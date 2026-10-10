@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mercury Support AI</title>
+  <meta name="description" content="An AI support agent trained on your docs. Answers 70% of tickets instantly, hands the rest to your team with the lead captured.">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="wrap"><b>☿ Mercury</b><a href="/dashboard.html">Log in</a></nav>
+
+  <header class="wrap hero">
+    <h1>Your support team, now answering in 5 seconds, 24/7.</h1>
+    <p>Paste your FAQ, docs or price list. Get an AI agent on your site in 2 minutes that answers customers, captures leads and hands hard cases to a human.</p>
+    <a class="btn" href="#signup">Start free: 100 conversations</a>
+  </header>
+
+  <section class="wrap grid3">
+    <div class="card"><h3>Answers only from your docs</h3><p>No invented prices or policies. If it doesn't know, it says so and escalates.</p></div>
+    <div class="card"><h3>Human handoff</h3><p>Refunds, angry customers, custom quotes go straight to your team's inbox.</p></div>
+    <div class="card"><h3>Lead capture</h3><p>Every email a visitor shares lands in your dashboard.</p></div>
+  </section>
+
+  <section class="wrap">
+    <h2>Pricing</h2>
+    <div class="grid3" id="plans"></div>
+  </section>
+
+  <section class="wrap" id="signup">
+    <h2>Create your agent</h2>
+    <form id="f" class="card">
+      <label>Company <input name="company" required></label>
+      <label>Work email <input name="email" type="email" required></label>
+      <label>Knowledge base (FAQ, docs, prices, policies)
+        <textarea name="knowledge" rows="8" placeholder="Q: What are your opening hours?&#10;A: Mon–Fri 9:00–18:00 CET…"></textarea>
+      </label>
+      <button class="btn">Create agent</button>
+    </form>
+    <div id="done" class="card" hidden></div>
+  </section>
+
+  <footer class="wrap muted">© Mercury Support AI</footer>
+
+  <script>
+    fetch("/api/plans").then(r => r.json()).then(plans => {
+      document.getElementById("plans").innerHTML = Object.values(plans).map(p =>
+        `<div class="card"><h3>${p.name}</h3><p class="price">$${p.priceUsd}<small>/mo</small></p><p>${p.messagesPerMonth.toLocaleString()} AI replies / month</p></div>`
+      ).join("");
+    });
+
+    document.getElementById("f").onsubmit = async (e) => {
+      e.preventDefault();
+      const body = Object.fromEntries(new FormData(e.target));
+      const r = await fetch("/api/workspaces", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (!r.ok) return alert(d.error);
+      try { localStorage.setItem("mercury_ws", JSON.stringify(d)); } catch {}
+      const done = document.getElementById("done");
+      const snippet = `<script src="${location.origin}/widget.js" data-workspace="${d.id}"><\/script>`;
+      done.hidden = false;
+      done.innerHTML = `<h3>Your agent is live 🎉</h3><p>Paste this before &lt;/body&gt; on your site:</p><pre></pre>
+        <p><b>Save your API key</b> (needed to log in): <code></code></p>
+        <p><a class="btn" href="/dashboard.html">Open dashboard</a></p>`;
+      done.querySelector("pre").textContent = snippet;
+      done.querySelector("code").textContent = d.apiKey;
+      e.target.hidden = true;
+      const s = document.createElement("script");
+      s.src = "/widget.js"; s.dataset.workspace = d.id; s.dataset.title = body.company;
+      document.body.appendChild(s);
+    };
+  </script>
+</body>
+</html>

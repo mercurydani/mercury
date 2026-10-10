@@ -1,0 +1,26 @@
+:root { --bg: #fafafc; --fg: #15151a; --muted: #666; --card: #fff; --line: #e6e6ee; --accent: #4f46e5; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0f0f14; --fg: #ececf1; --muted: #9a9aa6; --card: #1a1a22; --line: #2a2a35; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, sans-serif; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+nav { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; padding-bottom: 18px; }
+a { color: var(--accent); }
+.hero { padding-top: 48px; padding-bottom: 48px; }
+.hero h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.1; margin: 0 0 16px; max-width: 760px; }
+.hero p { font-size: 19px; color: var(--muted); max-width: 640px; }
+.btn { display: inline-block; background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 12px 20px; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+.grid3 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 24px auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.card h3 { margin-top: 0; }
+.price { font-size: 32px; font-weight: 700; margin: 0; }
+.price small { font-size: 14px; color: var(--muted); }
+label { display: block; margin-bottom: 14px; font-weight: 600; }
+input, textarea, select { display: block; width: 100%; margin-top: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-weight: 400; }
+pre, code { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; overflow-x: auto; word-break: break-all; white-space: pre-wrap; }
+pre { padding: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td, th { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.muted { color: var(--muted); }
+footer { padding-top: 40px; padding-bottom: 40px; }
+.stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.stats b { display: block; font-size: 28px; }

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mercury Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="wrap"><a href="/"><b>☿ Mercury</b></a><a href="#" id="logout" hidden>Log out</a></nav>
+
+  <main class="wrap">
+    <form id="login" class="card" hidden>
+      <h2>Log in</h2>
+      <label>Workspace ID <input name="id" required></label>
+      <label>API key <input name="apiKey" required></label>
+      <button class="btn">Open dashboard</button>
+    </form>
+
+    <div id="app" hidden>
+      <h1 id="title"></h1>
+      <div class="stats">
+        <div class="card"><span class="muted">AI replies this month</span><b id="usage"></b></div>
+        <div class="card"><span class="muted">Conversations</span><b id="convos"></b></div>
+        <div class="card"><span class="muted">Leads</span><b id="leads"></b></div>
+        <div class="card"><span class="muted">Handoffs to humans</span><b id="handoffs"></b></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>Plan: <span id="plan"></span></h3>
+        <select id="planSel"><option value="starter">Starter: $99/mo</option><option value="growth">Growth: $499/mo</option><option value="enterprise">Enterprise: $2,500/mo</option></select>
+        <p><button class="btn" id="upgrade">Upgrade</button> <span id="upMsg" class="muted"></span></p>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>Install</h3>
+        <pre id="snippet"></pre>
+      </div>
+
+      <form id="kb" class="card" style="margin-top:16px">
+        <h3>Knowledge base</h3>
+        <label>Bot name <input name="botName"></label>
+        <label>Content <textarea name="knowledge" rows="12"></textarea></label>
+        <button class="btn">Save</button> <span id="saved" class="muted"></span>
+      </form>
+
+      <div class="card" style="margin-top:16px"><h3>Leads</h3><table id="leadT"></table></div>
+      <div class="card" style="margin-top:16px"><h3>Needs a human</h3><table id="handT"></table></div>
+      <div class="card" style="margin-top:16px"><h3>Recent conversations</h3><div id="convT"></div></div>
+    </div>
+  </main>
+
+  <script>
+    let creds = null;
+    try { creds = JSON.parse(localStorage.getItem("mercury_ws")); } catch {}
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const api = (path, opts = {}) => fetch(`/api/workspaces/${creds.id}${path}`, {
+      ...opts, headers: { "Content-Type": "application/json", "x-api-key": creds.apiKey },
+    }).then(async (r) => { const d = await r.json(); if (!r.ok) throw new Error(d.error); return d; });
+
+    function render(ws) {
+      $("title").textContent = ws.company;
+      $("usage").textContent = `${ws.usageThisMonth} / ${ws.planInfo.messagesPerMonth.toLocaleString()}`;
+      $("convos").textContent = ws.conversationCount;
+      $("leads").textContent = ws.leads.length;
+      $("handoffs").textContent = ws.handoffs.length;
+      $("plan").textContent = `${ws.planInfo.name} ($${ws.planInfo.priceUsd}/mo)`;
+      $("snippet").textContent = `<script src="${location.origin}/widget.js" data-workspace="${ws.id}" data-title="${ws.botName}"><\/script>`;
+      $("kb").botName.value = ws.botName;
+      $("kb").knowledge.value = ws.knowledge;
+      $("leadT").innerHTML = "<tr><th>Email</th><th>When</th></tr>" + ws.leads.map((l) => `<tr><td>${esc(l.email)}</td><td>${esc(new Date(l.at).toLocaleString())}</td></tr>`).join("");
+      $("handT").innerHTML = "<tr><th>Question</th><th>When</th></tr>" + ws.handoffs.slice(-50).reverse().map((h) => `<tr><td>${esc(h.question)}</td><td>${esc(new Date(h.at).toLocaleString())}</td></tr>`).join("");
+      $("convT").innerHTML = ws.recentConversations.map((c) =>
+        `<details><summary>${esc(new Date(c.updatedAt).toLocaleString())} · ${c.messages.length / 2} messages</summary>` +
+        c.messages.map((m) => `<p><b>${m.role === "user" ? "Visitor" : "AI"}:</b> ${esc(m.content)}</p>`).join("") + "</details>").join("") || '<p class="muted">No conversations yet.</p>';
+    }
+
+    async function load() {
+      try {
+        render(await api(""));
+        $("app").hidden = false; $("login").hidden = true; $("logout").hidden = false;
+      } catch (e) {
+        $("login").hidden = false; $("app").hidden = true;
+      }
+    }
+
+    $("login").onsubmit = (e) => {
+      e.preventDefault();
+      creds = Object.fromEntries(new FormData(e.target));
+      try { localStorage.setItem("mercury_ws", JSON.stringify(creds)); } catch {}
+      load();
+    };
+    $("logout").onclick = (e) => { e.preventDefault(); try { localStorage.removeItem("mercury_ws"); } catch {} location.reload(); };
+    $("kb").onsubmit = async (e) => {
+      e.preventDefault();
+      render(await api("", { method: "PUT", body: JSON.stringify(Object.fromEntries(new FormData(e.target))) }));
+      $("saved").textContent = "Saved ✓";
+    };
+    $("upgrade").onclick = async () => {
+      const d = await api("/upgrade", { method: "POST", body: JSON.stringify({ plan: $("planSel").value }) });
+      if (d.checkoutUrl) location.href = d.checkoutUrl; else $("upMsg").textContent = d.message;
+    };
+
+    if (creds) load(); else $("login").hidden = false;
+  </script>
+</body>
+</html>

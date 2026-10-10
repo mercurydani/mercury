@@ -1,0 +1,19 @@
+{
+  "name": "mercury-support-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "B2B AI customer-support agent: answers from your knowledge base, hands off to humans, captures leads.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "express": "^5.1.0"
+  }
+}
