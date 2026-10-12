@@ -23,12 +23,12 @@ func _initialize() -> void:
 	main.step(3.0)
 	var w: Worker = main.workers[0]
 	var pl: Aircraft = main.planes.filter(func(p): return p != null)[0]
-	w.position = Cfg.BELT.position + Vector2(40, 40)
-	main.bags.append(w.position)
+	w.pos = Cfg.BELT.position + Vector2(40, 40)
+	main.bags.append(w.pos)
 	w.pressed = true
 	main.step(0.016)
 	print("holding=", w.item)
-	w.position = pl.door_pt()
+	w.pos = pl.door_pt()
 	w.pressed = true
 	main.step(0.016)
 	print("plane bags=", pl.bags, " item='", w.item, "'")

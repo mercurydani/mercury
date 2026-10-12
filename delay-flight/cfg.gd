@@ -2,6 +2,7 @@ class_name Cfg
 
 const W := 1280
 const H := 720
+const K := 0.02            # пиксели логики -> метры сцены
 const SHIFT := 180.0
 const PX := 800.0
 const ROWS := [215.0, 405.0, 595.0]
@@ -18,3 +19,6 @@ const ROLES := [
 	{"name": "Механик", "shirt": Color("3d7bd9"), "vest": Color("00000000"), "hat": "cap", "hat_col": Color("2b5fb3"), "ears": false, "skin": Color("8d5a3c")},
 ]
 const PLAYER_COLORS := [Color("4da3ff"), Color("ffb347"), Color("7dff8a"), Color("ff7ad9")]
+
+static func to3(p: Vector2, h: float = 0.0) -> Vector3:
+	return Vector3(p.x * K, h, p.y * K)

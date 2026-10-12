@@ -1,5 +1,5 @@
 class_name Angry
-extends Node2D
+extends Node3D
 # Злой сотрудник: пилот, диспетчер, пилот-хулиган или КАЧОК.
 
 var type := "pilot"
@@ -7,40 +7,51 @@ var cd := 1.5
 var wind := 0.0
 var shout := 3.0
 var walk := 0.0
-var face := -1.0
+var dir := Vector2(-1, 0)
 var moving := false
+var pos := Vector2.ZERO:
+	set(v):
+		pos = v
+		position = Cfg.to3(v)
+
+var rig: Node3D
+var glow: MeshInstance3D
+var alarm: Label3D
 
 const NAMES := {"pilot": "пилот", "dispatcher": "диспетчер", "hooligan": "пилот-хулиган", "muscle": "КАЧОК"}
+
+func _ready() -> void:
+	var o := {"s": 2.0, "brow": true, "skin": Color("e8a08a")}
+	var height := 3.2
+	match type:
+		"pilot":
+			o.merge({"shirt": Color("f4f6fa"), "hat": "pilot", "tie": true})
+		"dispatcher":
+			o.merge({"shirt": Color("9fc3ee"), "headset": true, "tie": true, "skin": Color("e07a6a")})
+		"hooligan":
+			o.merge({"shirt": Color("f4f6fa"), "hat": "pilot", "shades": true, "vest": Color("ff8a3d")})
+		"muscle":
+			o.merge({"s": 4.0, "bulk": 1.9, "shirt": Color("d8d8d8"), "hat": "bandana", "shades": true, "skin": Color("d98c5f"), "arm": Color("d98c5f"), "pants": Color("22304d")})
+			height = 6.0
+	rig = Rig.person(o)
+	add_child(rig)
+	Rig.label(self, NAMES[type], Vector3(0, height + 0.15, 0), 40 if type == "muscle" else 28, Color("ffb3a8"))
+	if type == "muscle":
+		glow = Rig.sphere(self, 2.6, Vector3(0, 2.6, 0), Color(1, 0.15, 0.1, 0.22), Vector3.ONE, 1.0)
+		glow.visible = false
+		alarm = Rig.label(self, "!!!", Vector3(0, 7.2, 0), 80, Color("ff2d2d"))
+		alarm.visible = false
 
 func _process(delta: float) -> void:
 	if moving:
 		walk += delta * 12.0
-	queue_redraw()
-
-func _draw() -> void:
-	var o := {"face": face, "walk": walk if moving else 0.0, "brow": true, "skin": Color("e8a08a")}
-	var r := 24.0
-	match type:
-		"pilot":
-			o.merge({"shirt": Color("f4f6fa"), "hat": "pilot", "tie": true, "arm": Color("f4f6fa")})
-		"dispatcher":
-			o.merge({"shirt": Color("9fc3ee"), "headset": true, "tie": true, "arm": Color("9fc3ee"), "skin": Color("e07a6a")})
-		"hooligan":
-			o.merge({"shirt": Color("f4f6fa"), "hat": "pilot", "shades": true, "vest": Color("ff8a3d"), "arm": Color("f4f6fa")})
-		"muscle":
-			o.merge({"s": 2.1, "shirt": Color("d8d8d8"), "hat": "bandana", "shades": true, "skin": Color("d98c5f"), "arm": Color("d98c5f"), "arm_r": 8.0, "pants": Color("22304d")})
-			r = 62.0
-			if wind > 0.0 and int(wind * 12.0) % 2 == 0:
-				draw_circle(Vector2(0, -20), 70, Color(1, 0.2, 0.1, 0.25))
-	Paint.person(self, Vector2.ZERO, o)
+	rig.rotation.y = lerp_angle(rig.rotation.y, atan2(dir.x, dir.y), minf(1.0, delta * 10.0))
+	Rig.animate(rig, walk, moving)
 	if type == "muscle":
-		for sx in [-1.0, 1.0]:
-			draw_arc(Vector2(sx * 30, -4), 12, 0.3, 2.4, 8, Color("a8532f"), 2.5)
+		var on := wind > 0.0 and int(wind * 12.0) % 2 == 0
+		glow.visible = on
+		alarm.visible = wind > 0.0
 		if wind > 0.0:
-			_label("!!!", Vector2(0, -r - 34), 40, Color("ff2d2d"))
-	_label(NAMES[type], Vector2(0, -r - 16 if type != "muscle" else -r - 6), 13 if type != "muscle" else 20, Color("ffb3a8"))
-
-func _label(t: String, p: Vector2, size: int, col: Color) -> void:
-	var font := ThemeDB.fallback_font
-	draw_string_outline(font, p + Vector2(-100, 0), t, HORIZONTAL_ALIGNMENT_CENTER, 200, size, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-100, 0), t, HORIZONTAL_ALIGNMENT_CENTER, 200, size, col)
+			rig.rotation.z = sin(Time.get_ticks_msec() / 25.0) * 0.06
+		else:
+			rig.rotation.z = 0.0
