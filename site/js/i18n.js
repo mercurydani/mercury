@@ -172,6 +172,7 @@ const I18N = {
     chip_design: "Dizajn",
 
     footer_city: "Beograd, Srbija",
+    calc_title: "Sastavite svoj projekat", calc_sub: "Označite šta vam treba — okvirna cena se računa odmah. Procenu pošaljite nama, a tačan iznos dogovaramo posle kratkog razgovora.", grp_site: "Sajt", grp_extra: "Dodatno", r_title: "Procena", r_empty: "Ovde će se pojaviti ono što izaberete.", r_total: "Ukupno", r_send_tg: "Pošalji u Telegram", r_copied: "Tekst procene je kopiran — nalepite ga u chat.", r_hello: "Zdravo! Zanima me:", r_from: "od", r_mo: "/ mes.", r_view: "Pogledaj procenu", also: "Takođe", calc_link: "Izračunajte cenu", bot_text_short: "Bot koji prima porudžbine i zakazuje termine.",
     avail: "Prihvatamo nove projekte", city_now: "Beograd", reply_note: "Pišite — odgovaramo isti dan", to_top: "Gore",
   },
 
@@ -346,6 +347,7 @@ const I18N = {
     chip_design: "Design",
 
     footer_city: "Belgrade, Serbia",
+    calc_title: "Build your project", calc_sub: "Tick what you need — a starting price is calculated right away. Send us the estimate, and we agree on the exact amount after a short call.", grp_site: "Website", grp_extra: "Extras", r_title: "Estimate", r_empty: "Your selection will appear here.", r_total: "Total", r_send_tg: "Send via Telegram", r_copied: "Estimate copied — paste it into the chat.", r_hello: "Hi! I'm interested in:", r_from: "from", r_mo: "/ mo", r_view: "View estimate", also: "Also", calc_link: "Calculate the price", bot_text_short: "A bot that takes orders and bookings.",
     avail: "Taking on new projects", city_now: "Belgrade", reply_note: "Write to us — we reply the same day", to_top: "Top",
   },
 
@@ -520,6 +522,7 @@ const I18N = {
     chip_design: "Дизайн",
 
     footer_city: "Белград, Сербия",
+    calc_title: "Соберите свой проект", calc_sub: "Отметьте, что вам нужно, — ориентировочная цена считается сразу. Отправьте нам смету, а точную сумму согласуем после короткого разговора.", grp_site: "Сайт", grp_extra: "Дополнительно", r_title: "Смета", r_empty: "Здесь появится то, что вы выберете.", r_total: "Итого", r_send_tg: "Отправить в Telegram", r_copied: "Текст сметы скопирован — вставьте его в чат.", r_hello: "Здравствуйте! Интересует:", r_from: "от", r_mo: "/ мес.", r_view: "Смотреть смету", also: "Также", calc_link: "Рассчитать цену", bot_text_short: "Бот, который принимает заказы и записи.",
     avail: "Принимаем новые проекты", city_now: "Белград", reply_note: "Напишите — ответим в тот же день", to_top: "Наверх",
   },
 };
