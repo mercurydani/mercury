@@ -443,3 +443,82 @@ static func gable(w: float, h: float, t: float, c: Color) -> ArrayMesh:
 			st.add_vertex(p[i])
 	st.generate_normals()
 	return st.commit()
+
+
+# ---------- облака ----------
+
+const CLOUD_SHADER := """
+shader_type spatial;
+render_mode blend_mix, depth_draw_never, cull_back, unshaded, shadows_disabled;
+uniform vec3 sun_dir = vec3(0.5, 0.45, 0.4);
+uniform vec3 lit_color : source_color = vec3(1.0, 0.93, 0.8);
+uniform vec3 shade_color : source_color = vec3(0.62, 0.58, 0.7);
+uniform sampler2D noise_tex : repeat_enable;
+varying vec3 wpos;
+varying vec3 wnormal;
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wnormal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+void fragment() {
+	float facing = clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+	float n1 = texture(noise_tex, wpos.xz * 0.011 + wpos.y * 0.007).r;
+	float n2 = texture(noise_tex, wpos.xz * 0.031 - wpos.y * 0.02).r;
+	float lit = clamp(dot(wnormal, normalize(sun_dir)) * 0.5 + 0.55, 0.0, 1.0);
+	lit = lit * (0.78 + 0.35 * n2);
+	vec3 col = mix(shade_color, lit_color, clamp(lit, 0.0, 1.0));
+	// светящийся край на стороне солнца
+	col += lit_color * pow(1.0 - facing, 3.0) * max(dot(wnormal, normalize(sun_dir)), 0.0) * 0.5;
+	ALBEDO = col;
+	float body = smoothstep(0.0, 0.55, facing);
+	float ragged = smoothstep(0.25, 0.75, n1 * 0.6 + n2 * 0.5 + facing * 0.55);
+	ALPHA = clamp(body * ragged * 1.25, 0.0, 0.92);
+}
+"""
+
+
+## Объёмные облака из кучи мягких пузырей с шейдером (светлая сторона к солнцу, рваные края).
+static func clouds(parent: Node, rng: RandomNumberGenerator, count: int, sun_dir: Vector3, y_range := Vector2(80.0, 200.0), r_range := Vector2(130.0, 700.0)) -> Node3D:
+	var root := Node3D.new()
+	add(parent, root, "Clouds")
+	var shader := Shader.new()
+	shader.code = CLOUD_SHADER
+	var nz := FastNoiseLite.new()
+	nz.frequency = 0.02
+	nz.fractal_octaves = 4
+	var nt := NoiseTexture2D.new()
+	nt.noise = nz
+	nt.seamless = true
+	nt.width = 256
+	nt.height = 256
+	var m := ShaderMaterial.new()
+	m.shader = shader
+	m.set_shader_parameter("noise_tex", nt)
+	m.set_shader_parameter("sun_dir", sun_dir)
+	for i in count:
+		var a := rng.randf() * TAU
+		var r := rng.randf_range(r_range.x, r_range.y)
+		var cl := Node3D.new()
+		add(root, cl, "Cloud%d" % i, Vector3(cos(a) * r, rng.randf_range(y_range.x, y_range.y), sin(a) * r))
+		cl.rotation_degrees.y = rng.randf() * 360.0
+		var k := rng.randf_range(0.7, 1.8)
+		var puffs := rng.randi_range(16, 28)
+		var length := rng.randf_range(60.0, 130.0) * k
+		for j in puffs:
+			var t := rng.randf()
+			var px := (t - 0.5) * length
+			var hump := sin(t * PI)                      # серединка выше, края ниже
+			var rad := rng.randf_range(11.0, 22.0) * k * (0.55 + 0.6 * hump)
+			var sm := SphereMesh.new()
+			sm.radius = rad
+			sm.height = rad * 1.6
+			sm.radial_segments = 24
+			sm.rings = 12
+			var mi := MeshInstance3D.new()
+			mi.mesh = sm
+			mi.material_override = m
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			var py := rng.randf_range(0.0, 1.0) * hump * 20.0 * k
+			add(cl, mi, "Puff%d" % j, Vector3(px, py, rng.randf_range(-14.0, 14.0) * k))
+			mi.scale = Vector3(1.0, rng.randf_range(0.6, 0.9), 1.0)
+	return root

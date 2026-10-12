@@ -96,12 +96,14 @@ func _surroundings() -> void:
 	U.kind = "paint"
 	var s := Node3D.new()
 	U.add(root_node, s, "Surroundings")
-	U.box(s, "Ground", Vector3(1400, 1.0, 1400), Color(0.42, 0.45, 0.4), Vector3(0, GROUND - 0.5, 0))
+	U.kind = "grass"
+	U.box(s, "Ground", Vector3(1400, 1.0, 1400), Color(0.62, 0.7, 0.5), Vector3(0, GROUND - 0.5, 0))
 	# Асфальтовые дорожки и газон двора
-	U.box(s, "LawnSouth", Vector3(60, 0.06, 14), Color(0.4, 0.58, 0.32), Vector3(10, GROUND + 0.03, 15))
-	U.box(s, "LawnNorth", Vector3(60, 0.06, 14), Color(0.4, 0.58, 0.32), Vector3(10, GROUND + 0.03, -15))
-	U.box(s, "PathSouth", Vector3(70, 0.08, 3.0), Color(0.3, 0.3, 0.33), Vector3(10, GROUND + 0.04, 8.5))
-	U.box(s, "PathNorth", Vector3(70, 0.08, 3.0), Color(0.3, 0.3, 0.33), Vector3(10, GROUND + 0.04, -8.5))
+	U.box(s, "LawnSouth", Vector3(190, 0.06, 14), Color(0.4, 0.58, 0.32), Vector3(25, GROUND + 0.03, 15))
+	U.box(s, "LawnNorth", Vector3(190, 0.06, 14), Color(0.4, 0.58, 0.32), Vector3(25, GROUND + 0.03, -15))
+	U.kind = "bitumen"
+	U.box(s, "PathSouth", Vector3(190, 0.08, 3.0), Color(0.3, 0.3, 0.33), Vector3(25, GROUND + 0.04, 8.5))
+	U.box(s, "PathNorth", Vector3(190, 0.08, 3.0), Color(0.3, 0.3, 0.33), Vector3(25, GROUND + 0.04, -8.5))
 	U.box(s, "Road", Vector3(160, 0.08, 7.0), Color(0.26, 0.26, 0.29), Vector3(10, GROUND + 0.04, 22.5))
 	for i in 14:
 		U.box(s, "RoadMark%d" % i, Vector3(2.2, 0.02, 0.18), Color(0.95, 0.95, 0.9), Vector3(-45 + i * 7.5, GROUND + 0.09, 22.5))
@@ -115,16 +117,18 @@ func _surroundings() -> void:
 	_kh(s, "SouthTower", Vector3(60, GROUND, 40), 180.0, 3, 9, 37, Color(0.78, 0.8, 0.84))
 	# Деревья двора (берёзы, тополя, липы), у стен вырастают до уровня окон
 	var tid := 100
+	U.kind = "paint"
 	for z in [-14.0, 14.0]:
-		for i in 9:
-			var x := -22.0 + i * 8.0 + rng.randf_range(-2.0, 2.0)
+		for i in 22:
+			var x := -62.0 + i * 8.0 + rng.randf_range(-2.0, 2.0)
 			var zz: float = z + rng.randf_range(-3.0, 3.0)
 			_tree(s, Vector3(x, GROUND, zz), rng.randi() % 3, tid, rng.randf_range(7.0, 12.0))
 			tid += 1
 	# Машины: «жигули», «газель», иномарка у подъезда
 	var cars := [[Vector3(-14, 0, 11.0), 0.0, Color(0.7, 0.15, 0.12)], [Vector3(-9, 0, 11.2), 0.1, Color(0.85, 0.85, 0.82)],
 		[Vector3(4, 0, 10.8), 180.0, Color(0.25, 0.4, 0.62)], [Vector3(16, 0, 11.0), 0.0, Color(0.15, 0.15, 0.18)],
-		[Vector3(30, 0, -10.8), 90.0, Color(0.85, 0.7, 0.2)], [Vector3(-6, 0, -10.8), 0.0, Color(0.5, 0.52, 0.5)]]
+		[Vector3(30, 0, -10.8), 90.0, Color(0.85, 0.7, 0.2)], [Vector3(-6, 0, -10.8), 0.0, Color(0.5, 0.52, 0.5)],
+		[Vector3(52, 0, 11.0), 0.0, Color(0.3, 0.5, 0.35)], [Vector3(66, 0, 10.8), 180.0, Color(0.8, 0.8, 0.78)], [Vector3(80, 0, -10.8), 0.0, Color(0.6, 0.2, 0.15)], [Vector3(96, 0, 11.0), 0.0, Color(0.2, 0.25, 0.4)], [Vector3(-40, 0, 11.0), 180.0, Color(0.7, 0.7, 0.2)], [Vector3(-52, 0, -10.8), 0.0, Color(0.15, 0.15, 0.18)]]
 	var ci := 0
 	for c in cars:
 		_car(s, "Car%d" % ci, c[0] + Vector3(0, GROUND, 0), c[1], c[2])
@@ -135,7 +139,7 @@ func _surroundings() -> void:
 	for i in 5:
 		U.box(s, "Garage%d" % i, Vector3(3.0, 2.3, 5.5), Color.from_hsv(0.08 + i * 0.07, 0.25, 0.55), Vector3(-36 + i * 3.3, GROUND + 1.15, -20), false)
 		U.box(s, "GarageDoor%d" % i, Vector3(2.4, 2.0, 0.08), Color(0.45, 0.3, 0.2), Vector3(-36 + i * 3.3, GROUND + 1.05, -17.2), false)
-	for bx in [-6.0, 12.0, 26.0]:
+	for bx in [-6.0, 12.0, 26.0, 52.0, 70.0, 90.0]:
 		_bench(s, Vector3(bx, GROUND, 6.8))
 	U.kind = _k
 
@@ -1314,47 +1318,4 @@ func _far_city() -> void:
 # ---------- облака ----------
 
 func _clouds() -> void:
-	var old_r := U.rounded
-	var c := Node3D.new()
-	U.add(root_node, c, "Clouds")
-	var lit := StandardMaterial3D.new()
-	lit.albedo_color = Color(1.0, 0.96, 0.9)
-	lit.emission_enabled = true
-	lit.emission = Color(1.0, 0.78, 0.55)
-	lit.emission_energy_multiplier = 0.28
-	lit.roughness = 1.0
-	var shade := StandardMaterial3D.new()
-	shade.albedo_color = Color(0.82, 0.74, 0.74)
-	shade.emission_enabled = true
-	shade.emission = Color(0.95, 0.65, 0.5)
-	shade.emission_energy_multiplier = 0.2
-	shade.roughness = 1.0
-	for i in 34:
-		var a := rng.randf() * TAU
-		var r := rng.randf_range(120.0, 650.0)
-		var cl := Node3D.new()
-		U.add(c, cl, "Cloud%d" % i, Vector3(cos(a) * r, rng.randf_range(70.0, 190.0), sin(a) * r))
-		cl.rotation_degrees.y = rng.randf() * 360.0
-		var k := rng.randf_range(0.8, 1.7)
-		var puffs := rng.randi_range(6, 10)
-		for j in puffs:
-			var rad := rng.randf_range(14.0, 26.0) * k
-			var sm := SphereMesh.new()
-			sm.radius = rad
-			sm.height = rad * 1.5
-			sm.radial_segments = 20
-			sm.rings = 10
-			var mi := MeshInstance3D.new()
-			mi.mesh = sm
-			var up := rng.randf_range(0.0, 1.0)
-			mi.material_override = lit if up > 0.25 else shade
-			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			U.add(cl, mi, "Puff%d" % j, Vector3((j - puffs * 0.5) * 22.0 * k * 0.7 + rng.randf_range(-8, 8), rad * 0.5 * (up if up > 0.25 else 0.0) , rng.randf_range(-12, 12) * k))
-			mi.scale = Vector3(1.0, 0.8, 1.0)
-	# Высокие перистые полосы
-	for i in 10:
-		var a := rng.randf() * TAU
-		var st := U.box(c, "Cirrus%d" % i, Vector3(rng.randf_range(160, 300), 0.6, rng.randf_range(6, 14)), Color(1.0, 0.92, 0.85, 0.5), Vector3(cos(a) * 500, rng.randf_range(260, 340), sin(a) * 500))
-		st.rotation_degrees.y = rng.randf() * 180.0
-		st.get_child(0).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	U.rounded = old_r
+	U.clouds(root_node, rng, 40, Vector3(0.75, 0.35, 0.55))
