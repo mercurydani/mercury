@@ -652,9 +652,13 @@ func _mascot() -> void:
 	_proc(mb, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void: MascotMesh.build_body(gm))
 	_box_shape(mb, Vector3(1.9, 1.1, 1.9), Vector3(0, 0.55, 0))
 	_box_shape(mb, Vector3(1.2, 2.1, 1.1), Vector3(0, 2.1, 0))
+	# Кот: модель «Lucky cat maneki neko» (Rice & Soy Sauce, CC-BY 4.0).
+	# Правая лапа переносится в узел Paw при запуске (scripts/mascot.gd) и машет.
+	const CAT_SCALE := 0.8
+	var cat_pos := Vector3(0, 0.96 + 0.144 * CAT_SCALE, 0)
+	_model(m, "Cat", "res://assets/models/lucky_cat/scene.gltf", cat_pos, CAT_SCALE)
 	var paw := Node3D.new()
-	_add(m, paw, "Paw", Vector3(0.42, MascotMesh.SEAT_Y + 1.0, 0.12))
-	_proc(paw, "Arm", Vector3.ZERO, func(gm: GeoMesh) -> void: MascotMesh.build_paw(gm))
+	_add(m, paw, "Paw", cat_pos + Vector3(1.0, 1.1, 0.0) * CAT_SCALE)
 	_trigger(m, "Trigger", "PROMPT_PET", Vector3(0, 1.0, 1.4), 2.2)
 
 

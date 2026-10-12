@@ -15,8 +15,8 @@ static func _e(st: SurfaceTool, c: Vector3, r: Vector3, col: Color, xf := Transf
 	Babushka.ellip(st, Vector3.ZERO, r, col, Transform3D(xf.basis, c + xf.origin))
 
 
+## Постамент с подушкой; сам кот — модель assets/models/lucky_cat (CC-BY 4.0).
 static func build_body(gm: GeoMesh) -> void:
-	var g := gm.s("gold")
 	# Постамент: ступенчатый камень и табличка
 	Geo.cbox(gm.s("concrete"), Vector3(0, 0.15, 0), Vector3(1.9, 0.3, 1.9), Color(0.75, 0.72, 0.68), 0.06)
 	Geo.cbox(gm.s("concrete"), Vector3(0, 0.55, 0), Vector3(1.6, 0.5, 1.6), Color(0.82, 0.8, 0.76), 0.05)
@@ -28,6 +28,11 @@ static func build_body(gm: GeoMesh) -> void:
 			var p := Vector3(sx * 0.72, 0.9, sz * 0.72)
 			_e(gm.s("gold"), p, Vector3(0.04, 0.04, 0.04), GOLD)
 			Geo.prism(gm.s("fabric"), p + Vector3(0, -0.18, 0), 0.03, 0.01, 0.16, GOLD, 8)
+
+
+## Старый процедурный кот (оставлен на случай, если модель недоступна).
+static func build_procedural_cat(gm: GeoMesh) -> void:
+	var g := gm.s("gold")
 	var y := SEAT_Y
 	# Туловище: сидячая «груша»
 	_e(g, Vector3(0, y + 0.42, 0), Vector3(0.62, 0.55, 0.52), GOLD)

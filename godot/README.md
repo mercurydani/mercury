@@ -23,3 +23,7 @@
 
     godot --headless --path godot --script res://tools/build_lobby.gd
     godot --headless --path godot --script res://tools/smoke_test.gd
+
+## Сторонние модели
+
+- Кот-талисман: «Lucky cat maneki neko» — Rice & Soy Sauce, https://sketchfab.com/3d-models/lucky-cat-maneki-neko-50b5d360717c442c971b3db0576606c4, лицензия CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/). В игре тонирован в золото, правая лапа анимирована. Файлы и `license.txt` — `assets/models/lucky_cat/`.
