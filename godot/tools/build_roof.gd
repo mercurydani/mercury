@@ -46,6 +46,7 @@ func _init() -> void:
 	_roof_b()
 	_roof_c()
 	_ramp_and_planks()
+	_extras()
 	_hazards()
 	_cat()
 	_players_and_checkpoints()
@@ -88,6 +89,8 @@ func _tree(parent: Node, pos: Vector3, kind: int, seed_value: int, h: float) -> 
 # ---------- окружение: двор внизу, соседние дома, облака ----------
 
 func _surroundings() -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var s := Node3D.new()
 	U.add(root_node, s, "Surroundings")
 	U.box(s, "Ground", Vector3(320, 1.0, 320), Color(0.42, 0.45, 0.4), Vector3(0, GROUND - 0.5, 0))
@@ -131,9 +134,12 @@ func _surroundings() -> void:
 		U.box(s, "GarageDoor%d" % i, Vector3(2.4, 2.0, 0.08), Color(0.45, 0.3, 0.2), Vector3(-36 + i * 3.3, GROUND + 1.05, -17.2), false)
 	for bx in [-6.0, 12.0, 26.0]:
 		_bench(s, Vector3(bx, GROUND, 6.8))
+	U.kind = _k
 
 
 func _car(parent: Node, nm: String, pos: Vector3, rot_y: float, col: Color) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var c := Node3D.new()
 	U.add(parent, c, nm, pos)
 	c.rotation_degrees.y = rot_y
@@ -144,9 +150,12 @@ func _car(parent: Node, nm: String, pos: Vector3, rot_y: float, col: Color) -> v
 		for z in [-0.85, 0.85]:
 			var w := U.cyl(c, "Wheel", 0.33, 0.33, 0.25, Color(0.1, 0.1, 0.1), Vector3(x, 0.33, z), 10)
 			w.rotation_degrees.x = 90
+	U.kind = _k
 
 
 func _playground(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var p := Node3D.new()
 	U.add(parent, p, "Playground", pos)
 	U.box(p, "Sandbox", Vector3(4, 0.3, 4), Color(0.85, 0.75, 0.5), Vector3(0, 0.15, 0))
@@ -165,9 +174,12 @@ func _playground(parent: Node, pos: Vector3) -> void:
 	U.rod(p, "CarpetBarL", Vector3(-6, 0, 3), Vector3(-6, 2.4, 3), 0.1, C_STEEL, 0.5, 0.4)
 	U.rod(p, "CarpetBarR", Vector3(-9, 0, 3), Vector3(-9, 2.4, 3), 0.1, C_STEEL, 0.5, 0.4)
 	U.rod(p, "CarpetBar", Vector3(-9, 2.4, 3), Vector3(-6, 2.4, 3), 0.1, C_STEEL, 0.5, 0.4)
+	U.kind = _k
 
 
 func _bench(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "wood"
 	var b := Node3D.new()
 	U.add(parent, b, "Bench", pos)
 	U.box(b, "Seat", Vector3(1.8, 0.08, 0.45), C_WOOD, Vector3(0, 0.5, 0))
@@ -179,7 +191,12 @@ func _bench(parent: Node, pos: Vector3) -> void:
 # ---------- крыша A: старт ----------
 
 ## Настил с рубероидом: швы полос, заплатки, лужи, птичий «привет».
+	U.kind = _k
+
+
 func _deck(parent: Node, nm: String, cx: float, top: float, length: float, depth: float) -> Node3D:
+	var _k := U.kind
+	U.kind = "bitumen"
 	var d := Node3D.new()
 	U.add(parent, d, nm, Vector3(cx, top, 0))
 	# Коллизия настила (верх ровно на top)
@@ -213,7 +230,12 @@ func _deck(parent: Node, nm: String, cx: float, top: float, length: float, depth
 
 
 ## Парапет: цельный по кромке, с проёмами gaps = [[ось, from, to], ...] (ось "x"/"z" — вдоль чего проём)
+	U.kind = _k
+
+
 func _parapet(parent: Node, cx: float, top: float, length: float, depth: float, gaps: Dictionary) -> void:
+	var _k := U.kind
+	U.kind = "concrete"
 	var holder := Node3D.new()
 	U.add(parent, holder, "Parapet", Vector3(cx, top, 0))
 	var hh := 0.6
@@ -247,9 +269,12 @@ func _parapet(parent: Node, cx: float, top: float, length: float, depth: float, 
 				var cr := U.box(holder, "Crack", crack, Color(0.15, 0.15, 0.15), cpos)
 				cr.rotation_degrees.z = rng.randf_range(-30, 30) if e[2] else 0.0
 			si += 1
+	U.kind = _k
 
 
 func _roof_a() -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var a := Node3D.new()
 	U.add(root_node, a, "RoofA")
 	_kh(a, "Building", Vector3(0, GROUND, 0), 0.0, 2, 5, 7, Color(0.8, 0.77, 0.7), false, false)
@@ -294,9 +319,12 @@ func _roof_a() -> void:
 		U.box(props, "RampPost", Vector3(0.12, 1.0, 0.12), C_STEEL, Vector3(11.8, 0.5, z), false, 0.5, 0.4)
 	# Хлам: старый стул, жестяной таз
 	U.cyl(props, "Basin", 0.5, 0.35, 0.22, Color(0.7, 0.72, 0.74), Vector3(5.0, 0.11, 2.9), 14, 0.5, 0.5)
+	U.kind = _k
 
 
 func _stair_hut(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "concrete"
 	var h := Node3D.new()
 	U.add(parent, h, "StairHut", pos)
 	var body := U.box(h, "Walls", Vector3(3.2, 2.5, 3.4), C_CONC.darkened(0.05), Vector3(0, 1.25, 0), true)
@@ -319,9 +347,12 @@ func _stair_hut(parent: Node, pos: Vector3) -> void:
 	U.box(h, "Slot2", Vector3(0.04, 0.5, 0.9), Color(0.15, 0.15, 0.16), Vector3(0, 1.5, -1.72))
 	U.cyl(h, "Chimney", 0.18, 0.2, 0.9, Color(0.4, 0.4, 0.42), Vector3(-0.8, 3.1, 0.6), 10, 0.6, 0.4)
 	U.cyl(h, "ChimneyCap", 0.3, 0.05, 0.12, Color(0.4, 0.4, 0.42), Vector3(-0.8, 3.62, 0.6), 10, 0.6, 0.4)
+	U.kind = _k
 
 
 func _vent(parent: Node, pos: Vector3, h: float) -> void:
+	var _k := U.kind
+	U.kind = "concrete"
 	var v := Node3D.new()
 	U.add(parent, v, "Vent", pos)
 	U.box(v, "Base", Vector3(0.9, h, 0.9), C_CONC.darkened(0.08), Vector3(0, h * 0.5, 0), true)
@@ -330,9 +361,12 @@ func _vent(parent: Node, pos: Vector3, h: float) -> void:
 	for i in 3:
 		U.box(v, "Slat", Vector3(0.6, 0.03, 0.05), Color(0.5, 0.5, 0.5), Vector3(0, h * 0.6 - 0.1 + i * 0.1, 0.47))
 	U.box(v, "Stain", Vector3(0.06, h * 0.7, 0.02), Color(0.45, 0.4, 0.34), Vector3(0.3, h * 0.45, 0.455))
+	U.kind = _k
 
 
 func _antenna(parent: Node, pos: Vector3, h: float, arms: int) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var a := Node3D.new()
 	U.add(parent, a, "Antenna", pos)
 	U.box(a, "Foot", Vector3(0.5, 0.15, 0.5), C_CONC.darkened(0.2), Vector3(0, 0.07, 0), true)
@@ -358,9 +392,12 @@ func _antenna(parent: Node, pos: Vector3, h: float, arms: int) -> void:
 	flag.phase = rng.randf_range(0, 6)
 	U.add(a, flag, "Ribbon", Vector3(0, h + 0.05, 0))
 	U.box(flag, "Cloth", Vector3(0.5, 0.18, 0.015), Color(0.95, 0.3, 0.25), Vector3(0.25, 0, 0))
+	U.kind = _k
 
 
 func _dish(parent: Node, pos: Vector3, yaw: float) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var d := Node3D.new()
 	U.add(parent, d, "Dish", pos)
 	d.rotation_degrees.y = yaw
@@ -372,9 +409,12 @@ func _dish(parent: Node, pos: Vector3, yaw: float) -> void:
 	var arm := U.rod(d, "Arm", Vector3(0, 1.3, 0.2), Vector3(0, 1.75, 0.8), 0.025, Color(0.2, 0.2, 0.2))
 	U.sphere(d, "LNB", 0.07, Color(0.2, 0.2, 0.22), Vector3(0, 1.78, 0.82))
 	U.rod(d, "Cable", Vector3(0, 1.0, 0.0), Vector3(0.8, 0.02, 1.2), 0.02, Color(0.1, 0.1, 0.1))
+	U.kind = _k
 
 
 func _ac_unit(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var u := Node3D.new()
 	U.add(parent, u, "AC", pos)
 	U.box(u, "Bracket", Vector3(0.9, 0.06, 0.4), C_STEEL, Vector3(0, 0.55, -0.1), false, 0.4, 0.6)
@@ -383,9 +423,12 @@ func _ac_unit(parent: Node, pos: Vector3) -> void:
 	for i in 5:
 		U.box(u, "Grille%d" % i, Vector3(0.5, 0.012, 0.01), Color(0.55, 0.55, 0.55), Vector3(0, 0.78 + i * 0.06, -0.435))
 	U.rod(u, "Drip", Vector3(-0.3, 0.55, -0.25), Vector3(-0.3, 0.1, -0.5), 0.025, Color(0.9, 0.9, 0.9))
+	U.kind = _k
 
 
 func _drain(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	U.cyl(parent, "DrainRing", 0.38, 0.38, 0.03, Color(0.3, 0.3, 0.33), pos + Vector3(0, 0.025, 0), 16, 0.4, 0.6)
 	U.cyl(parent, "DrainHole", 0.26, 0.26, 0.035, Color(0.04, 0.04, 0.05), pos + Vector3(0, 0.03, 0), 12)
 	for i in 4:
@@ -393,9 +436,12 @@ func _drain(parent: Node, pos: Vector3) -> void:
 		b.rotation_degrees.y = i * 45.0
 	for i in 5:
 		U.box(parent, "Leaf", Vector3(0.12, 0.01, 0.08), Color(0.55, 0.45, 0.12), pos + Vector3(rng.randf_range(-0.5, 0.5), 0.03, rng.randf_range(-0.5, 0.5)))
+	U.kind = _k
 
 
 func _pipe_run(parent: Node, a: Vector3, b: Vector3, collide := false) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var holder := StaticBody3D.new() if collide else Node3D.new()
 	U.add(parent, holder, "Pipe", Vector3.ZERO)
 	var h := 0.42
@@ -422,9 +468,12 @@ func _pipe_run(parent: Node, a: Vector3, b: Vector3, collide := false) -> void:
 		var ring := U.cyl(holder, "Coupling%d" % i, 0.23, 0.23, 0.14, Color(0.75, 0.75, 0.72), p + Vector3(0, h, 0), 14, 0.5, 0.4)
 		ring.look_at_from_position(ring.position, ring.position + d, Vector3.UP)
 		ring.rotate_object_local(Vector3.RIGHT, PI * 0.5)
+	U.kind = _k
 
 
 func _armchair(parent: Node, pos: Vector3, yaw: float) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var c := Node3D.new()
 	U.add(parent, c, "Armchair", pos)
 	c.rotation_degrees.y = yaw
@@ -437,9 +486,12 @@ func _armchair(parent: Node, pos: Vector3, yaw: float) -> void:
 		for z in [-0.3, 0.3]:
 			U.box(c, "Leg", Vector3(0.08, 0.22, 0.08), C_WOOD.darkened(0.3), Vector3(x, 0.11, z))
 	U.box(c, "Doily", Vector3(0.5, 0.02, 0.4), Color(0.95, 0.93, 0.85), Vector3(0, 0.56, -0.2))
+	U.kind = _k
 
 
 func _old_tv(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "wood"
 	var t := Node3D.new()
 	U.add(parent, t, "OldTV", pos)
 	t.rotation_degrees.y = 160
@@ -452,24 +504,33 @@ func _old_tv(parent: Node, pos: Vector3) -> void:
 	U.rod(t, "RabbitL", Vector3(0, 1.0, 0), Vector3(-0.4, 1.5, -0.1), 0.02, C_STEEL)
 	U.rod(t, "RabbitR", Vector3(0, 1.0, 0), Vector3(0.4, 1.45, -0.1), 0.02, C_STEEL)
 	U.sphere(t, "RabbitBase", 0.1, Color(0.2, 0.2, 0.2), Vector3(0, 1.02, 0), 0.5)
+	U.kind = _k
 
 
 func _crate(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "wood"
 	var c := U.box(parent, "Crate", Vector3(0.7, 0.55, 0.5), C_WOOD.darkened(0.1), pos + Vector3(0, 0.275, 0), true)
 	for i in 3:
 		U.box(c, "Slat", Vector3(0.72, 0.06, 0.52), C_WOOD.lightened(0.1), Vector3(0, -0.2 + i * 0.2, 0))
+	U.kind = _k
 
 
 func _bottle(parent: Node, pos: Vector3, col: Color) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var b := Node3D.new()
 	U.add(parent, b, "Bottle", pos)
 	U.cyl(b, "Body", 0.06, 0.06, 0.22, col, Vector3(0, 0.11, 0), 8, 0.2)
 	U.cyl(b, "Neck", 0.025, 0.04, 0.12, col, Vector3(0, 0.28, 0), 8, 0.2)
 	U.cyl(b, "Cap", 0.03, 0.03, 0.02, Color(0.8, 0.7, 0.2), Vector3(0, 0.35, 0), 8, 0.3, 0.6)
 	b.rotation_degrees.z = rng.randf_range(-6, 90) if rng.randf() < 0.4 else 0.0
+	U.kind = _k
 
 
 func _carpet_rack(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var r := Node3D.new()
 	U.add(parent, r, "CarpetRack", pos)
 	for x in [-1.1, 1.1]:
@@ -487,9 +548,12 @@ func _carpet_rack(parent: Node, pos: Vector3) -> void:
 	U.box(carpet, "RugDiamond", Vector3(0.8, 0.8, 0.07), Color(0.12, 0.28, 0.5), Vector3(0, -0.7, 0)).rotation_degrees.z = 45
 	for i in 9:
 		U.box(carpet, "Fringe%d" % i, Vector3(0.04, 0.12, 0.04), Color(0.9, 0.75, 0.3), Vector3(-0.8 + i * 0.2, -1.46, 0))
+	U.kind = _k
 
 
 func _cables(parent: Node) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	# Кабели к антеннам по настилу, чёрные «змейки» на скобах
 	var pts := [Vector3(-3.6, 0.02, 0.8), Vector3(-2.2, 0.02, 1.7), Vector3(0.0, 0.02, 2.6), Vector3(1.0, 0.02, 2.2)]
 	for i in pts.size() - 1:
@@ -497,17 +561,24 @@ func _cables(parent: Node) -> void:
 	var pts2 := [Vector3(7.8, 0.02, -1.2), Vector3(6.0, 0.02, -2.4), Vector3(3.0, 0.02, -3.8), Vector3(0.5, 0.02, -4.5)]
 	for i in pts2.size() - 1:
 		U.rod(parent, "CableB%d" % i, pts2[i], pts2[i + 1], 0.03, Color(0.08, 0.08, 0.09))
+	U.kind = _k
 
 
 func _gravel(parent: Node, length: float, depth: float) -> void:
+	var _k := U.kind
+	U.kind = "concrete"
 	for i in int(length * 3):
 		var s := rng.randf_range(0.05, 0.14)
 		U.box(parent, "Stone%d" % i, Vector3(s, s * 0.6, s), Color(0.45, 0.45, 0.47).lightened(rng.randf_range(-0.1, 0.15)), Vector3(rng.randf_range(-length * 0.5, length * 0.5), s * 0.3, rng.randf_range(-depth * 0.5, depth * 0.5)))
 
 
 # ---------- крыша B: четырёхэтажка с вентилятором, бельём и щитом ----------
+	U.kind = _k
+
 
 func _roof_b() -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var b := Node3D.new()
 	U.add(root_node, b, "RoofB")
 	_kh(b, "Building", Vector3(29, GROUND, 0), 0.0, 2, 4, 9, Color(0.84, 0.76, 0.66), false, false)
@@ -552,9 +623,12 @@ func _roof_b() -> void:
 		i += 1
 	_pigeon(props, Vector3(9.5, 2.2 + 0.0, 4.15), true, 20, 2)
 	_pigeon(props, Vector3(6.0, 2.2, 3.9), true, 21, 2)
+	U.kind = _k
 
 
 func _pigeon(parent: Node, pos: Vector3, hooligan: bool, seed_value: int, tier: int) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var p := Node3D.new()
 	p.set_script(load("res://scripts/location/pigeon.gd"))
 	p.set("hooligan", hooligan)
@@ -582,9 +656,12 @@ func _pigeon(parent: Node, pos: Vector3, hooligan: bool, seed_value: int, tier: 
 	else:
 		# Мирные голуби сидят всегда
 		pass
+	U.kind = _k
 
 
 func _water_tank(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var t := Node3D.new()
 	U.add(parent, t, "Tank", pos)
 	for x in [-0.55, 0.55]:
@@ -596,18 +673,24 @@ func _water_tank(parent: Node, pos: Vector3) -> void:
 		U.cyl(t, "Hoop", 0.64, 0.64, 0.05, Color(0.2, 0.2, 0.22), Vector3(0, y, 0), 18, 0.5, 0.5)
 	U.cyl(t, "Lid", 0.6, 0.55, 0.1, Color(0.25, 0.38, 0.55), Vector3(0, 2.4, 0), 18, 0.5, 0.3)
 	U.rod(t, "Hose", Vector3(0.62, 1.2, 0), Vector3(1.4, 0.05, 0.4), 0.05, Color(0.1, 0.1, 0.12))
+	U.kind = _k
 
 
 func _hatch(parent: Node, pos: Vector3) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var h := Node3D.new()
 	U.add(parent, h, "Hatch", pos)
 	U.box(h, "Frame", Vector3(1.1, 0.14, 1.1), Color(0.3, 0.3, 0.32), Vector3(0, 0.07, 0), true, 0.6, 0.3)
 	U.box(h, "Lid", Vector3(0.9, 0.05, 0.9), Color(0.35, 0.4, 0.45), Vector3(0, 0.16, 0), false, 0.6, 0.4)
 	U.box(h, "Handle", Vector3(0.3, 0.05, 0.05), Color(0.8, 0.8, 0.8), Vector3(0, 0.2, 0.25), false, 0.3, 0.8)
 	U.box(h, "Padlock", Vector3(0.1, 0.1, 0.06), Color(0.8, 0.65, 0.2), Vector3(0.4, 0.15, 0.0), false, 0.3, 0.8)
+	U.kind = _k
 
 
 func _laundry(parent: Node) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	# Две бельевые верёвки между столбами: простыни, полотенца, майки, носки
 	var cols := [Color(0.95, 0.95, 0.92), Color(0.9, 0.3, 0.3), Color(0.3, 0.55, 0.85), Color(0.95, 0.8, 0.25), Color(0.4, 0.75, 0.45), Color(0.85, 0.55, 0.75)]
 	var line_z := [2.4, 4.0]
@@ -636,9 +719,12 @@ func _laundry(parent: Node) -> void:
 				U.box(sw, "Peg", Vector3(0.04, 0.1, 0.05), Color(0.9, 0.7, 0.2), Vector3(w * pn, -0.02, 0))
 			x += w + 0.1
 			k += 1
+	U.kind = _k
 
 
 func _billboard(parent: Node) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var b := Node3D.new()
 	U.add(parent, b, "Billboard", Vector3.ZERO)
 	var x0 := 3.0
@@ -675,18 +761,24 @@ func _billboard(parent: Node) -> void:
 		U.rod(b, "RailPost%d" % j, Vector3(lx, 2.2, 2.95), Vector3(lx, 3.2, 2.95), 0.05, C_STEEL)
 	U.rod(b, "RailTop", Vector3(2.7, 3.2, 2.95), Vector3(11.1, 3.2, 2.95), 0.05, C_STEEL)
 	U.rod(b, "RailMid", Vector3(2.7, 2.7, 2.95), Vector3(11.1, 2.7, 2.95), 0.04, C_STEEL)
+	U.kind = "brick"
 	var step1 := U.box(b, "PalletStack1", Vector3(1.6, 1.1, 1.2), C_BRICK, Vector3(1.5, 0.55, 3.5), true)
 	for i in 4:
 		U.box(step1, "BrickRow%d" % i, Vector3(1.62, 0.02, 1.22), C_BRICK.darkened(0.25), Vector3(0, -0.4 + i * 0.28, 0))
 	U.box(step1, "Pallet", Vector3(1.7, 0.14, 1.3), C_WOOD, Vector3(0, -0.52, 0))
 	U.box(step1, "Film", Vector3(1.62, 0.5, 1.22), Color(0.8, 0.85, 0.9, 0.35), Vector3(0, 0.2, 0))
+	U.kind = "wood"
 	var step2 := U.box(b, "PalletStack2", Vector3(1.2, 0.55, 1.2), C_WOOD.lightened(0.05), Vector3(2.5, 0.28, 2.0), false)
 	_crate(b, Vector3(0.0, 0, 3.4))
 
 
 # ---------- крыша C: мокрый шифер ----------
+	U.kind = _k
+
 
 func _roof_c() -> void:
+	var _k := U.kind
+	U.kind = "plaster"
 	var c := Node3D.new()
 	U.add(root_node, c, "RoofC")
 	var wall := U.box(c, "Walls", Vector3(12.0, SLATE_W_EAVE - GROUND, 9.0), Color(0.88, 0.76, 0.48), Vector3(49.0, (SLATE_W_EAVE + GROUND) * 0.5, 0.0), true, 0.95)
@@ -746,20 +838,25 @@ func _roof_c() -> void:
 		for i in 4:
 			_old_window(c, Vector3(C_X0 + 1.8 + i * 2.8, GROUND + 2.2 + f * 2.8, 4.53), false)
 	# Труба-дымоход на коньке: наверху ждёт кот
+	U.kind = "brick"
 	var ch := U.box(c, "Chimney", Vector3(0.95, 2.4, 0.95), C_BRICK, Vector3(C_RIDGE_X, SLATE_RIDGE - 0.3 + 1.2 - 0.0, 2.8), true)
 	for i in 8:
 		U.box(ch, "BrickLine%d" % i, Vector3(0.97, 0.02, 0.97), C_BRICK.darkened(0.3), Vector3(0, -1.0 + i * 0.3, 0))
 	U.box(ch, "Cap", Vector3(1.3, 0.18, 1.3), C_CONC, Vector3(0, 1.29, 0), false)
 	U.box(ch, "Hole", Vector3(0.55, 0.02, 0.55), Color(0.05, 0.05, 0.05), Vector3(0, 1.39, 0), false)
 	U.box(ch, "Soot", Vector3(0.7, 0.35, 0.02), Color(0.15, 0.15, 0.15), Vector3(0, 1.1, 0.48))
+	U.kind = "plaster"
 	_antenna(c, Vector3(C_RIDGE_X, SLATE_RIDGE + 0.1, -2.4), 3.4, 5)
 	# Табличка у мостика: не ходить, крыша течёт
 	var post := U.rod(c, "SignPost", Vector3(40.6, DECK_B, -3.0), Vector3(40.6, DECK_B + 1.5, -3.0), 0.07, C_RUST, 0.8, 0.3)
 	var board := U.box(c, "SignBoard", Vector3(0.05, 0.7, 1.1), Color(0.95, 0.85, 0.25), Vector3(40.6, DECK_B + 1.35, -3.0))
 	U.label(board, "Text", "SIGN_NO_ENTRY", Vector3(-0.03, 0, 0), 0.17, Color(0.15, 0.1, 0.1)).rotation_degrees.y = -90
+	U.kind = _k
 
 
 func _old_window(parent: Node, pos: Vector3, on_x: bool) -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var w := Node3D.new()
 	U.add(parent, w, "OldWindow", pos)
 	if on_x:
@@ -780,8 +877,12 @@ func _old_window(parent: Node, pos: Vector3, on_x: bool) -> void:
 
 
 # ---------- трап и мостик ----------
+	U.kind = _k
+
 
 func _ramp_and_planks() -> void:
+	var _k := U.kind
+	U.kind = "wood"
 	var r := Node3D.new()
 	U.add(root_node, r, "Bridges")
 	# Трап с A на B: два широких прогона с поперечными рейками и верёвочными перилами
@@ -822,6 +923,8 @@ func _ramp_and_planks() -> void:
 
 
 # ---------- опасности ----------
+	U.kind = _k
+
 
 func _hazards() -> void:
 	var h := Node3D.new()
@@ -837,6 +940,8 @@ func _hazards() -> void:
 
 
 func _fan(parent: Node, nm: String, pos: Vector3, tier: int) -> void:
+	var _k := U.kind
+	U.kind = "metal"
 	var f := Node3D.new()
 	U.add(parent, f, nm, pos)
 	U.cyl(f, "Housing", 0.7, 0.55, 0.9, Color(0.55, 0.58, 0.62), Vector3(0, 0.45, 0), 16, 0.4, 0.5).get_parent()
@@ -869,8 +974,12 @@ func _fan(parent: Node, nm: String, pos: Vector3, tier: int) -> void:
 
 
 # ---------- кот, игрок, чекпоинты ----------
+	U.kind = _k
+
 
 func _cat() -> void:
+	var _k := U.kind
+	U.kind = "paint"
 	var spots := Node3D.new()
 	U.add(root_node, spots, "CatSpots")
 	# 0 щит (простая), 1 карниз над двором (средняя), 2 труба на шиферной крыше (сложная)
@@ -935,6 +1044,7 @@ func _cat() -> void:
 	bubble.no_depth_test = true
 	U.add(cat, bubble, "Bubble", Vector3(0, 1.4, 0))
 	U.trigger(cat, "Trigger", "PROMPT_RESCUE", Vector3(0, 0.6, 0), 1.9)
+	U.kind = _k
 
 
 func _players_and_checkpoints() -> void:
@@ -946,3 +1056,78 @@ func _players_and_checkpoints() -> void:
 	U.checkpoint(cps, "Checkpoint0", 0, Vector3(-6.2, DECK_A, 0.0))
 	U.checkpoint(cps, "Checkpoint1", 1, Vector3(19.5, DECK_B, -2.2))
 	U.checkpoint(cps, "Checkpoint2", 2, Vector3(C_RIDGE_X - 0.3, SLATE_RIDGE + 0.1, -3.6))
+
+
+# ---------- мелочи для реализма: сорняки, подтёки, вёдра, шины, гнездо ----------
+
+func _extras() -> void:
+	var old := U.kind
+	var e := Node3D.new()
+	U.add(root_node, e, "Extras")
+	# Сорняки и мох в трещинах у парапета и вокруг воронок (пучки из стеблей-конусов)
+	U.kind = "paint"
+	var tufts: Array[Vector3] = []
+	for deck in [[0.0, DECK_A], [29.0, DECK_B]]:
+		for i in 26:
+			var along := rng.randf_range(-11.5, 11.5)
+			var edge := rng.randf_range(0.0, 1.0)
+			var z := (-5.35 if edge < 0.5 else 5.35) + rng.randf_range(-0.1, 0.1)
+			tufts.append(Vector3(deck[0] + along, deck[1], z))
+		for i in 8:
+			tufts.append(Vector3(deck[0] + rng.randf_range(-11, 11), deck[1], rng.randf_range(-4.5, 4.5)))
+	var ti := 0
+	for t in tufts:
+		_weed(e, t, ti)
+		ti += 1
+	# Ржавые подтёки под креплениями и дымоходом
+	for i in 14:
+		var x := rng.randf_range(-11.0, 11.0)
+		var drip := U.box(e, "RustDrip%d" % i, Vector3(0.06, 0.012, rng.randf_range(0.5, 1.4)), Color(0.5, 0.28, 0.14, 0.7), Vector3(x, DECK_A + 0.017, rng.randf_range(-4.5, 4.5)))
+	for i in 10:
+		var x := 29.0 + rng.randf_range(-11.0, 11.0)
+		U.box(e, "RustDripB%d" % i, Vector3(0.06, 0.012, rng.randf_range(0.5, 1.4)), Color(0.5, 0.28, 0.14, 0.7), Vector3(x, DECK_B + 0.017, rng.randf_range(-4.5, 4.5)))
+	# Вёдра с застывшей смолой, банки краски, старая шина, мотки кабеля
+	U.kind = "metal"
+	_bucket(e, Vector3(-4.8, DECK_A, -1.6), Color(0.2, 0.4, 0.7))
+	_bucket(e, Vector3(7.0, DECK_A, 3.0), Color(0.75, 0.2, 0.18))
+	_bucket(e, Vector3(35.0, DECK_B, -2.5), Color(0.9, 0.7, 0.15))
+	for p in [Vector3(-9.0, DECK_A, -3.0), Vector3(32.5, DECK_B, 3.6)]:
+		var tire := MeshInstance3D.new()
+		var tm := TorusMesh.new()
+		tm.inner_radius = 0.18
+		tm.outer_radius = 0.42
+		tm.rings = 24
+		tm.ring_segments = 14
+		tire.mesh = tm
+		tire.material_override = U.mat(Color(0.1, 0.1, 0.11), 0.95)
+		U.add(e, tire, "Tire", p + Vector3(0, 0.2, 0))
+	# Гнездо голубя на выступе щита и птичьи перья
+	U.kind = "wood"
+	var nest := Node3D.new()
+	U.add(e, nest, "Nest", Vector3(29.0 + 3.6, DECK_B + 2.3, 3.55))
+	for i in 22:
+		var ang := rng.randf() * TAU
+		var tw := U.rod(nest, "Twig", Vector3(cos(ang) * 0.05, 0, sin(ang) * 0.05), Vector3(cos(ang) * 0.24, rng.randf_range(0.0, 0.1), sin(ang) * 0.24), 0.012, Color(0.45, 0.35, 0.22), 0.95)
+	U.sphere(nest, "Egg", 0.05, Color(0.95, 0.95, 0.9), Vector3(0, 0.03, 0), 1.3)
+	U.kind = old
+
+
+func _weed(parent: Node, pos: Vector3, seed_value: int) -> void:
+	var w := Node3D.new()
+	U.add(parent, w, "Weed%d" % seed_value, pos)
+	var col := Color(0.35, 0.55, 0.2).lerp(Color(0.55, 0.62, 0.25), rng.randf())
+	for i in rng.randi_range(4, 8):
+		var blade := U.cyl(w, "Blade", 0.0, 0.012, rng.randf_range(0.18, 0.4), col, Vector3(rng.randf_range(-0.06, 0.06), 0.1, rng.randf_range(-0.06, 0.06)), 4, 0.9)
+		blade.rotation_degrees = Vector3(rng.randf_range(-25, 25), 0, rng.randf_range(-25, 25))
+	if rng.randf() < 0.3:
+		U.sphere(w, "Flower", 0.025, Color(0.95, 0.85, 0.2), Vector3(0, 0.38, 0), 1.0)
+
+
+func _bucket(parent: Node, pos: Vector3, col: Color) -> void:
+	var b := Node3D.new()
+	U.add(parent, b, "Bucket", pos)
+	U.cyl(b, "Body", 0.2, 0.24, 0.32, col, Vector3(0, 0.16, 0), 24, 0.5, 0.3)
+	U.cyl(b, "Rim", 0.25, 0.25, 0.03, col.darkened(0.2), Vector3(0, 0.33, 0), 24, 0.5, 0.3)
+	U.cyl(b, "Tar", 0.2, 0.2, 0.01, Color(0.06, 0.06, 0.07), Vector3(0, 0.3, 0), 24, 0.3)
+	var handle := U.rod(b, "Handle", Vector3(-0.22, 0.33, 0), Vector3(0.0, 0.5, 0), 0.015, Color(0.7, 0.7, 0.72), 0.4, 0.6)
+	U.rod(b, "Handle2", Vector3(0.0, 0.5, 0), Vector3(0.22, 0.33, 0), 0.015, Color(0.7, 0.7, 0.72), 0.4, 0.6)

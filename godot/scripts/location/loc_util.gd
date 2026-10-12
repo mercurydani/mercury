@@ -4,29 +4,53 @@ extends RefCounted
 ## Общие для всех 8 локаций, чтобы не копировать код.
 
 static var _mats := {}
-static var _grain: NoiseTexture2D
+static var kind: String = "paint"   # вид поверхности для новых материалов: paint, concrete, bitumen, wood, metal, brick, plaster
+static var _tex := {}
+static var _rbox := {}
+
+## kind -> [тёмный, светлый, частота, тип шума, растяжение по X, сила рельефа]
+const KINDS := {
+	"paint": [Color(0.9, 0.9, 0.9), Color(1, 1, 1), 0.05, FastNoiseLite.TYPE_SIMPLEX, 1.0, 1.0],
+	"concrete": [Color(0.62, 0.6, 0.57), Color(1, 1, 1), 0.07, FastNoiseLite.TYPE_CELLULAR, 1.0, 3.0],
+	"plaster": [Color(0.8, 0.78, 0.74), Color(1, 1, 1), 0.04, FastNoiseLite.TYPE_PERLIN, 1.0, 1.5],
+	"bitumen": [Color(0.55, 0.55, 0.57), Color(1.0, 1.0, 1.0), 0.09, FastNoiseLite.TYPE_CELLULAR, 1.0, 4.0],
+	"wood": [Color(0.55, 0.5, 0.45), Color(1, 1, 1), 0.03, FastNoiseLite.TYPE_PERLIN, 0.12, 3.0],
+	"metal": [Color(0.7, 0.7, 0.7), Color(1, 1, 1), 0.08, FastNoiseLite.TYPE_SIMPLEX_SMOOTH, 0.3, 1.5],
+	"brick": [Color(0.55, 0.5, 0.48), Color(1, 1, 1), 0.12, FastNoiseLite.TYPE_CELLULAR, 1.0, 5.0],
+}
 
 
-## Общая мелкая «зернистость» (бетон, рубероид, дерево не выглядят пластиком)
-static func grain() -> NoiseTexture2D:
-	if _grain == null:
-		var n := FastNoiseLite.new()
-		n.noise_type = FastNoiseLite.TYPE_CELLULAR
-		n.frequency = 0.04
-		n.fractal_type = FastNoiseLite.FRACTAL_FBM
-		_grain = NoiseTexture2D.new()
-		_grain.noise = n
-		_grain.width = 256
-		_grain.height = 256
-		_grain.seamless = true
-		var g := Gradient.new()
-		g.colors = PackedColorArray([Color(0.82, 0.82, 0.82), Color(1, 1, 1)])
-		_grain.color_ramp = g
-	return _grain
+## Процедурные текстуры: альбедо и карта нормалей из шума (генерируются при загрузке, в сцене только параметры).
+static func tex(k: String) -> Array:
+	if _tex.has(k):
+		return _tex[k]
+	var cfg: Array = KINDS[k]
+	var n := FastNoiseLite.new()
+	n.noise_type = cfg[3]
+	n.frequency = cfg[2]
+	n.fractal_type = FastNoiseLite.FRACTAL_FBM
+	n.fractal_octaves = 4
+	var alb := NoiseTexture2D.new()
+	alb.noise = n
+	alb.width = 256
+	alb.height = 256
+	alb.seamless = true
+	var g := Gradient.new()
+	g.colors = PackedColorArray([cfg[0], cfg[1]])
+	alb.color_ramp = g
+	var nm := NoiseTexture2D.new()
+	nm.noise = n
+	nm.width = 256
+	nm.height = 256
+	nm.seamless = true
+	nm.as_normal_map = true
+	nm.bump_strength = cfg[5]
+	_tex[k] = [alb, nm, cfg[4]]
+	return _tex[k]
 
 
 static func mat(c: Color, rough := 0.85, metallic := 0.0) -> StandardMaterial3D:
-	var key := "%s_%s_%s" % [c.to_html(true), rough, metallic]
+	var key := "%s_%s_%s_%s" % [c.to_html(true), rough, metallic, kind]
 	if _mats.has(key):
 		return _mats[key]
 	var m := StandardMaterial3D.new()
@@ -34,13 +58,67 @@ static func mat(c: Color, rough := 0.85, metallic := 0.0) -> StandardMaterial3D:
 	m.roughness = rough
 	m.metallic = metallic
 	if c.a >= 1.0:
-		m.albedo_texture = grain()
+		var t := tex(kind)
+		m.albedo_texture = t[0]
+		m.normal_enabled = true
+		m.normal_texture = t[1]
+		m.normal_scale = 0.8
 		m.uv1_triplanar = true
-		m.uv1_scale = Vector3.ONE * 0.5
-	if c.a < 1.0:
+		m.uv1_scale = Vector3(0.6, 0.6, 0.6)
+	else:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_mats[key] = m
 	return m
+
+
+## Скруглённый параллелепипед (радиус кромки r), сетка проецируется на скруглённый бокс. Кэшируется.
+static func rounded_box(size: Vector3, r: float) -> ArrayMesh:
+	var key := "%s_%s" % [size, r]
+	if _rbox.has(key):
+		return _rbox[key]
+	var h := size * 0.5
+	var inner := h - Vector3.ONE * r
+	var steps := [0.0, 0.3, 0.7, 1.0]
+	var coords: Array[Vector3] = []
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for face in 6:
+		var axis := face / 2
+		var sgn := 1.0 if face % 2 == 0 else -1.0
+		var ua := (axis + 1) % 3
+		var va := (axis + 2) % 3
+		var us := _axis_samples(h[ua], r)
+		var vs := _axis_samples(h[va], r)
+		for i in us.size() - 1:
+			for j in vs.size() - 1:
+				var quad := []
+				for dv in [[0, 0], [1, 0], [1, 1], [0, 1]]:
+					var p := Vector3.ZERO
+					p[axis] = sgn * h[axis]
+					p[ua] = us[i + dv[0]]
+					p[va] = vs[j + dv[1]]
+					var pin := p.clamp(-inner, inner)
+					var nrm := (p - pin)
+					nrm = nrm.normalized() if nrm.length() > 0.00001 else Vector3(1 if axis == 0 else 0, 1 if axis == 1 else 0, 1 if axis == 2 else 0) * sgn
+					quad.append([pin + nrm * r, nrm])
+				for tri in [[0, 1, 2], [0, 2, 3]]:
+					var pa: Vector3 = quad[tri[0]][0]
+					var pb: Vector3 = quad[tri[1]][0]
+					var pc: Vector3 = quad[tri[2]][0]
+					var avg: Vector3 = quad[tri[0]][1] + quad[tri[1]][1] + quad[tri[2]][1]
+					# Godot: лицевая сторона по часовой стрелке, т.е. нормаль = (c-a)x(b-a)
+					var order: Array = tri if (pc - pa).cross(pb - pa).dot(avg) > 0.0 else [tri[0], tri[2], tri[1]]
+					for o in order:
+						st.set_normal(quad[o][1])
+						st.add_vertex(quad[o][0])
+	var m := st.commit()
+	_rbox[key] = m
+	return m
+
+
+static func _axis_samples(half: float, r: float) -> Array:
+	var rr := minf(r, half * 0.99)
+	return [-half, -half + rr * 0.3, -half + rr * 0.7, -half + rr, half - rr, half - rr * 0.7, half - rr * 0.3, half]
 
 
 static func add(parent: Node, n: Node, nm: String, pos := Vector3.ZERO) -> Node:
@@ -62,9 +140,15 @@ static func mesh(parent: Node, nm: String, m: Mesh, c: Color, pos := Vector3.ZER
 static func box(parent: Node, nm: String, size: Vector3, c: Color, pos: Vector3, collide := false, rough := 0.85, metallic := 0.0) -> Node3D:
 	var holder: Node3D = StaticBody3D.new() if collide else Node3D.new()
 	add(parent, holder, nm, pos)
-	var bm := BoxMesh.new()
-	bm.size = size
-	mesh(holder, "Mesh", bm, c, Vector3.ZERO, rough, metallic)
+	var md := minf(size.x, minf(size.y, size.z))
+	var m: Mesh
+	if md >= 0.12:
+		m = rounded_box(size, clampf(md * 0.14, 0.02, 0.07))
+	else:
+		var bm := BoxMesh.new()
+		bm.size = size
+		m = bm
+	mesh(holder, "Mesh", m, c, Vector3.ZERO, rough, metallic)
 	if collide:
 		box_shape(holder, size)
 	return holder
@@ -79,7 +163,7 @@ static func box_shape(parent: Node, size: Vector3, pos := Vector3.ZERO) -> Colli
 
 
 ## Цилиндр (ось Y). top/bottom — радиусы.
-static func cyl(parent: Node, nm: String, bottom: float, top: float, h: float, c: Color, pos: Vector3, seg := 12, rough := 0.85, metallic := 0.0) -> MeshInstance3D:
+static func cyl(parent: Node, nm: String, bottom: float, top: float, h: float, c: Color, pos: Vector3, seg := 24, rough := 0.85, metallic := 0.0) -> MeshInstance3D:
 	var cm := CylinderMesh.new()
 	cm.bottom_radius = bottom
 	cm.top_radius = top
@@ -94,8 +178,8 @@ static func sphere(parent: Node, nm: String, r: float, c: Color, pos: Vector3, s
 	sm.radius = r
 	sm.height = r * 2.0 * squash if not hemi else r
 	sm.is_hemisphere = hemi
-	sm.radial_segments = 14
-	sm.rings = 8
+	sm.radial_segments = 24
+	sm.rings = 14
 	return mesh(parent, nm, sm, c, pos, rough)
 
 
