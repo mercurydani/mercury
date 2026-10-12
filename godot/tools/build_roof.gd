@@ -13,7 +13,7 @@ extends SceneTree
 const U := preload("res://scripts/location/loc_util.gd")
 const DECK_A := 0.1     # верх настила крыши A
 const DECK_B := -2.7    # верх настила крыши B
-const GROUND := -14.7
+const GROUND := -14.86   # низ зданий: настил крыши A на 0.1 (хрущёвка 5 этажей: цоколь 0.8 + 5×2.8 + плита 0.16)
 const SLATE_W_EAVE := -2.9   # y западного карниза шиферной крыши C
 const SLATE_RIDGE := -0.7
 const C_X0 := 43.0

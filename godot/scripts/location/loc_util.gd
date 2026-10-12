@@ -50,6 +50,10 @@ static func tex(k: String) -> Array:
 	return _tex[k]
 
 
+## kind -> текстура из общей библиотеки лобби (assets/textures, см. mats.gd); paint — без текстуры
+const KIND_TEX := {"concrete": "concrete", "plaster": "concrete", "bitumen": "asphalt", "wood": "wood", "metal": "metal", "brick": "brick", "grass": "grass", "bark": "bark"}
+
+
 static func mat(c: Color, rough := 0.85, metallic := 0.0) -> StandardMaterial3D:
 	var key := "%s_%s_%s_%s" % [c.to_html(true), rough, metallic, kind]
 	if _mats.has(key):
@@ -58,16 +62,22 @@ static func mat(c: Color, rough := 0.85, metallic := 0.0) -> StandardMaterial3D:
 	m.albedo_color = c
 	m.roughness = rough
 	m.metallic = metallic
-	if c.a >= 1.0:
-		var t := tex(kind)
-		m.albedo_texture = t[0]
-		m.normal_enabled = true
-		m.normal_texture = t[1]
-		m.normal_scale = 0.8
-		m.uv1_triplanar = true
-		m.uv1_scale = Vector3(0.6, 0.6, 0.6)
-	else:
+	if c.a < 1.0:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	elif KIND_TEX.has(kind):
+		var d: Array = Mats.TEXTURED[KIND_TEX[kind]]
+		m.albedo_texture = load(Mats.TEX + d[0] + "_albedo.png")
+		m.normal_enabled = true
+		m.normal_texture = load(Mats.TEX + d[0] + "_normal.png")
+		m.normal_scale = d[3]
+		if metallic < 0.3:
+			m.roughness_texture = load(Mats.TEX + d[0] + "_rough.png")
+			m.roughness = 1.0
+		m.uv1_triplanar = true
+		m.uv1_world_triplanar = true
+		m.uv1_triplanar_sharpness = 4.0
+		m.uv1_scale = Vector3.ONE / float(d[1])
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_mats[key] = m
 	return m
 

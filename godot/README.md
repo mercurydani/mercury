@@ -23,6 +23,10 @@
 
 - Скриншоты (нужен рендер): `xvfb-run -a godot --path godot --rendering-method gl_compatibility --rendering-driver opengl3 --resolution 1280x720 --script res://tools/screenshot.gd -- res://scenes/locations/roof.tscn out ru x y z tx ty tz`
 
+`assets/textures/` — свои тайлящиеся PBR-текстуры (бетон, асфальт, кирпич, кора, дерево, металл, трава, листва, пучки травы), генерируются `python3 godot/tools/gen_textures.py`. `scripts/mats.gd` — библиотека материалов (мировой трипланар), `scripts/geo_mesh.gd` — меш из нескольких материалов.
+
+`scripts/geo.gd` — помощник процедурной геометрии (коробки с фаской, трубы, «комки» для крон). Меши реквизита сохраняются в `scenes/generated/`.
+
 ## Команды
 Перед первой генерацией нужен импорт ассетов (`godot --headless --path godot --import`). Сцена генерируется скриптом (правки можно делать и там, и в редакторе после генерации):
 

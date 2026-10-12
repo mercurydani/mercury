@@ -13,12 +13,16 @@ const YARD_MIN := Vector2(-18, -14)
 const YARD_MAX := Vector2(18, 12)
 
 var lobby_root: Node3D
+var _mesh_i := 0
 
 
 func _init() -> void:
 	lobby_root = Node3D.new()
 	lobby_root.name = "Lobby"
 	lobby_root.set_script(load("res://scripts/lobby.gd"))
+	DirAccess.make_dir_recursive_absolute("res://scenes/generated")
+	for f in DirAccess.get_files_at("res://scenes/generated"):
+		DirAccess.remove_absolute("res://scenes/generated/" + f)
 
 	_environment()
 	_city()
@@ -165,39 +169,130 @@ func _tree(parent: Node, pos: Vector3, kind: int, seed_value: int, h: float) -> 
 # ---------- окружение и город ----------
 
 func _environment() -> void:
+	# Тёплый вечер: низкое мягкое солнце, золотистое небо, лёгкая дымка
 	var we := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sm := ProceduralSkyMaterial.new()
-	sm.sky_top_color = Color(0.35, 0.55, 0.9)
-	sm.sky_horizon_color = Color(1.0, 0.8, 0.6)
-	sm.ground_horizon_color = Color(1.0, 0.8, 0.6)
-	sm.ground_bottom_color = Color(0.45, 0.42, 0.45)
-	sm.ground_horizon_color = Color(1.0, 0.8, 0.6)
+	sm.sky_top_color = Color(0.32, 0.42, 0.62)
+	sm.sky_horizon_color = Color(0.98, 0.72, 0.45)
+	sm.sky_curve = 0.12
+	sm.ground_horizon_color = Color(0.85, 0.62, 0.42)
+	sm.ground_bottom_color = Color(0.3, 0.27, 0.26)
+	sm.sun_angle_max = 20.0
 	sky.sky_material = sm
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = 0.45
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.ambient_light_sky_contribution = 0.8
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 0.95
+	env.tonemap_white = 6.0
+	env.ssao_enabled = true
+	env.ssao_radius = 1.2
+	env.ssao_intensity = 2.5
+	env.glow_enabled = true
+	env.glow_intensity = 0.5
+	env.glow_bloom = 0.05
 	env.fog_enabled = true
-	env.fog_light_color = Color(1.0, 0.85, 0.7)
-	env.fog_density = 0.004
+	env.fog_light_color = Color(0.95, 0.7, 0.48)
+	env.fog_density = 0.0025
+	env.fog_sun_scatter = 0.25
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.08
+	env.adjustment_contrast = 1.05
 	we.environment = env
 	_add(lobby_root, we, "WorldEnvironment")
 	var sun := DirectionalLight3D.new()
-	sun.light_color = Color(1.0, 0.88, 0.7)
-	sun.light_energy = 0.8
-	sun.rotation_degrees = Vector3(-35, -40, 0)
+	sun.light_color = Color(1.0, 0.74, 0.46)
+	sun.light_energy = 0.75
+	sun.rotation_degrees = Vector3(-22, -55, 0)
 	sun.shadow_enabled = true
+	sun.shadow_blur = 2.0
+	sun.directional_shadow_max_distance = 80.0
 	_add(lobby_root, sun, "Sun")
+
+
+## Процедурный меш: fn(st) рисует в SurfaceTool через Geo.
+func _proc(parent: Node, nm: String, pos: Vector3, fn: Callable, rot_y := 0.0) -> MeshInstance3D:
+	var g := GeoMesh.new()
+	fn.call(g)
+	var mi := MeshInstance3D.new()
+	var mesh := g.build()
+	# Меши сохраняем отдельными бинарными файлами, чтобы .tscn оставался лёгким
+	_mesh_i += 1
+	var path := "res://scenes/generated/%s_%d.mesh" % [nm.to_snake_case(), _mesh_i]
+	ResourceSaver.save(mesh, path, ResourceSaver.FLAG_COMPRESS)
+	mesh.take_over_path(path)
+	mi.mesh = mesh
+	_add(parent, mi, nm, pos)
+	mi.rotation_degrees.y = rot_y
+	return mi
+
+
+func _lamp_post(parent: Node, nm: String, pos: Vector3, rot_y := 0.0) -> void:
+	var holder := StaticBody3D.new()
+	_add(parent, holder, nm, pos)
+	holder.rotation_degrees.y = rot_y
+	_proc(holder, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("metal")
+		Geo.prism(st, Vector3.ZERO, 0.16, 0.12, 0.5, Color(0.3, 0.32, 0.3), 8)
+		Geo.rod(st, Vector3(0, 0.4, 0), Vector3(0, 5.2, 0), 0.07, Color(0.3, 0.32, 0.3), 8)
+		Geo.rod(st, Vector3(0, 5.1, 0), Vector3(0, 5.35, 0.9), 0.05, Color(0.3, 0.32, 0.3), 6)
+		Geo.cbox(st, Vector3(0, 5.3, 1.05), Vector3(0.35, 0.18, 0.55), Color(0.25, 0.27, 0.25), 0.05))
+	var bulb := MeshInstance3D.new()
+	var bm := SphereMesh.new()
+	bm.radius = 0.13
+	bm.height = 0.2
+	bulb.mesh = bm
+	var lm := StandardMaterial3D.new()
+	lm.albedo_color = Color(1, 0.85, 0.6)
+	lm.emission_enabled = true
+	lm.emission = Color(1.0, 0.75, 0.4)
+	lm.emission_energy_multiplier = 3.0
+	bulb.material_override = lm
+	_add(holder, bulb, "Bulb", Vector3(0, 5.18, 1.05))
+	var l := OmniLight3D.new()
+	l.light_color = Color(1.0, 0.7, 0.38)
+	l.light_energy = 2.0
+	l.omni_range = 11.0
+	l.omni_attenuation = 1.3
+	_add(holder, l, "Light", Vector3(0, 5.0, 1.05))
+	var cs := CollisionShape3D.new()
+	var cyl := CylinderShape3D.new()
+	cyl.radius = 0.15
+	cyl.height = 5.2
+	cs.shape = cyl
+	_add(holder, cs, "Shape", Vector3(0, 2.6, 0))
+
+
+func _bench(parent: Node, nm: String, pos: Vector3, rot_y := 0.0) -> void:
+	var b := StaticBody3D.new()
+	_add(parent, b, nm, pos)
+	b.rotation_degrees.y = rot_y
+	_proc(b, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("wood")
+		var wood := Color(0.55, 0.36, 0.22)
+		for i in 4:
+			Geo.cbox(st, Vector3(0, 0.45, -0.22 + i * 0.15), Vector3(2.0, 0.05, 0.12), wood.darkened(0.05 * (i % 2)), 0.02)
+		for i in 3:
+			Geo.cbox(st, Vector3(0, 0.62 + i * 0.16, -0.36 - i * 0.03), Vector3(2.0, 0.11, 0.04), wood, 0.015)
+		for sx in [-0.85, 0.85]:
+			Geo.cbox(gm.s("metal"), Vector3(sx, 0.22, 0), Vector3(0.08, 0.44, 0.5), Color(0.2, 0.2, 0.22), 0.02)
+			Geo.cbox(gm.s("metal"), Vector3(sx, 0.7, -0.38), Vector3(0.06, 0.6, 0.06), Color(0.2, 0.2, 0.22), 0.02))
+	_box_shape(b, Vector3(2.0, 0.5, 0.6), Vector3(0, 0.25, 0))
 
 
 func _city() -> void:
 	var c := Node3D.new()
 	_add(lobby_root, c, "City")
 	# Земля квартала (асфальт), на ней всё стоит
-	_box(c, "Ground", Vector3(140, 1.0, 140), Color(0.36, 0.37, 0.4), Vector3(0, -0.5, 0))
+	var ground := StaticBody3D.new()
+	_add(c, ground, "Ground")
+	_proc(ground, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		Geo.box(gm.s("asphalt"), Vector3(0, -0.5, 0), Vector3(140, 1.0, 140), Color(0.85, 0.85, 0.85)))
+	_box_shape(ground, Vector3(140, 1.0, 140), Vector3(0, -0.5, 0))
 	var b := Node3D.new()
 	_add(c, b, "Buildings")
 	# Хрущёвки вокруг двора, фасадом с подъездами во двор
@@ -208,11 +303,23 @@ func _city() -> void:
 	# Улица на юге: дорога с фонарями, тротуар и дома напротив
 	var road := Node3D.new()
 	_add(c, road, "Street")
-	for x in range(-48, 49, 8):
-		var kind := "road-straight-lightposts" if (x / 8) % 2 == 0 else "road-straight"
-		_model(road, "Road%d" % (x + 48), CITY + kind + ".glb", Vector3(x, 0.0, 19), 8.0, 90.0)
-	for x in range(-36, 37, 4):
-		_model(road, "Walk%d" % (x + 36), CITY + "pavement.glb", Vector3(x, 0.0, 14), 4.0)
+	_proc(road, "Road", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 9
+		# Проезжая часть чуть темнее, разметка, бордюры и тротуары
+		Geo.box(gm.s("asphalt"), Vector3(0, 0.005, 19), Vector3(110, 0.01, 7.6), Color(0.7, 0.7, 0.72))
+		for x in range(-54, 55, 4):
+			Geo.box(gm.s("plain"), Vector3(x, 0.012, 19), Vector3(2.0, 0.005, 0.14), Color(0.85, 0.83, 0.75))
+		for sz in [-1.0, 1.0]:
+			Geo.cbox(gm.s("concrete"), Vector3(0, 0.09, 19 + sz * 3.9), Vector3(110, 0.18, 0.25), Color(0.75, 0.74, 0.72), 0.04)
+			Geo.box(gm.s("concrete"), Vector3(0, 0.08, 19 + sz * 5.4), Vector3(110, 0.16, 2.8), Color(0.62, 0.6, 0.58))
+		# Плитка тротуара швами
+		for x in range(-54, 55, 1):
+			for sz in [-1.0, 1.0]:
+				Geo.box(gm.s("plain"), Vector3(x, 0.165, 19 + sz * 5.4), Vector3(0.02, 0.005, 2.8), Color(0.35, 0.34, 0.33))
+		# Ливнёвки
+		for x in range(-50, 51, 12):
+			Geo.box(gm.s("metal"), Vector3(x, 0.015, 15.55), Vector3(0.8, 0.01, 0.4), Color(0.2, 0.2, 0.2)))
 	# Припаркованные машины
 	_model(road, "CarGreen", RACE + "vehicle-truck-green.glb", Vector3(-14, 0, 16.5), 1.8, 90.0, true)
 	_model(road, "CarPurple", RACE + "vehicle-truck-purple.glb", Vector3(12, 0, 21.5), 1.8, -90.0, true)
@@ -221,81 +328,186 @@ func _city() -> void:
 func _yard() -> void:
 	var y := Node3D.new()
 	_add(lobby_root, y, "Yard")
-	# Плитка двора
-	for x in range(int(YARD_MIN.x) + 2, int(YARD_MAX.x), 4):
-		for z in range(int(YARD_MIN.y) + 2, int(YARD_MAX.y), 4):
-			_model(y, "Tile_%d_%d" % [x, z], CITY + "pavement.glb", Vector3(x, -0.2, z), 4.0)
-	# Забор с калиткой на юге (остальные стороны закрывают дома)
-	var fc := Color(0.55, 0.35, 0.2)
-	_box(y, "FenceSW", Vector3(15.5, 1.6, 0.3), fc, Vector3(-10.25, 0.8, 12))
-	_box(y, "FenceSE", Vector3(15.5, 1.6, 0.3), fc, Vector3(10.25, 0.8, 12))
-	_box(y, "GatePostL", Vector3(0.5, 2.4, 0.5), Color(0.4, 0.25, 0.15), Vector3(-2.5, 1.2, 12))
-	_box(y, "GatePostR", Vector3(0.5, 2.4, 0.5), Color(0.4, 0.25, 0.15), Vector3(2.5, 1.2, 12))
-	_box(y, "GateSign", Vector3(5.5, 0.6, 0.15), Color(0.95, 0.5, 0.2), Vector3(0, 2.6, 12), false)
+	# Асфальт двора пятнами разного оттенка, газоны с бордюрами, площадка
+	var lawns := [
+		Rect2(-18, -13.4, 4.2, 12.0), Rect2(14.2, -13.4, 3.8, 11.5),
+		Rect2(-18, 9.0, 13.5, 2.6), Rect2(4.0, 9.0, 14.0, 2.6),
+		Rect2(-14.5, -13.4, 9.0, 0.9), Rect2(-1.5, -13.4, 12.0, 0.9),
+	]
+	_proc(y, "Ground", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("asphalt")
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		for x in range(-18, 18, 3):
+			for z in range(-14, 12, 3):
+				var tone := Color(1.0, 1.0, 1.0).darkened(rng.randf_range(-0.05, 0.15))
+				Geo.box(st, Vector3(x + 1.5, -0.04, z + 1.5), Vector3(3.0, 0.08, 3.0), tone)
+		# Трещины и заплатки
+		for i in 30:
+			# Трещина: ломаная из тонких полосок
+			var p := Vector3(rng.randf_range(-17, 17), 0.004, rng.randf_range(-13, 11))
+			var ang := rng.randf() * TAU
+			for k in 4:
+				var seg := rng.randf_range(0.3, 0.8)
+				var d := Vector3(cos(ang), 0, sin(ang))
+				Geo.box(st, Vector3.ZERO, Vector3(seg, 0.008, 0.035), Color(0.2, 0.2, 0.21), Transform3D(Basis(Vector3.UP, -ang), p + d * seg * 0.5))
+				p += d * seg
+				ang += rng.randf_range(-0.6, 0.6)
+		for r in lawns:
+			var rr := r as Rect2
+			var c := Vector3(rr.position.x + rr.size.x * 0.5, 0.0, rr.position.y + rr.size.y * 0.5)
+			Geo.cbox(gm.s("concrete"), c + Vector3(0, 0.07, 0), Vector3(rr.size.x, 0.14, rr.size.y), Color(0.72, 0.71, 0.68), 0.03)
+			Geo.box(gm.s("grass"), c + Vector3(0, 0.15, 0), Vector3(rr.size.x - 0.3, 0.04, rr.size.y - 0.3), Color(1, 1, 1))
+			# Пучки травы карточками
+			var gb := gm.s("grass_blades")
+			for k in int(rr.get_area() * 7.0):
+				var gp := c + Vector3(rng.randf_range(-0.5, 0.5) * (rr.size.x - 0.5), 0.17, rng.randf_range(-0.5, 0.5) * (rr.size.y - 0.5))
+				var hgt := rng.randf_range(0.25, 0.5)
+				var ang := rng.randf() * PI
+				var tint := Color(1, 1, 1).darkened(rng.randf_range(0.0, 0.25))
+				for q in 2:
+					var bx := Basis(Vector3.UP, ang + q * PI * 0.5)
+					Geo.card(gb, gp + Vector3(0, hgt * 0.5, 0), Basis(bx.x * hgt * 1.2, Vector3.UP * hgt, bx.z), tint)
+		# Площадка с песком и резиновой крошкой
+		Geo.cbox(gm.s("asphalt"), Vector3(-8.5, 0.04, -6), Vector3(9, 0.08, 6), Color(1.6, 0.85, 0.7), 0.02))
+	for r in lawns:
+		var rr := r as Rect2
+		var body := StaticBody3D.new()
+		_add(y, body, "Lawn%d" % lawns.find(r), Vector3(rr.position.x + rr.size.x * 0.5, 0.0, rr.position.y + rr.size.y * 0.5))
+		_box_shape(body, Vector3(rr.size.x, 0.17, rr.size.y), Vector3(0, 0.085, 0))
+	# Металлический забор с калиткой на юге
+	for side in [-1.0, 1.0]:
+		var fence := StaticBody3D.new()
+		_add(y, fence, "Fence%s" % ("W" if side < 0 else "E"), Vector3(side * 10.25, 0, 12))
+		_proc(fence, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+			var st := gm.s("metal")
+			var green := Color(0.2, 0.36, 0.25)
+			Geo.cbox(gm.s("concrete"), Vector3(0, 0.15, 0), Vector3(15.5, 0.3, 0.3), Color(0.7, 0.68, 0.65), 0.03)
+			for i in 78:
+				var x := -7.7 + i * 0.2
+				Geo.rod(st, Vector3(x, 0.3, 0), Vector3(x, 1.5, 0), 0.015, green, 4)
+				Geo.prism(st, Vector3(x, 1.5, 0), 0.03, 0.0, 0.1, green, 4)
+			for yy in [0.45, 1.35]:
+				Geo.rod(st, Vector3(-7.75, yy, 0), Vector3(7.75, yy, 0), 0.025, green, 4)
+			for i in 6:
+				Geo.cbox(st, Vector3(-7.7 + i * 3.08, 0.8, 0), Vector3(0.12, 1.6, 0.12), green.darkened(0.2), 0.02))
+		_box_shape(fence, Vector3(15.5, 1.6, 0.3), Vector3(0, 0.8, 0))
+	for sx in [-1.0, 1.0]:
+		var post := StaticBody3D.new()
+		_add(y, post, "GatePost%s" % ("L" if sx < 0 else "R"), Vector3(sx * 2.5, 0, 12))
+		_proc(post, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+			var st := gm.s("brick")
+			# Кирпичный столб
+			Geo.cbox(st, Vector3(0, 1.2, 0), Vector3(0.55, 2.4, 0.55), Color(1, 1, 1), 0.03)
+			Geo.prism(gm.s("concrete"), Vector3(0, 2.4, 0), 0.42, 0.0, 0.35, Color(0.6, 0.58, 0.56), 4))
+		_box_shape(post, Vector3(0.55, 2.4, 0.55), Vector3(0, 1.2, 0))
+	_proc(y, "GateSign", Vector3(0, 2.75, 12), func(gm: GeoMesh) -> void:
+		var st := gm.s("metal")
+		Geo.cbox(st, Vector3.ZERO, Vector3(5.3, 0.6, 0.1), Color(0.85, 0.42, 0.18), 0.05)
+		Geo.cbox(st, Vector3(0, 0, 0.04), Vector3(4.9, 0.4, 0.04), Color(0.95, 0.85, 0.6), 0.02))
+	# Фонари во дворе и на улице
+	var lamps := Node3D.new()
+	_add(y, lamps, "Lamps")
+	_lamp_post(lamps, "LampYard1", Vector3(-6, 0, 7.5), 180.0)
+	_lamp_post(lamps, "LampYard2", Vector3(9, 0, 2), -90.0)
+	_lamp_post(lamps, "LampYard3", Vector3(-3, 0, -10), 0.0)
+	for x in [-24, -8, 8, 24]:
+		_lamp_post(lamps, "LampStreet%d" % (x + 24), Vector3(x, 0.16, 14.4), 0.0)
 	# Деревья: берёзы, тополя, липы по краям двора и вдоль улицы
 	var trees := Node3D.new()
 	_add(y, trees, "Trees")
 	var spots := [
-		[-16, -12, 0, 8.0], [-16, -8, 2, 7.0], [-16.5, -3, 1, 11.0], [-16, 2, 0, 7.5],
-		[-6, -12.5, 2, 7.5], [-8.5, -12, 0, 8.5], [16.5, -12.5, 1, 12.0],
-		[16.0, -3.6, 2, 8.0], [17, 4, 0, 7.0], [11, 10.5, 2, 7.0], [-5, 10.5, 0, 6.5],
-		[7, 10.8, 0, 7.5], [-16.5, 10.5, 1, 11.0],
+		[-16, -12, 0, 8.0], [-16, -8, 2, 7.0], [-16.5, -3, 1, 11.0], [-15.5, -5.5, 0, 6.5],
+		[-6, -12.9, 2, 7.5], [-12, -13, 0, 8.5], [16.5, -12.5, 1, 12.0], [15.5, -8, 0, 7.0],
+		[16.0, -3.6, 2, 8.0], [12, 10.3, 2, 7.0],
+		[-16.5, 10.3, 1, 11.0], [-10, 10.4, 2, 7.5], [15.5, 10.3, 0, 8.0],
 	]
 	var n := 1
 	for sp in spots:
-		_tree(trees, Vector3(sp[0], 0, sp[1]), sp[2], n, sp[3])
+		_tree(trees, Vector3(sp[0], 0.15, sp[1]), sp[2], n, sp[3])
 		n += 1
 	for x in range(-34, 35, 7):
-		_tree(trees, Vector3(x + 1.5, 0, 14.6), (n % 3), n, 7.0 + (n % 4))
+		_tree(trees, Vector3(x + 1.5, 0.16, 13.9), (n % 3), n, 7.0 + (n % 4))
 		n += 1
-		_tree(trees, Vector3(x - 1.0, 0, 24.2), (n % 3), n, 7.0 + (n % 3))
+		_tree(trees, Vector3(x - 1.0, 0.16, 24.6), (n % 3), n, 7.0 + (n % 3))
 		n += 1
-	# Детская площадка: песочница, качели, горка
-	var pg := Node3D.new()
+	# Детская площадка: песочница с грибком, качели, горка
+	var pg := StaticBody3D.new()
 	_add(y, pg, "Playground", Vector3(-9, 0, -6))
-	_box(pg, "SandboxRim", Vector3(3.2, 0.35, 0.2), Color(0.85, 0.3, 0.25), Vector3(0, 0.17, -1.5))
-	_box(pg, "SandboxRim2", Vector3(3.2, 0.35, 0.2), Color(0.85, 0.3, 0.25), Vector3(0, 0.17, 1.5))
-	_box(pg, "SandboxRim3", Vector3(0.2, 0.35, 3.2), Color(0.85, 0.3, 0.25), Vector3(-1.5, 0.17, 0))
-	_box(pg, "SandboxRim4", Vector3(0.2, 0.35, 3.2), Color(0.85, 0.3, 0.25), Vector3(1.5, 0.17, 0))
-	_box(pg, "Sand", Vector3(2.8, 0.2, 2.8), Color(0.93, 0.82, 0.55), Vector3(0, 0.1, 0), false)
-	_box(pg, "Fungus", Vector3(0.12, 2.0, 0.12), Color(0.4, 0.4, 0.45), Vector3(0, 1.0, 0), false)
-	var cap := CylinderMesh.new()
-	cap.top_radius = 0.1
-	cap.bottom_radius = 1.4
-	cap.height = 0.5
-	cap.radial_segments = 8
-	_mesh(pg, "FungusCap", cap, Color(0.9, 0.25, 0.25), Vector3(0, 2.2, 0))
-	var sw_col := Color(0.3, 0.55, 0.85)
-	_box(pg, "SwingPostL", Vector3(0.12, 2.6, 0.12), sw_col, Vector3(3.5, 1.3, -0.8))
-	_box(pg, "SwingPostR", Vector3(0.12, 2.6, 0.12), sw_col, Vector3(3.5, 1.3, 0.8))
-	_box(pg, "SwingBar", Vector3(0.12, 0.12, 1.8), sw_col, Vector3(3.5, 2.6, 0), false)
-	_box(pg, "SwingSeat", Vector3(0.45, 0.06, 0.6), Color(0.9, 0.75, 0.2), Vector3(3.5, 0.6, 0), false)
-	_box(pg, "SwingRopes", Vector3(0.03, 2.0, 0.5), Color(0.3, 0.3, 0.3), Vector3(3.5, 1.6, 0), false)
-	# Выбивалка для ковров и мусорные баки
-	_box(y, "CarpetRackL", Vector3(0.1, 2.0, 0.1), Color(0.35, 0.5, 0.35), Vector3(9, 1.0, -3.5))
-	_box(y, "CarpetRackR", Vector3(0.1, 2.0, 0.1), Color(0.35, 0.5, 0.35), Vector3(11.5, 1.0, -3.5))
-	_box(y, "CarpetRackBar", Vector3(2.6, 0.08, 0.08), Color(0.35, 0.5, 0.35), Vector3(10.25, 1.9, -3.5), false)
-	_box(y, "Carpet", Vector3(1.6, 1.2, 0.05), Color(0.65, 0.15, 0.2), Vector3(10.25, 1.3, -3.5), false)
+	_proc(pg, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("metal")
+		var red := Color(0.78, 0.25, 0.2)
+		for k in 4:
+			var xf := Transform3D(Basis(Vector3.UP, k * PI * 0.5), Vector3.ZERO)
+			Geo.cbox(st, Vector3(0, 0.2, 1.5), Vector3(3.2, 0.32, 0.22), red, 0.05, xf)
+		Geo.box(gm.s("concrete"), Vector3(0, 0.15, 0), Vector3(2.8, 0.14, 2.8), Color(1.15, 0.95, 0.62))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 3
+		Geo.blob(gm.s("concrete"), Vector3(0.6, 0.22, 0.4), Vector3(0.5, 0.15, 0.4), Color(1.15, 0.95, 0.62), rng, 5, 10, 0.2)
+		Geo.rod(st, Vector3(0, 0, 0), Vector3(0, 2.1, 0), 0.06, Color(0.35, 0.35, 0.38))
+		Geo.prism(st, Vector3(0, 2.0, 0), 1.4, 0.15, 0.55, Color(0.85, 0.22, 0.2), 10)
+		var blue := Color(0.25, 0.45, 0.75)
+		for sz in [-0.9, 0.9]:
+			Geo.rod(st, Vector3(3.5, 0, sz - 0.5), Vector3(3.5, 2.6, sz * 0.2), 0.05, blue)
+			Geo.rod(st, Vector3(3.5, 0, sz + 0.5), Vector3(3.5, 2.6, sz * 0.2), 0.05, blue)
+		Geo.rod(st, Vector3(3.5, 2.6, -0.9), Vector3(3.5, 2.6, 0.9), 0.06, blue)
+		for sz in [-0.25, 0.25]:
+			Geo.rod(st, Vector3(3.5, 2.55, sz), Vector3(3.5, 0.62, sz), 0.012, Color(0.3, 0.3, 0.3), 4)
+		Geo.cbox(st, Vector3(3.5, 0.6, 0), Vector3(0.45, 0.06, 0.65), Color(0.9, 0.7, 0.2), 0.02)
+		# Горка
+		Geo.cbox(st, Vector3(-3.4, 0.9, 1.8), Vector3(0.9, 0.08, 2.8), Color(0.75, 0.75, 0.78), 0.03, Transform3D(Basis(Vector3.RIGHT, -0.55), Vector3(0, 0, 0)))
+		for i in 6:
+			Geo.rod(st, Vector3(-3.8, 0.3 * i, 0.0), Vector3(-3.0, 0.3 * i, 0.0), 0.03, Color(0.85, 0.6, 0.15), 5)
+		Geo.cbox(st, Vector3(-3.4, 1.8, -0.1), Vector3(1.0, 0.08, 0.8), Color(0.85, 0.6, 0.15), 0.02))
+	_box_shape(pg, Vector3(3.2, 0.35, 3.2), Vector3(0, 0.17, 0))
+	# Выбивалка для ковров, мусорные баки, лавочки
+	_proc(y, "CarpetRack", Vector3(10.25, 0, -3.5), func(gm: GeoMesh) -> void:
+		var st := gm.s("metal")
+		var g := Color(0.3, 0.45, 0.32)
+		for sx in [-1.25, 1.25]:
+			Geo.rod(st, Vector3(sx, 0, 0), Vector3(sx, 2.0, 0), 0.05, g)
+		Geo.rod(st, Vector3(-1.3, 1.95, 0), Vector3(1.3, 1.95, 0), 0.04, g)
+		Geo.rod(st, Vector3(-1.3, 1.0, 0), Vector3(1.3, 1.0, 0), 0.03, g)
+		Geo.cbox(gm.s("fabric"), Vector3(0, 1.35, 0.03), Vector3(1.7, 1.15, 0.04), Color(0.6, 0.12, 0.16), 0.02)
+		for i in 5:
+			Geo.box(gm.s("fabric"), Vector3(0, 1.0 + i * 0.2, 0.06), Vector3(1.5, 0.04, 0.01), Color(0.85, 0.7, 0.3)))
 	for i in 3:
-		_box(y, "Bin%d" % i, Vector3(1.1, 1.1, 0.9), Color(0.25, 0.45, 0.3), Vector3(-17.0, 0.55, 6.0 + i * 1.3))
-	# Лавочки у подъездов
-	for x in [-10.6, 1.4]:
-		_box(y, "Bench_%d" % int(x), Vector3(2.0, 0.45, 0.6), Color(0.55, 0.35, 0.22), Vector3(x, 0.3, -12.2))
+		var bin := StaticBody3D.new()
+		_add(y, bin, "Bin%d" % i, Vector3(-17.2, 0, 6.0 + i * 1.35))
+		bin.rotation_degrees.y = 90.0
+		_proc(bin, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void:
+			var st := gm.s("metal")
+			var c := [Color(0.25, 0.42, 0.3), Color(0.3, 0.35, 0.45), Color(0.25, 0.42, 0.3)][i] as Color
+			Geo.cbox(st, Vector3(0, 0.6, 0), Vector3(1.2, 1.0, 0.95), c, 0.06)
+			Geo.cbox(st, Vector3(0, 1.13, -0.02), Vector3(1.26, 0.08, 1.0), c.darkened(0.25), 0.03)
+			for sx in [-0.45, 0.45]:
+				Geo.prism(st, Vector3(sx, 0, 0.3), 0.07, 0.07, 0.1, Color(0.1, 0.1, 0.1), 6)
+				Geo.prism(st, Vector3(sx, 0, -0.3), 0.07, 0.07, 0.1, Color(0.1, 0.1, 0.1), 6))
+		_box_shape(bin, Vector3(1.2, 1.15, 0.95), Vector3(0, 0.58, 0))
+	_bench(y, "Bench1", Vector3(-10.6, 0, -12.0))
+	_bench(y, "Bench2", Vector3(1.4, 0, -12.0))
+	_bench(y, "Bench3", Vector3(6.5, 0, 8.3), 180.0)
 	# Гирлянда между домами над двором
-	var cols := [Color(1, 0.3, 0.3), Color(1, 0.9, 0.3), Color(0.3, 0.8, 1), Color(0.5, 1, 0.5)]
+	var cols := [Color(1, 0.35, 0.25), Color(1, 0.8, 0.3), Color(0.4, 0.75, 1), Color(0.5, 1, 0.5)]
 	var g := Node3D.new()
 	_add(y, g, "Garland")
+	_proc(g, "Wire", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("plain")
+		for i in 17:
+			var t0 := float(i) / 17.0
+			var t1 := float(i + 1) / 17.0
+			Geo.rod(st, Vector3(lerpf(-17, 17, t0), 6.2 - 1.2 * sin(t0 * PI), -2), Vector3(lerpf(-17, 17, t1), 6.2 - 1.2 * sin(t1 * PI), -2), 0.012, Color(0.15, 0.15, 0.15), 3))
 	for i in 18:
 		var sm := SphereMesh.new()
-		sm.radius = 0.15
-		sm.height = 0.3
+		sm.radius = 0.1
+		sm.height = 0.2
 		var t := float(i) / 17.0
-		var mi := _mesh(g, "Bulb%d" % i, sm, cols[i % 4], Vector3(lerpf(-17, 17, t), 6.0 - 1.2 * sin(t * PI), -2))
+		var mi := _mesh(g, "Bulb%d" % i, sm, cols[i % 4], Vector3(lerpf(-17, 17, t), 6.05 - 1.2 * sin(t * PI), -2))
 		var lm := StandardMaterial3D.new()
 		lm.albedo_color = cols[i % 4]
 		lm.emission_enabled = true
 		lm.emission = cols[i % 4]
-		lm.emission_energy_multiplier = 1.5
+		lm.emission_energy_multiplier = 2.5
 		mi.material_override = lm
 
 
@@ -339,62 +551,97 @@ func _van() -> void:
 
 
 func _stall() -> void:
-	var s := Node3D.new()
-	_add(lobby_root, s, "Stall", Vector3(-13, 0, 5))
+	var s := StaticBody3D.new()
+	_add(lobby_root, s, "Stall", Vector3(-13, 0, 4.5))
 	s.rotation_degrees.y = 90.0
-	_box(s, "Counter", Vector3(3.0, 1.0, 1.0), Color(0.75, 0.45, 0.25), Vector3(0, 0.5, 0))
-	_box(s, "BackWall", Vector3(3.0, 2.6, 0.2), Color(0.6, 0.4, 0.3), Vector3(0, 1.3, -1.6))
-	_box(s, "SideL", Vector3(0.2, 2.6, 1.8), Color(0.6, 0.4, 0.3), Vector3(-1.5, 1.3, -0.7))
-	_box(s, "SideR", Vector3(0.2, 2.6, 1.8), Color(0.6, 0.4, 0.3), Vector3(1.5, 1.3, -0.7))
-	# Полосатый навес
-	for i in 6:
-		var col := Color(0.9, 0.2, 0.3) if i % 2 == 0 else Color(1, 0.95, 0.9)
-		_box(s, "Awning%d" % i, Vector3(0.6, 0.12, 2.4), col, Vector3(-1.5 + 0.3 + i * 0.6, 2.75, -0.3), false)
-	_box(s, "Sign", Vector3(2.4, 0.5, 0.1), Color(1.0, 0.85, 0.3), Vector3(0, 3.15, 0.6), false)
-	# Украшения на прищепках
-	for i in 5:
-		var hm := SphereMesh.new()
-		hm.radius = 0.15
-		hm.height = 0.3
-		_mesh(s, "Goods%d" % i, hm, Color.from_hsv(i * 0.2, 0.7, 1.0), Vector3(-1.0 + i * 0.5, 2.3, 0.4))
+	# Ларёк: стены с фаской, витрина, прилавок, полосатый козырёк, вывеска
+	_proc(s, "Kiosk", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("metal")
+		var wall := Color(0.38, 0.55, 0.62)
+		var trim := Color(0.9, 0.88, 0.82)
+		Geo.cbox(gm.s("concrete"), Vector3(0, 0.1, -0.7), Vector3(3.4, 0.2, 2.2), Color(0.7, 0.68, 0.65), 0.04)
+		Geo.cbox(st, Vector3(0, 1.4, -1.65), Vector3(3.2, 2.6, 0.15), wall, 0.05)
+		for sx in [-1.0, 1.0]:
+			Geo.cbox(st, Vector3(sx * 1.55, 1.4, -0.75), Vector3(0.15, 2.6, 1.85), wall, 0.05)
+			Geo.cbox(st, Vector3(sx * 1.55, 1.3, 0.15), Vector3(0.2, 2.5, 0.2), trim, 0.05)
+		# Прилавок с деревянной столешницей
+		Geo.cbox(st, Vector3(0, 0.55, 0.05), Vector3(2.9, 0.9, 0.45), wall.darkened(0.15), 0.05)
+		Geo.cbox(gm.s("wood"), Vector3(0, 1.03, 0.12), Vector3(3.0, 0.07, 0.65), Color(0.75, 0.52, 0.32), 0.02)
+		# Крыша и полосатый козырёк
+		Geo.cbox(gm.s("asphalt"), Vector3(0, 2.75, -0.75), Vector3(3.5, 0.18, 2.3), Color(0.9, 0.9, 0.9), 0.05)
+		for i in 7:
+			var col := Color(0.82, 0.2, 0.22) if i % 2 == 0 else Color(0.96, 0.93, 0.86)
+			var x := -1.5 + 0.215 + i * 0.43
+			Geo.cbox(gm.s("fabric"), Vector3.ZERO, Vector3(0.43, 0.04, 1.1), col, 0.01, Transform3D(Basis(Vector3.RIGHT, 0.35), Vector3(x, 2.55, 0.65)))
+			Geo.prism(gm.s("fabric"), Vector3(x, 2.25, 1.15), 0.215, 0.215, 0.1, col, 12)
+		# Вывеска «Украшения»
+		Geo.cbox(st, Vector3(0, 3.15, 0.25), Vector3(2.8, 0.5, 0.1), Color(0.95, 0.75, 0.25), 0.04)
+		Geo.cbox(st, Vector3(0, 3.15, 0.3), Vector3(2.5, 0.3, 0.04), Color(0.55, 0.18, 0.18), 0.02)
+		# Полки с товаром за продавцом
+		for k in 3:
+			Geo.cbox(gm.s("wood"), Vector3(0, 1.1 + k * 0.5, -1.45), Vector3(2.8, 0.05, 0.3), Color(0.75, 0.52, 0.32), 0.01)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 11
+		for k in 3:
+			for i in 7:
+				var c := Color.from_hsv(rng.randf(), 0.55, 0.9)
+				var pos := Vector3(-1.2 + i * 0.4, 1.22 + k * 0.5, -1.45)
+				if rng.randf() < 0.5:
+					Geo.blob(gm.s("fabric"), pos, Vector3(0.13, 0.11, 0.13), c, rng, 6, 10, 0.08)
+				else:
+					Geo.cbox(gm.s("fabric"), pos, Vector3(0.22, 0.18, 0.16), c, 0.04)
+		# Шапки на верёвке под козырьком
+		Geo.rod(st, Vector3(-1.45, 2.25, 0.35), Vector3(1.45, 2.25, 0.35), 0.01, Color(0.85, 0.85, 0.85), 3)
+		for i in 5:
+			var hc := Color.from_hsv(i * 0.19, 0.6, 0.85)
+			Geo.blob(gm.s("fabric"), Vector3(-1.0 + i * 0.5, 2.05, 0.35), Vector3(0.14, 0.14, 0.14), hc, rng, 7, 12, 0.03)
+			Geo.blob(gm.s("fabric"), Vector3(-1.0 + i * 0.5, 2.22, 0.35), Vector3(0.05, 0.05, 0.05), Color(0.97, 0.95, 0.9), rng, 5, 8, 0.0))
+	_box_shape(s, Vector3(3.4, 2.8, 2.2), Vector3(0, 1.4, -0.7))
 	# Баб Нюра: персонаж Kenney + платок и шаль
-	var n := _model(s, "BabNyura", PLAT + "character.glb", Vector3(0, 0, -0.8), 1.2)
-	var scarf := SphereMesh.new()
-	scarf.radius = 0.36
-	scarf.height = 0.5
-	_mesh(n, "Headscarf", scarf, Color(0.85, 0.2, 0.25), Vector3(0, 1.15, -0.02))
-	var shawl := CylinderMesh.new()
-	shawl.top_radius = 0.3
-	shawl.bottom_radius = 0.45
-	shawl.height = 0.35
-	_mesh(n, "Shawl", shawl, Color(0.55, 0.4, 0.7), Vector3(0, 0.7, 0))
-	# Примерочная: зеркало сбоку
-	_box(s, "MirrorFrame", Vector3(1.4, 2.2, 0.15), Color(0.9, 0.75, 0.3), Vector3(2.6, 1.1, -0.8), false)
-	_box(s, "Mirror", Vector3(1.2, 2.0, 0.05), Color(0.7, 0.9, 1.0), Vector3(2.6, 1.1, -0.7), false)
+	var n := _model(s, "BabNyura", PLAT + "character.glb", Vector3(0, 0.2, -0.8), 1.2)
+	_proc(n, "Clothes", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("fabric")
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 5
+		Geo.blob(st, Vector3(0, 1.17, -0.03), Vector3(0.36, 0.26, 0.36), Color(0.82, 0.2, 0.25), rng, 8, 14, 0.03)
+		Geo.prism(st, Vector3(0, 0.55, 0), 0.47, 0.3, 0.35, Color(0.55, 0.4, 0.7), 16)
+		Geo.rod(st, Vector3(-0.12, 0.98, 0.32), Vector3(0.12, 0.98, 0.32), 0.03, Color(0.15, 0.15, 0.15), 4))
+	# Примерочная: зеркало в раме на ножках
+	_proc(s, "Mirror", Vector3(2.5, 0, -0.6), func(gm: GeoMesh) -> void:
+		var st := gm.s("wood")
+		Geo.cbox(st, Vector3(0, 1.25, 0), Vector3(1.3, 2.1, 0.12), Color(0.85, 0.65, 0.3), 0.05)
+		Geo.cbox(gm.s("glass"), Vector3(0, 1.25, 0.05), Vector3(1.1, 1.9, 0.04), Color(0.85, 0.9, 0.95), 0.02)
+		for sx in [-0.5, 0.5]:
+			Geo.cbox(st, Vector3(sx, 0.1, 0), Vector3(0.15, 0.2, 0.6), Color(0.6, 0.45, 0.22), 0.04))
 	_trigger(s, "Trigger", "PROMPT_SHOP", Vector3(0, 1.0, 1.6), 2.0)
 
 
 func _slot_machine() -> void:
-	var m := Node3D.new()
-	_add(lobby_root, m, "SlotMachine", Vector3(-12.5, 0, 9.5))
+	var m := StaticBody3D.new()
+	_add(lobby_root, m, "SlotMachine", Vector3(-12.5, 0, 7.8))
 	m.rotation_degrees.y = 90.0
-	_box(m, "Body", Vector3(1.4, 2.2, 1.0), Color(0.55, 0.15, 0.2), Vector3(0, 1.1, 0))
-	_box(m, "Screen", Vector3(1.0, 0.7, 0.05), Color(0.2, 0.25, 0.3), Vector3(0, 1.5, 0.52), false)
-	for i in 3:
-		var reel := SphereMesh.new()
-		reel.radius = 0.13
-		reel.height = 0.26
-		_mesh(m, "Reel%d" % i, reel, Color(1, 0.8, 0.3), Vector3(-0.3 + i * 0.3, 1.5, 0.58))
-	_box(m, "Marquee", Vector3(1.4, 0.35, 0.1), Color(1.0, 0.9, 0.2), Vector3(0, 2.35, 0.2), false)
-	var lever := CylinderMesh.new()
-	lever.top_radius = 0.05
-	lever.bottom_radius = 0.05
-	lever.height = 0.9
-	_mesh(m, "Lever", lever, Color(0.8, 0.8, 0.85), Vector3(0.85, 1.4, 0), 0.8)
-	var knob := SphereMesh.new()
-	knob.radius = 0.12
-	knob.height = 0.24
-	_mesh(m, "LeverKnob", knob, Color(1.0, 0.2, 0.2), Vector3(0.85, 1.9, 0))
+	_proc(m, "Body", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var st := gm.s("metal")
+		var red := Color(0.62, 0.14, 0.17)
+		var chrome := Color(0.8, 0.8, 0.82)
+		Geo.cbox(st, Vector3(0, 0.5, 0), Vector3(1.4, 1.0, 1.0), red.darkened(0.2), 0.08)
+		Geo.cbox(st, Vector3(0, 1.45, -0.1), Vector3(1.35, 1.1, 0.8), red, 0.12)
+		Geo.cbox(st, Vector3(0, 2.15, -0.05), Vector3(1.45, 0.4, 0.9), Color(0.95, 0.75, 0.2), 0.15)
+		Geo.cbox(st, Vector3(0, 1.5, 0.3), Vector3(1.05, 0.6, 0.06), chrome, 0.04)
+		Geo.box(gm.s("glass"), Vector3(0, 1.5, 0.34), Vector3(0.95, 0.5, 0.02), Color(0.2, 0.2, 0.25))
+		for i in 3:
+			Geo.prism(st, Vector3(-0.3 + i * 0.3, 1.3, 0.36), 0.12, 0.12, 0.4, Color(0.97, 0.94, 0.86), 10, Transform3D(Basis(Vector3.FORWARD, PI * 0.5), Vector3.ZERO) * Transform3D.IDENTITY, true)
+		Geo.cbox(st, Vector3(0, 1.0, 0.5), Vector3(1.2, 0.08, 0.15), chrome, 0.02)
+		Geo.cbox(st, Vector3(0, 0.55, 0.51), Vector3(0.5, 0.25, 0.04), Color(0.1, 0.1, 0.1), 0.02)
+		# Рычаг-лапка
+		Geo.rod(st, Vector3(0.72, 1.3, 0), Vector3(0.85, 2.05, 0), 0.05, chrome)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 2
+		Geo.blob(gm.s("plain"), Vector3(0.86, 2.13, 0), Vector3(0.13, 0.13, 0.13), Color(1, 0.3, 0.3), rng, 8, 14, 0.0)
+		# Лампочки по верху
+		for i in 7:
+			Geo.blob(gm.s("lit"), Vector3(-0.6 + i * 0.2, 2.38, 0.3), Vector3(0.05, 0.05, 0.05), Color(1, 0.9, 0.5), rng, 5, 8, 0.0))
+	_box_shape(m, Vector3(1.4, 2.4, 1.0), Vector3(0, 1.2, 0))
 	_trigger(m, "Trigger", "PROMPT_SLOT", Vector3(0, 1.0, 1.4), 1.6)
 
 
@@ -448,14 +695,33 @@ var _pad_i := 0
 
 
 func _pad_node(body: Node3D, kind: String, top: Vector3) -> void:
-	var path := PLAT + ("platform-medium.glb" if kind == "big" else ("platform-falling.glb" if kind == "fall" else "platform.glb"))
-	var a := _model_aabb(path)
-	var k := 0.6
-	body.position = top - Vector3(0, a.end.y * k, 0)
-	var inst: Node3D = load(path).instantiate()
-	inst.scale = Vector3.ONE * k
-	_add(body, inst, "Model")
-	_box_shape(body, a.size * k, (a.position + a.size * 0.5) * k)
+	# Площадки паркура в духе двора: ящики-поддоны, бетонные плиты, металлические листы
+	var size := Vector3(1.2, 0.3, 1.2)
+	if kind == "big":
+		size = Vector3(1.8, 0.35, 1.8)
+	elif kind == "fall":
+		size = Vector3(1.3, 0.22, 1.3)
+	body.position = top - Vector3(0, size.y, 0)
+	_proc(body, "Model", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		var c := Vector3(0, size.y * 0.5, 0)
+		if kind == "big":
+			Geo.cbox(gm.s("concrete"), c, size, Color(0.85, 0.83, 0.8), 0.05)
+			Geo.box(gm.s("plain"), c + Vector3(0, size.y * 0.5 + 0.004, 0), Vector3(size.x - 0.2, 0.004, 0.05), Color(1.0, 0.8, 0.2))
+		elif kind == "fall":
+			# Трухлявые доски с щелями
+			for i in 5:
+				var w := size.x / 5.0
+				Geo.cbox(gm.s("wood"), Vector3(-size.x * 0.5 + (i + 0.5) * w, size.y * 0.75, 0), Vector3(w - 0.04, size.y * 0.5, size.z), Color(0.7, 0.5, 0.35).darkened(0.1 * (i % 2)), 0.015)
+			for z in [-0.45, 0.45]:
+				Geo.cbox(gm.s("wood"), Vector3(0, size.y * 0.25, z * size.z), Vector3(size.x, size.y * 0.5, 0.12), Color(0.55, 0.38, 0.26), 0.015)
+		else:
+			# Деревянный поддон
+			for i in 6:
+				var w := size.x / 6.0
+				Geo.cbox(gm.s("wood"), Vector3(-size.x * 0.5 + (i + 0.5) * w, size.y - 0.04, 0), Vector3(w - 0.03, 0.08, size.z), Color(0.95, 0.78, 0.55), 0.012)
+			for z in [-0.42, 0.0, 0.42]:
+				Geo.cbox(gm.s("wood"), Vector3(0, (size.y - 0.08) * 0.5, z * size.z), Vector3(size.x, size.y - 0.08, 0.14), Color(0.85, 0.68, 0.48), 0.015))
+	_box_shape(body, size, Vector3(0, size.y * 0.5, 0))
 
 
 func _pad(top: Vector3, kind := "pad") -> Node3D:
