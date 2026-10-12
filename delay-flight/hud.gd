@@ -1,0 +1,69 @@
+class_name Hud
+extends Node2D
+# Интерфейс: верхняя панель, баннер, меню, финал.
+
+var game: Node
+
+func _t(text: String, cx: float, y: float, size: int, col: Color = Color.WHITE) -> void:
+	var font := ThemeDB.fallback_font
+	draw_string_outline(font, Vector2(cx - 640, y), text, HORIZONTAL_ALIGNMENT_CENTER, 1280, size, 6, Color(0, 0, 0, 0.85))
+	draw_string(font, Vector2(cx - 640, y), text, HORIZONTAL_ALIGNMENT_CENTER, 1280, size, col)
+
+func _left(text: String, x: float, y: float, size: int, col: Color = Color.WHITE) -> void:
+	var font := ThemeDB.fallback_font
+	draw_string_outline(font, Vector2(x, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 5, Color(0, 0, 0, 0.85))
+	draw_string(font, Vector2(x, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col)
+
+func _process(_d: float) -> void:
+	queue_redraw()
+
+func _draw() -> void:
+	match game.mode:
+		"menu": _menu()
+		"play":
+			_bar()
+		"end":
+			_bar()
+			_end()
+
+func _bar() -> void:
+	Paint.round_rect(self, Rect2(8, 84, 1264, 38), Color(0, 0, 0, 0.55), 10)
+	_left("Время  %d" % maxi(0, ceili(game.time_left)), 24, 110, 22)
+	_left("Очки  %d" % game.score, 220, 110, 22, Color("ffd24d"))
+	_left("Вылетов  %d" % game.departed, 400, 110, 22)
+	_left("ЗЛОСТЬ", 640, 110, 18, Color("ff8a80"))
+	Paint.round_rect(self, Rect2(730, 92, 520, 22), Color(0, 0, 0, 0.6), 8)
+	var a: float = game.anger / 100.0
+	var col := Color("7dff8a") if a < 0.33 else (Color("ff9f43") if a < 0.66 else Color("ff3b30"))
+	if a > 0.01:
+		Paint.round_rect(self, Rect2(730, 92, 520 * a, 22), col, 8)
+	if game.banner_t > 0.0:
+		draw_rect(Rect2(0, 330, 1280, 64), Color(0, 0, 0, 0.7))
+		_t(game.banner_text, 640, 372, 32, Color("ffd24d"))
+
+func _menu() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color(0.05, 0.08, 0.14, 0.82))
+	_t("ЗАДЕРЖКА РЕЙСА", 640, 170, 84, Color("ffd24d"))
+	_t("Ты сотрудник наземной службы. Самолёты не ждут. Пилоты — тем более.", 640, 232, 24)
+	_t("Опоздаешь — придёт КАЧОК.", 640, 270, 26, Color("ff8a80"))
+	var y := 340
+	for i in 4:
+		var role: Dictionary = Cfg.ROLES[i]
+		var x := 220.0 + i * 280.0
+		Paint.person(self, Vector2(x, y), {"s": 1.6, "shirt": role.shirt, "vest": role.vest, "hat": role.hat, "hat_col": role.hat_col, "ears": role.ears, "skin": role.skin, "walk": Time.get_ticks_msec() / 90.0})
+		_t(role.name, x, y + 60, 20, Cfg.PLAYER_COLORS[i])
+		var ctl: String = ["WASD + Пробел", "Стрелки + Enter", "Геймпад 1", "Геймпад 2"][i]
+		_t(ctl, x, y + 84, 16, Color("c8d0db"))
+	_t("Нажми 1 · 2 · 3 · 4 — число игроков", 640, 520, 30, Color("7dff8a"))
+	_t("Взять / отдать — действие. У крыла держи действие — заправка.", 640, 580, 20)
+	_t("Кофе успокаивает пилота и диспетчера. Бургер — качка.", 640, 610, 20)
+
+func _end() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.8))
+	_t(game.reason, 640, 220, 40, Color("ff5a4d") if game.anger >= 100.0 else Color("ffd24d"))
+	_t("Очки: %d" % game.score, 640, 310, 56)
+	_t("Вылетов: %d      Успокоено: %d" % [game.departed, game.calmed], 640, 370, 28)
+	var s: int = game.score
+	var rank := "Король перрона" if s > 1200 else ("Опытный грузчик" if s > 700 else ("Стажёр" if s > 300 else "Лучше бы вы пошли на кассу"))
+	_t(rank, 640, 440, 34, Color("7dff8a"))
+	_t("R — в меню", 640, 520, 24)
