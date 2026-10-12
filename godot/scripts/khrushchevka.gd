@@ -21,6 +21,16 @@ extends StaticBody3D
 	set(v):
 		panel_color = v
 		_rebuild()
+## false — без парапета (его строит локация со своими проёмами)
+@export var parapet: bool = true:
+	set(v):
+		parapet = v
+		_rebuild()
+## false — крыша без вентшахт и антенн (на ней строят свою, см. локацию «Верхотура»)
+@export var roof_props: bool = true:
+	set(v):
+		roof_props = v
+		_rebuild()
 @export var porch_lights: bool = true:
 	set(v):
 		porch_lights = v
@@ -127,10 +137,10 @@ func _rebuild() -> void:
 			Geo.prism(_metal, Vector3(x, top - 0.1, z), 0.1, 0.2, 0.3, Color(0.5, 0.5, 0.52), 12)
 	# Крыша: карниз, парапет, выходы, вентшахты, антенны
 	Geo.cbox(_g.s("asphalt"), Vector3(0, top + 0.08, 0), Vector3(L + 0.4, 0.16, DEPTH + 0.4), Color(0.75, 0.72, 0.72), 0.04)
-	for side in [-1.0, 1.0]:
+	for side in ([-1.0, 1.0] if parapet else []):
 		Geo.cbox(st, Vector3(0, top + 0.4, side * (DEPTH * 0.5 + 0.1)), Vector3(L + 0.4, 0.5, 0.22), seam, 0.04)
 		Geo.cbox(st, Vector3(side * (L * 0.5 + 0.1), top + 0.4, 0), Vector3(0.22, 0.5, DEPTH + 0.4), seam, 0.04)
-	for s in sections:
+	for s in (sections if roof_props else 0):
 		var x := -L * 0.5 + (s * COLS_PER_SECTION + 1.5) * COL_W
 		Geo.cbox(st, Vector3(x, top + 1.1, -1.5), Vector3(2.2, 2.0, 2.2), seam, 0.05)
 		Geo.cbox(_metal, Vector3(x, top + 2.15, -1.5), Vector3(2.5, 0.12, 2.5), Color(0.45, 0.45, 0.45), 0.03)
