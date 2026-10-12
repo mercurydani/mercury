@@ -52,7 +52,7 @@ func _build_menu() -> void:
 	t.add_theme_font_size_override("font_size", 28)
 	box.add_child(t)
 	var h := Label.new()
-	h.text = "WASD ходить, пробел прыжок, E взаимодействие, R респаун, Esc меню, F1/F2/F3 сложность"
+	h.text = "Мышь — обзор, WASD ходить, пробел прыжок, E взаимодействие, R респаун, Esc меню, F1/F2/F3 сложность"
 	h.autowrap_mode = TextServer.AUTOWRAP_WORD
 	box.add_child(h)
 	var opt := OptionButton.new()

@@ -21,6 +21,9 @@ var _floor_ray: RayCast3D
 var _anim: AnimationPlayer
 var _current: Interactable = null
 var _cam_yaw: float = 0.0
+var _cam_pitch: float = 0.0
+@export var mouse_sens: float = 0.0025
+@export var eye_height: float = 1.6
 
 
 func _ready() -> void:
@@ -29,6 +32,14 @@ func _ready() -> void:
 	add_to_group("players")
 	respawn_point = global_position
 	_camera = get_node_or_null("Camera") as Camera3D
+	if _camera:
+		_camera.top_level = true
+		_camera.current = true
+		var mdl := get_node_or_null("Model") as Node3D
+		if mdl:
+			mdl.visible = false
+	if DisplayServer.get_name() != "headless":
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_interact_area = $InteractArea
 	_floor_ray = $FloorRay
 	_anim = find_child("AnimationPlayer", true, false) as AnimationPlayer
@@ -100,6 +111,14 @@ func stand(exit_pos: Vector3) -> void:
 	global_position = exit_pos
 
 
+func _unhandled_input(e: InputEvent) -> void:
+	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		_cam_yaw -= e.relative.x * mouse_sens
+		_cam_pitch = clampf(_cam_pitch - e.relative.y * mouse_sens, -1.5, 1.5)
+	elif e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.get_name() != "headless":
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
 func _update_camera() -> void:
 	if _camera == null:
 		return
@@ -107,10 +126,8 @@ func _update_camera() -> void:
 		_cam_yaw += 0.03
 	if Input.is_action_pressed("cam_right"):
 		_cam_yaw -= 0.03
-	var back := Vector3(0.0, 0.0, 9.0).rotated(Vector3.UP, _cam_yaw)
-	var target := global_position + back + Vector3(0.0, 6.0, 0.0)
-	_camera.global_position = _camera.global_position.lerp(target, 0.12)
-	_camera.look_at(global_position + Vector3(0.0, 1.2, 0.0))
+	_camera.global_position = global_position + Vector3(0.0, eye_height, 0.0)
+	_camera.rotation = Vector3(_cam_pitch, _cam_yaw, 0.0)
 
 
 func _update_anim() -> void:
