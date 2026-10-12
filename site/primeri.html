@@ -22,6 +22,8 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-title-key="meta_title_work">
+<script>document.documentElement.classList.add("js")</script>
+<div class="progress" aria-hidden="true"></div>
 
 <header class="header">
   <div class="wrap">
@@ -43,7 +45,7 @@
   </div>
 </header>
 
-<main>
+<main id="top">
   <section class="page-hero"><div class="wrap">
     <span class="kicker" data-i18n="work_kicker"></span>
     <h1 data-i18n="work_title"></h1>
@@ -68,11 +70,12 @@
   </div></section>
 </main>
 
-<footer class="footer"><div class="wrap">
+<footer class="footer"><div class="wordmark" aria-hidden="true">Mercury</div><div class="wrap">
   <span>© <span id="year">2026</span> Mercury Studio · <span data-i18n="footer_city">Beograd, Srbija</span></span>
-  <span class="footer-links"><a href="https://t.me/mercury_dani_rs" target="_blank" rel="noopener">Telegram</a><a href="https://wa.me/381653454290" target="_blank" rel="noopener">WhatsApp</a></span>
+  <span class="footer-links"><a href="#top" data-i18n="to_top">Gore</a><a href="https://t.me/mercury_dani_rs" target="_blank" rel="noopener">Telegram</a><a href="https://wa.me/381653454290" target="_blank" rel="noopener">WhatsApp</a></span>
 </div></footer>
 
 <script src="js/i18n.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>

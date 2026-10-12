@@ -172,6 +172,7 @@ const I18N = {
     chip_design: "Dizajn",
 
     footer_city: "Beograd, Srbija",
+    avail: "Prihvatamo nove projekte", city_now: "Beograd", reply_note: "Pišite — odgovaramo isti dan", to_top: "Gore",
   },
 
   en: {
@@ -345,6 +346,7 @@ const I18N = {
     chip_design: "Design",
 
     footer_city: "Belgrade, Serbia",
+    avail: "Taking on new projects", city_now: "Belgrade", reply_note: "Write to us — we reply the same day", to_top: "Top",
   },
 
   ru: {
@@ -518,6 +520,7 @@ const I18N = {
     chip_design: "Дизайн",
 
     footer_city: "Белград, Сербия",
+    avail: "Принимаем новые проекты", city_now: "Белград", reply_note: "Напишите — ответим в тот же день", to_top: "Наверх",
   },
 };
 

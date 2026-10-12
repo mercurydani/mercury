@@ -22,6 +22,8 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<script>document.documentElement.classList.add("js")</script>
+<div class="progress" aria-hidden="true"></div>
 
 <header class="header">
   <div class="wrap">
@@ -43,9 +45,10 @@
   </div>
 </header>
 
-<main>
+<main id="top">
   <section class="hero">
     <div class="wrap">
+      <div class="hero-meta"><span class="status"><i aria-hidden="true"></i><span data-i18n="avail"></span></span><span class="clock"><span data-i18n="city_now"></span> <time id="clock">--:--</time></span></div>
       <h1 data-i18n-html="hero_title"></h1>
       <div class="hero-row">
         <div>
@@ -60,6 +63,8 @@
       </div>
     </div>
   </section>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-track"><div><span data-i18n="s1_title"></span><i>✱</i><span data-i18n="s4_title"></span><i>✱</i><span data-i18n="s2_title"></span><i>✱</i><span data-i18n="s3_title"></span><i>✱</i><span>SEO</span><i>✱</i><span>WordPress</span><i>✱</i><span>MODX</span><i>✱</i><span>Tilda</span><i>✱</i><span>Admin panel</span><i>✱</i><span>SR / EN / RU</span><i>✱</i></div><div><span data-i18n="s1_title"></span><i>✱</i><span data-i18n="s4_title"></span><i>✱</i><span data-i18n="s2_title"></span><i>✱</i><span data-i18n="s3_title"></span><i>✱</i><span>SEO</span><i>✱</i><span>WordPress</span><i>✱</i><span>MODX</span><i>✱</i><span>Tilda</span><i>✱</i><span>Admin panel</span><i>✱</i><span>SR / EN / RU</span><i>✱</i></div></div></div>
 
   <section class="section" id="usluge"><div class="wrap">
     <div class="section-head reveal"><span class="kicker"><b>01</b><span data-i18n="services_kicker"></span></span><h2 data-i18n="services_title"></h2><p data-i18n="services_sub"></p></div>
@@ -126,11 +131,12 @@
   </div></section>
 </main>
 
-<footer class="footer"><div class="wrap">
+<footer class="footer"><div class="wordmark" aria-hidden="true">Mercury</div><div class="wrap">
   <span>© <span id="year">2026</span> Mercury Studio · <span data-i18n="footer_city">Beograd, Srbija</span></span>
-  <span class="footer-links"><a href="https://t.me/mercury_dani_rs" target="_blank" rel="noopener">Telegram</a><a href="https://wa.me/381653454290" target="_blank" rel="noopener">WhatsApp</a></span>
+  <span class="footer-links"><a href="#top" data-i18n="to_top">Gore</a><a href="https://t.me/mercury_dani_rs" target="_blank" rel="noopener">Telegram</a><a href="https://wa.me/381653454290" target="_blank" rel="noopener">WhatsApp</a></span>
 </div></footer>
 
 <script src="js/i18n.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>
