@@ -22,6 +22,17 @@ extends StaticBody3D
 		panel_color = v
 		_rebuild()
 
+## false — без парапета (его строит локация со своими проёмами)
+@export var parapet: bool = true:
+	set(v):
+		parapet = v
+		_rebuild()
+## false — крыша без случайных вентшахт и антенн (на ней строят свою, см. локацию «Верхотура»)
+@export var roof_props: bool = true:
+	set(v):
+		roof_props = v
+		_rebuild()
+
 const COL_W := 3.0       # ширина «окна» (шаг панелей)
 const COLS_PER_SECTION := 4
 const FLOOR_H := 2.8
@@ -57,7 +68,7 @@ func _rebuild() -> void:
 	_box(st, Vector3(0, PLINTH * 0.5, 0), Vector3(L + 0.2, PLINTH, DEPTH + 0.2), Color(0.45, 0.42, 0.4))
 	_box(st, Vector3(0, PLINTH + floors * FLOOR_H * 0.5, 0), Vector3(L, floors * FLOOR_H, DEPTH), panel_color)
 	_box(st, Vector3(0, H + 0.05, 0), Vector3(L + 0.3, 0.1, DEPTH + 0.3), Color(0.35, 0.33, 0.33))
-	for side in [-1.0, 1.0]:
+	for side in ([-1.0, 1.0] if parapet else []):
 		_box(st, Vector3(0, H + 0.35, side * (DEPTH * 0.5 + 0.1)), Vector3(L + 0.3, 0.6, 0.2), dark)
 		_box(st, Vector3(side * (L * 0.5 + 0.1), H + 0.35, 0), Vector3(0.2, 0.6, DEPTH + 0.3), dark)
 	# Швы панелей: горизонтальные по этажам, вертикальные по шагу окон
@@ -90,7 +101,7 @@ func _rebuild() -> void:
 		if entrance:
 			_entrance(st, Vector3(x, 0, DEPTH * 0.5))
 	# Мелочи на крыше: вентшахты и антенны
-	for i in sections * 2:
+	for i in (sections * 2 if roof_props else 0):
 		var x := -L * 0.5 + (i + 0.5) * L / (sections * 2)
 		_box(st, Vector3(x, H + 0.5, _rng.randf_range(-2, 2)), Vector3(1.0, 1.0, 1.0), dark)
 		if _rng.randf() < 0.6:
