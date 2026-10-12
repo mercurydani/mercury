@@ -14,13 +14,13 @@ func _initialize() -> void:
 		if main.planes.all(func(p): return p == null or p.state == "ready"):
 			break
 	var w: Worker = main.workers[0]
-	w.pos = Vector2(140, 1225)
+	w.pos = Vector2(140, 780)
 	w.yaw = PI
 	await _frames(3)
 	_save("fp_a")
-	w.pos = Vector2(1180, 1500)
+	w.pos = Vector2(620, 1110)
 	w.yaw = 0.0
-	w.pitch = 0.22
+	w.pitch = 0.12
 	await _frames(3)
 	_save("fp_sign")
 	w.pitch = 0.0
@@ -29,9 +29,9 @@ func _initialize() -> void:
 	w.pitch = 0.04
 	await _frames(3)
 	_save("fp_far")
-	w.pos = Vector2(760, 1030)
+	w.pos = Vector2(700, 1990)
 	w.yaw = PI * 0.5
-	w.pitch = 0.08
+	w.pitch = 0.04
 	await _frames(3)
 	_save("fp_side")
 	w.pos = Vector2(700, 1260)

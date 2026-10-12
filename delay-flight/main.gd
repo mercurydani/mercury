@@ -50,6 +50,7 @@ func _ready() -> void:
 	add_child(world)
 	_setup_environment()
 	airport = Airport.new()
+	airport.game = self
 	world.add_child(airport)
 	plane_layer = Node3D.new()
 	world.add_child(plane_layer)
@@ -81,7 +82,7 @@ func _setup_environment() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-34, 38, 0)
 	sun.light_color = Color(1.0, 0.94, 0.84)
-	sun.light_energy = 1.35
+	sun.light_energy = 0.95
 	sun.shadow_enabled = true
 	sun.shadow_bias = 0.04
 	sun.shadow_normal_bias = 1.2
@@ -90,35 +91,30 @@ func _setup_environment() -> void:
 	sun.directional_shadow_blend_splits = true
 	sun.light_angular_distance = 0.6
 	add_child(sun)
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.22, 0.43, 0.8)
-	sky_mat.sky_horizon_color = Color(0.74, 0.84, 0.93)
-	sky_mat.ground_horizon_color = Color(0.74, 0.84, 0.93)
-	sky_mat.ground_bottom_color = Color(0.45, 0.5, 0.55)
-	sky_mat.sky_curve = 0.18
-	sky_mat.sun_angle_max = 28.0
-	sky_mat.sun_curve = 0.12
-	sky_mat.use_debanding = true
+	var sky_mat := ShaderMaterial.new()
+	sky_mat.shader = load("res://shaders/sky_clouds.gdshader")
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
+	sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
+	sky.radiance_size = Sky.RADIANCE_SIZE_128
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.6
+	env.ambient_light_energy = 0.42
 	env.ambient_light_color = Color(0.62, 0.64, 0.68)
 	env.ambient_light_sky_contribution = 0.5
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.0
+	env.tonemap_exposure = 0.82
 	env.tonemap_white = 6.0
 	env.glow_enabled = true
-	env.glow_intensity = 0.55
+	env.glow_intensity = 0.3
 	env.glow_bloom = 0.08
-	env.glow_hdr_threshold = 1.05
+	env.glow_hdr_threshold = 1.3
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.08
-	env.adjustment_saturation = 1.0
+	env.adjustment_contrast = 1.1
+	env.adjustment_saturation = 0.95
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.7, 0.8, 0.9)
 	env.fog_density = 0.0007
@@ -169,6 +165,45 @@ func to_screen(p: Vector2, h: float = 0.0) -> Vector2:
 	if cam == null or cam.is_position_behind(p3):
 		return Vector2(-9999, -9999)
 	return cam.unproject_position(p3)
+
+# Выталкивает круг (радиус r px) из непроходимых прямоугольников: терминал, техника, киоски, припаркованные самолёты.
+func resolve_px(p: Vector2, r: float) -> Vector2:
+	for pass_i in 2:
+		for rc: Rect2 in airport.solids_px:
+			p = _push(p, r, rc)
+		for pl in planes:
+			if pl != null and pl.state == "ready":
+				for rc: Rect2 in plane_rects(pl):
+					p = _push(p, r, rc)
+	return p
+
+func plane_rects(pl: Aircraft) -> Array:
+	var len_px: float = (Assets.LENGTHS[pl.model_idx] if pl.model_idx >= 0 else 12.0) / Cfg.K
+	var span_px := len_px * 0.95
+	return [
+		Rect2(pl.pos.x - len_px * 0.5, pl.pos.y - 0.34 / Cfg.K, len_px, 0.68 / Cfg.K),
+		Rect2(pl.pos.x - len_px * 0.12, pl.pos.y - span_px * 0.48, len_px * 0.34, span_px * 0.96),
+	]
+
+func _push(p: Vector2, r: float, rc: Rect2) -> Vector2:
+	var q := Vector2(clampf(p.x, rc.position.x, rc.end.x), clampf(p.y, rc.position.y, rc.end.y))
+	var d := p - q
+	if d == Vector2.ZERO:
+		var l := p.x - rc.position.x
+		var rr := rc.end.x - p.x
+		var t := p.y - rc.position.y
+		var b := rc.end.y - p.y
+		var mn := minf(minf(l, rr), minf(t, b))
+		if mn == l:
+			return Vector2(rc.position.x - r, p.y)
+		if mn == rr:
+			return Vector2(rc.end.x + r, p.y)
+		if mn == t:
+			return Vector2(p.x, rc.position.y - r)
+		return Vector2(p.x, rc.end.y + r)
+	if d.length() < r:
+		return q + d.normalized() * r
+	return p
 
 # Подсказка у прицела: что можно сделать прямо сейчас.
 func hint_for(w: Worker) -> String:
@@ -250,7 +285,7 @@ func start_game(n: int) -> void:
 	w.setup(0)
 	w.fp = true
 	w.yaw = PI
-	w.pos = Vector2(140, 1225)
+	w.pos = Vector2(140, 780)
 	worker_layer.add_child(w)
 	workers.append(w)
 	mode = "play"
@@ -427,6 +462,7 @@ func update_npc(n: Angry, dt: float) -> void:
 	if d > 4.0:
 		var dir := (t.pos - n.pos) / d
 		n.pos += dir * speed * dt
+		n.pos = resolve_px(n.pos, 30.0 if n.type == "muscle" else 16.0)
 		n.moving = true
 		n.dir = dir
 
@@ -472,6 +508,7 @@ func update_worker(w: Worker, dt: float) -> void:
 			w.moving = true
 			w.dir = d.normalized()
 	w.pos = Vector2(clampf(w.pos.x, Cfg.BOUNDS.position.x, Cfg.BOUNDS.end.x), clampf(w.pos.y, Cfg.BOUNDS.position.y, Cfg.BOUNDS.end.y))
+	w.pos = resolve_px(w.pos, 14.0)
 
 	if w.pressed and w.stun <= 0.0:
 		if w.item == "bag":
@@ -534,6 +571,12 @@ func _process(delta: float) -> void:
 		camera.current = true
 	_sync_bags()
 
+func _on_belt(p: Vector2) -> bool:
+	for b: Rect2 in Cfg.BELTS:
+		if b.has_point(p):
+			return true
+	return false
+
 func _sync_bags() -> void:
 	while bag_layer.get_child_count() < bags.size():
 		var n := Rig.item("bag")
@@ -543,7 +586,7 @@ func _sync_bags() -> void:
 	for i in kids.size():
 		kids[i].visible = i < bags.size()
 		if i < bags.size():
-			kids[i].position = Cfg.to3(bags[i], 0.12)
+			kids[i].position = Cfg.to3(bags[i], 0.68 if _on_belt(bags[i]) else 0.12)
 
 func step(dt: float) -> void:
 	if mode != "play":
@@ -557,14 +600,32 @@ func step(dt: float) -> void:
 
 	bag_t -= dt
 	if bag_t <= 0.0:
-		bag_t = 1.1
+		bag_t = 1.5
 		var belt: Rect2 = Cfg.BELTS.pick_random()
 		var on_belt := 0
-		for b in bags:
-			if belt.has_point(b):
+		var start_free := true
+		for bg in bags:
+			if belt.has_point(bg):
 				on_belt += 1
-		if on_belt < 6:
-			bags.append(belt.position + Vector2(randf_range(24, belt.size.x - 24), randf_range(14, belt.size.y - 14)))
+				if bg.x < belt.position.x + 70.0:
+					start_free = false
+		if on_belt < 6 and start_free:
+			bags.append(Vector2(belt.position.x + 16.0, belt.position.y + belt.size.y / 2.0 + randf_range(-12.0, 12.0)))
+	# багаж едет по ленте к столу и накапливается у упора
+	for i in bags.size():
+		var bg := bags[i]
+		for belt: Rect2 in Cfg.BELTS:
+			if belt.has_point(bg):
+				var end_x := belt.end.x - 24.0
+				if bg.x < end_x:
+					var blocked := false
+					for j in bags.size():
+						if j != i and bags[j].x > bg.x and bags[j].x - bg.x < 34.0 and absf(bags[j].y - bg.y) < 36.0 and belt.has_point(bags[j]):
+							blocked = true
+							break
+					if not blocked:
+						bags[i] = Vector2(minf(bg.x + Cfg.BELT_SPEED * dt, end_x), bg.y)
+				break
 
 	plane_t -= dt
 	if plane_t <= 0.0:

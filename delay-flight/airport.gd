@@ -17,6 +17,9 @@ var flybys: Array = []
 var fly_t := 3.0
 var radar: Node3D
 var crew: Array = []
+var solids_px: Array = []        # непроходимые прямоугольники (px: x=глубина, y=вдоль терминала)
+var belt_cleats: Array = []
+var game: Node
 
 func _ready() -> void:
 	_ground()
@@ -43,6 +46,18 @@ func _ready() -> void:
 	print("Airport: baked %d meshes" % baked)
 
 # ---------- материалы и помощники ----------
+# Регистрирует непроходимый прямоугольник (центр и размеры в мировых единицах).
+func _solid(x: float, z: float, sx: float, sz: float) -> void:
+	solids_px.append(Rect2(Vector2((z - sz / 2.0) / Cfg.K, (x - sx / 2.0) / Cfg.K), Vector2(sz / Cfg.K, sx / Cfg.K)))
+
+# Ставит объект на сцену и делает его непроходимым. size = (ширина по X, длина по Z) до поворота.
+func _place(n: Node3D, pos: Vector3, yaw_deg: float, size: Vector2) -> void:
+	n.position = pos
+	n.rotation_degrees.y = yaw_deg
+	add_child(n)
+	var turned := absf(sin(deg_to_rad(yaw_deg))) > 0.7
+	_solid(pos.x, pos.z, size.y if turned else size.x, size.x if turned else size.y)
+
 func _plane(size: Vector2, center: Vector3, mat: StandardMaterial3D) -> void:
 	var pm := PlaneMesh.new()
 	pm.size = size
@@ -126,7 +141,7 @@ func _sphere_mesh(r: float = 0.5) -> SphereMesh:
 func _ground() -> void:
 	var cx := CX
 	_plane(Vector2(3000, 3000), Vector3(cx, -0.06, 1000), Tex.material(Tex.grass(), Vector2(800, 800), 0.95))
-	_plane(Vector2(620, 29), Vector3(cx, Y_APRON, 14.5), Tex.material(Tex.concrete(256, 0.5, 1), Vector2(620 / 1.7, 29 / 1.7), 0.7, 0.55))
+	_plane(Vector2(620, 29), Vector3(cx, Y_APRON, 14.5), Tex.material(Tex.concrete(256, 0.42, 1), Vector2(620 / 1.7, 29 / 1.7), 0.7, 0.55))
 	_plane(Vector2(620, 7.4), Vector3(cx, Y_TAXI, 34.0), Tex.material(Tex.asphalt(256, 0.27), Vector2(620 / 1.4, 7.4 / 1.4), 0.6, 0.6))
 	for x in [-90.0, 150.0]:
 		_plane(Vector2(7.4, 60.0), Vector3(x, Y_TAXI, 67.6), Tex.material(Tex.asphalt(256, 0.27), Vector2(5.0, 43.0), 0.6, 0.6))
@@ -136,6 +151,7 @@ func _ground() -> void:
 
 # ---------- терминал ----------
 func _terminal() -> void:
+	_solid(CX, -10.0, TERM_W + 2.0, 21.0)
 	var x0 := CX - TERM_W / 2.0
 	var wall := _flat(Color("d9dde4"), 0.7)
 	var b := Rig.box(self, Vector3(TERM_W, 7.2, 14.0), Vector3(CX, 3.6, -7.0), Color("d9dde4"))
@@ -296,6 +312,7 @@ func _tower() -> void:
 
 func _bridge(xc: float, nose_z: float) -> void:
 	var bx := xc - 3.0
+	_solid(bx, (nose_z + 0.6) / 2.0 + 0.1, 1.9, nose_z + 0.6)
 	var shell := _flat(Color("d9dee6"), 0.5, 0.3)
 	var tube := Rig.box(self, Vector3(1.7, 1.8, nose_z - 0.6), Vector3(bx, 3.1, (nose_z + 0.6) / 2.0), Color.WHITE)
 	tube.material_override = shell
@@ -323,27 +340,88 @@ func _bridges() -> void:
 		l.pixel_size = 0.012
 		l.outline_size = 0
 
+# Багажная лента выходит из терминала: портал с резиновыми шторками, конвейер, движущиеся «зубья», стол-накопитель.
 func _belts() -> void:
 	for r: Rect2 in Cfg.BELTS:
-		var c := Cfg.to3(r.get_center())
-		var sz := Vector2(r.size.y * Cfg.K, r.size.x * Cfg.K)
-		Rig.box(self, Vector3(sz.x + 0.6, 0.35, sz.y + 0.6), Vector3(c.x, 0.17, c.z), Color("1d222d"))
-		Rig.box(self, Vector3(sz.x, 0.08, sz.y), Vector3(c.x, 0.37, c.z), Color("3a4254"))
-		var rollers: Array = []
-		for k in int(sz.y / 0.33):
-			rollers.append(_xf(Vector3(c.x, 0.42, c.z - sz.y / 2.0 + 0.2 + k * 0.33), Vector3(sz.x - 0.1, 0.03, 0.07)))
-		_mm(_box_mesh(), rollers, _flat(Color("5a6478"), 0.4, 0.5))
+		var bx: float = r.get_center().y * Cfg.K
+		var z0b: float = r.position.x * Cfg.K
+		var z1b: float = r.end.x * Cfg.K
+		var len := z1b - z0b + 0.6
+		var zc := (z0b + z1b) / 2.0 + 0.3
+		_solid(bx, zc + 0.2, 1.9, len + 1.2)
+		var steel := Color("8d96a3")
+		# --- портал в фасаде ---
+		Rig.box(self, Vector3(3.4, 3.0, 0.3), Vector3(bx, 1.5, 0.12), Color("2a2f38"))
+		var hole := Rig.box(self, Vector3(2.5, 2.3, 0.1), Vector3(bx, 1.35, 0.3), Color("0b0d11"))
+		hole.material_override = _flat(Color("0b0d11"), 0.9)
 		for sx in [-1.0, 1.0]:
-			Rig.box(self, Vector3(0.12, 0.25, sz.y + 0.6), Vector3(c.x + sx * (sz.x / 2.0 + 0.35), 0.45, c.z), Color("e0b020"))
-		Rig.box(self, Vector3(sz.x + 1.6, 1.0, 0.14), Vector3(c.x, 2.4, c.z - sz.y / 2.0 - 0.6), Color("1b2a52"))
-		Rig.cyl(self, 0.06, 0.06, 2.4, Vector3(c.x - sz.x / 2.0 - 0.6, 1.2, c.z - sz.y / 2.0 - 0.6), Color("333b4a"))
-		Rig.cyl(self, 0.06, 0.06, 2.4, Vector3(c.x + sz.x / 2.0 + 0.6, 1.2, c.z - sz.y / 2.0 - 0.6), Color("333b4a"))
-		var l := Rig.label(self, "БАГАЖ", Vector3(c.x, 2.4, c.z - sz.y / 2.0 - 0.52), 60, Color("ffd24d"), false)
-		l.pixel_size = 0.011
-		l.outline_size = 0
+			GSE.hazard(self, Vector3(bx + sx * 1.38, 1.4, 0.3), Vector3(0.14, 0.14, 2.6), false, 12)
+		GSE.hazard(self, Vector3(bx, 2.58, 0.3), Vector3(2.9, 0.14, 0.14), true, 14)
+		var curtain: Array = []
+		for k in 18:
+			curtain.append(_xf(Vector3(bx - 1.15 + k * 0.135, 1.45, 0.46 + (k % 2) * 0.03), Vector3(0.12, 1.95, 0.015)))
+		_mm(_box_mesh(), curtain, _flat(Color("26292f"), 0.97))
+		Rig.box(self, Vector3(2.6, 0.5, 0.1), Vector3(bx, 3.35, 0.32), Color("f0b61c"))
+		var sign := Rig.label(self, "БАГАЖ  ·  BAGGAGE", Vector3(bx, 3.35, 0.4), 52, Color("15171c"), false)
+		sign.pixel_size = 0.0095
+		sign.outline_size = 0
+		# --- конвейер ---
+		Rig.box(self, Vector3(1.56, 0.07, len), Vector3(bx, 0.64, zc), Color("1c1e22"))
+		for sx in [-1.0, 1.0]:
+			var rail := Rig.box(self, Vector3(0.09, 0.28, len), Vector3(bx + sx * 0.8, 0.5, zc), steel)
+			rail.material_override = _flat(steel, 0.35, 0.8)
+			Rig.box(self, Vector3(0.06, 0.12, len), Vector3(bx + sx * 0.8, 0.72, zc), Color("f0b61c"))
+		var legs: Array = []
+		var feet: Array = []
+		var zz := z0b + 0.6
+		while zz < z1b:
+			for sx in [-1.0, 1.0]:
+				legs.append(_xf(Vector3(bx + sx * 0.74, 0.25, zz), Vector3(0.07, 0.5, 0.07)))
+				feet.append(_xf(Vector3(bx + sx * 0.74, 0.02, zz), Vector3(0.22, 0.03, 0.22)))
+			legs.append(_xf(Vector3(bx, 0.4, zz), Vector3(1.4, 0.04, 0.05)))
+			zz += 1.5
+		_mm(_box_mesh(), legs, _flat(steel, 0.4, 0.7))
+		_mm(_box_mesh(), feet, _flat(Color("2a2f38"), 0.6, 0.4))
+		# движущиеся «зубья»
+		var holder := Node3D.new()
+		holder.position = Vector3(bx, 0.69, z0b)
+		add_child(holder)
+		var cl: Array = []
+		var n := int((z1b - z0b) / 0.45) + 3
+		for k in n:
+			cl.append(_xf(Vector3(0, 0.0, k * 0.45 - 0.45), Vector3(1.4, 0.025, 0.07)))
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _box_mesh()
+		mm.instance_count = cl.size()
+		for k in cl.size():
+			mm.set_instance_transform(k, cl[k])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.material_override = _flat(Color("33363d"), 0.9)
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		holder.add_child(mmi)
+		belt_cleats.append(holder)
+		# направляющие у конца, упор, стол-накопитель
+		for sx in [-1.0, 1.0]:
+			Rig.box(self, Vector3(0.05, 0.2, 2.4), Vector3(bx + sx * 0.84, 0.86, z1b - 1.2), Color("f0b61c"))
+			for k in 3:
+				Rig.box(self, Vector3(0.05, 0.42, 0.05), Vector3(bx + sx * 0.84, 0.7, z1b - 2.2 + k * 1.0), steel)
+		GSE.hazard(self, Vector3(bx, 0.82, z1b + 0.25), Vector3(1.5, 0.3, 0.06), true, 8)
+		var table := Rig.box(self, Vector3(1.7, 0.05, 1.1), Vector3(bx, 0.6, z1b + 0.85), steel)
+		table.material_override = _flat(Color("b9c0ca"), 0.3, 0.9)
+		for sx in [-1.0, 1.0]:
+			Rig.box(self, Vector3(0.05, 0.6, 0.05), Vector3(bx + sx * 0.8, 0.3, z1b + 1.3), steel)
+		# аварийный шнур и светильник
+		for k in 3:
+			Rig.cyl(self, 0.02, 0.02, 1.2, Vector3(bx - 0.95, 0.6 + 0.0, z0b + 1.5 + k * 3.0), Color("2a2f38"))
+		Rig.cyl(self, 0.012, 0.012, len - 1.0, Vector3(bx - 0.95, 1.25, zc), Color("d8301f"), Vector3(90, 0, 0))
+		Rig.cyl(self, 0.04, 0.05, 2.2, Vector3(bx + 1.1, 1.1, z1b + 0.4), Color("5d6572"))
+		Rig.box(self, Vector3(0.5, 0.1, 0.22), Vector3(bx + 1.1, 2.2, z1b + 0.4), Color("fff3d0"), Vector3.ZERO, 2.6)
 
 func _kiosk(p: Vector2, title: String, roof: Color, icon: String) -> void:
 	var c := Cfg.to3(p)
+	_solid(c.x, c.z + 0.3, 3.3, 2.4)
 	Rig.box(self, Vector3(3.2, 1.9, 1.7), Vector3(c.x, 0.95, c.z), Color("e8d2a8"))
 	Rig.box(self, Vector3(2.5, 0.85, 0.06), Vector3(c.x, 1.1, c.z + 0.87), Color("2b2118"))
 	Rig.box(self, Vector3(3.3, 0.08, 0.7), Vector3(c.x, 1.35, c.z + 1.05), Color("c8a77a"))
@@ -368,7 +446,7 @@ func _stand(i: int) -> void:
 	var z0 := Cfg.PX * Cfg.K
 	var paint := _flat(Color("f2c744"), 0.7)
 	var white := _flat(Color("e9edf2"), 0.7)
-	var red := _flat(Color("c0392b"), 0.7)
+	var red := _flat(Color("9a2a20"), 0.8)
 	# осевая заруливания, стоп-линия, зона безопасности
 	_mm(_box_mesh(), [_xf(Vector3(xc, Y_PAINT, 20.5), Vector3(0.22, 0.03, 27.0))], paint)
 	_mm(_box_mesh(), [_xf(Vector3(xc, Y_PAINT, 6.6), Vector3(4.0, 0.03, 0.25))], white)
@@ -376,11 +454,11 @@ func _stand(i: int) -> void:
 	var t := 6.0
 	while t < z0 + 8.6:
 		for dx in [-8.5, 8.5]:
-			dashes.append(_xf(Vector3(xc + dx, Y_PAINT, t), Vector3(0.14, 0.03, 0.5)))
+			dashes.append(_xf(Vector3(xc + dx, Y_PAINT, t), Vector3(0.1, 0.03, 0.4)))
 		t += 1.0
 	var x := -8.5
 	while x < 8.5:
-		dashes.append(_xf(Vector3(xc + x, Y_PAINT, z0 + 8.6), Vector3(0.5, 0.03, 0.14)))
+		dashes.append(_xf(Vector3(xc + x, Y_PAINT, z0 + 8.6), Vector3(0.4, 0.03, 0.1)))
 		x += 1.0
 	_mm(_box_mesh(), dashes, red)
 	# большой номер стоянки на асфальте
@@ -401,23 +479,13 @@ func _stand(i: int) -> void:
 		ring.scale = Vector3(1, 0.04, 1)
 		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(ring)
-	# заправщик у крыла, багажный поезд у люка, наземное питание, тягач
-	var fuel := Props.fuel_truck()
-	fuel.position = Vector3(xc + 6.8, 0, z0 + 0.8)
-	add_child(fuel)
-	var train := Props.baggage_train(3)
-	train.position = Vector3(xc + 3.4, 0, z0 + 5.6)
-	add_child(train)
-	var gpu := Props.gpu_cart()
-	gpu.position = Vector3(xc - 2.4, 0, 8.6)
-	gpu.rotation_degrees.y = 25
-	add_child(gpu)
-	var tug := Assets.kenney("tractor", 1.25)
-	if tug == null:
-		tug = Props.pushback_tug()
-	tug.position = Vector3(xc - 3.6, 0, 6.0)
-	tug.rotation_degrees.y = 160.0
-	add_child(tug)
+	# заправщик у крыла, ленточный погрузчик у багажного люка, поезд тележек, питание, тягач
+	_place(GSE.fuel_truck(), Vector3(xc + 6.9, 0, z0 + 0.7), 0.0, Vector2(0.95, 3.4))
+	_place(GSE.belt_loader(), Vector3(xc + 3.1, 0, z0 + 4.6), 90.0, Vector2(0.7, 4.0))
+	_place(GSE.baggage_train(3), Vector3(xc + 5.4, 0, z0 + 6.4), 0.0, Vector2(0.7, 5.4))
+	_place(GSE.gpu_cart(), Vector3(xc - 1.1, 0, 8.0), 20.0, Vector2(0.5, 0.9))
+	if i == 1:
+		_place(GSE.pushback_tug(), Vector3(xc + 0.4, 0, 3.4), 180.0, Vector2(1.0, 4.0))
 	for off in [Vector2(-8.5, 5.4), Vector2(8.5, 5.4), Vector2(-8.5, z0 + 8.2), Vector2(8.5, z0 + 8.2)]:
 		var c := Vector3(xc + off.x, 0, off.y)
 		Rig.cyl(self, 0.02, 0.1, 0.3, c + Vector3(0, 0.15, 0), Color("ff6a2a"))
@@ -436,12 +504,10 @@ func _decor_gates() -> void:
 		add_child(a)
 		a.position = Vector3(xc, 0, Cfg.PX * Cfg.K)
 		a.body.rotation.y = -PI / 2.0
-		var fuel := Props.fuel_truck()
-		fuel.position = Vector3(xc + 6.8, 0, Cfg.PX * Cfg.K + 0.8)
-		add_child(fuel)
-		var train := Props.baggage_train(2)
-		train.position = Vector3(xc + 3.4, 0, Cfg.PX * Cfg.K + 5.6)
-		add_child(train)
+		_solid(xc, Cfg.PX * Cfg.K, 13.0, 15.0)
+		_place(GSE.fuel_truck(), Vector3(xc + 6.9, 0, Cfg.PX * Cfg.K + 0.7), 0.0, Vector2(0.95, 3.4))
+		_place(GSE.baggage_train(2), Vector3(xc + 5.4, 0, Cfg.PX * Cfg.K + 6.4), 0.0, Vector2(0.7, 4.1))
+		_place(GSE.belt_loader(), Vector3(xc + 3.1, 0, Cfg.PX * Cfg.K + 4.6), 90.0, Vector2(0.7, 4.0))
 
 func _apron_details() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -543,25 +609,32 @@ func _service_road() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 8
 	var items := [
-		["bus", -14.0], ["train", -2.0], ["bus", 40.0], ["stairs", 24.0], ["cat", 55.0], ["train", 66.0], ["cat", 4.0], ["stairs", 76.0],
+		["bus", -14.0], ["train", -2.0], ["bus", 40.0], ["stairs", 24.0], ["cat", 55.0], ["train", 66.0], ["cat", 4.0], ["stairs", 76.0], ["loader", 12.0], ["loader", 88.0],
 	]
 	for it in items:
 		var n: Node3D
+		var size := Vector2(0.9, 3.0)
 		match it[0]:
-			"bus": n = Props.bus()
-			"train": n = Props.baggage_train(3)
-			"stairs": n = Props.stairs_truck()
-			_: n = Props.catering_truck()
-		n.position = Vector3(it[1], 0, 27.0)
-		n.rotation_degrees.y = 90.0 if rng.randf() < 0.5 else -90.0
-		add_child(n)
-	# грузовые контейнеры ULD
+			"bus":
+				n = GSE.bus()
+				size = Vector2(0.95, 4.1)
+			"train":
+				n = GSE.baggage_train(3)
+				size = Vector2(0.7, 5.4)
+			"stairs":
+				n = GSE.stairs_truck()
+				size = Vector2(0.9, 2.4)
+			"loader":
+				n = GSE.belt_loader()
+				size = Vector2(0.7, 4.0)
+			_:
+				n = GSE.catering_truck()
+				size = Vector2(0.95, 3.1)
+		_place(n, Vector3(it[1], 0, 27.0), 90.0 if rng.randf() < 0.5 else -90.0, size)
 	var uld: Array = []
-	var ucol: Array = []
-	for k in 16:
-		uld.append(_xf(Vector3(-20.0 + (k % 8) * 1.0 + 60.0 * (k / 8), 0.4, 28.4 + (k % 2) * 0.9), Vector3(0.9, 0.8, 0.9)))
-		ucol.append(Color("aab4c3").lerp(Color("6a7a90"), rng.randf()))
-	_mm_colored(_box_mesh(), uld, ucol, true)
+	for k in 8:
+		var u := GSE.uld()
+		_place(u, Vector3(-18.0 + k * 0.8 + (60.0 if k >= 4 else 0.0), 0, 28.6), 0.0, Vector2(0.65, 0.55))
 
 func _kenney_vehicles() -> void:
 	var spots := [
@@ -573,9 +646,7 @@ func _kenney_vehicles() -> void:
 		var v := Assets.kenney(s[0], s[1])
 		if v == null:
 			continue
-		v.position = s[2]
-		v.rotation_degrees.y = s[3]
-		add_child(v)
+		_place(v, s[2], s[3], Vector2(1.0, float(s[1])))
 
 func _crew() -> void:
 	var vests := [Color("ff7a1a"), Color("d7ef2a"), Color("ff4d2e"), Color("ffd24d")]
@@ -636,6 +707,9 @@ func _crew_update(delta: float) -> void:
 			continue
 		var step: Vector2 = d.normalized() * c.speed * delta
 		w.position += Vector3(step.x, 0, step.y)
+		if game != null:
+			var rp: Vector2 = game.resolve_px(Vector2(w.position.z / Cfg.K, w.position.x / Cfg.K), 12.0)
+			w.position = Vector3(rp.y * Cfg.K, 0.0, rp.x * Cfg.K)
 		w.rotation.y = lerp_angle(w.rotation.y, atan2(d.x, d.y), minf(1.0, delta * 8.0))
 
 func _extras() -> void:
@@ -645,6 +719,7 @@ func _extras() -> void:
 		m.position = Vector3(x + 5.0, 0, 23.0)
 		m.rotation_degrees.y = 180
 		add_child(m)
+		_solid(x + 5.0, 23.0, 0.5, 0.5)
 	for p in [Vector3(130.0, 0, 41.0), Vector3(-70.0, 0, 41.0)]:
 		var w := Props.windsock()
 		w.position = p
@@ -659,17 +734,6 @@ func _extras() -> void:
 	for x in range(-30, 92, 11):
 		ac.append(_xf(Vector3(x, 8.2, -9.0), Vector3(4.6, 1.4, 3.2)))
 	_mm(_box_mesh(), ac, _flat(Color("aab4c3"), 0.5, 0.3), true)
-	# облака
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 99
-	for k in 40:
-		var c := Node3D.new()
-		c.position = Vector3(rng.randf_range(-600, 700), rng.randf_range(160, 320), rng.randf_range(300, 1500))
-		add_child(c)
-		for j in 6:
-			var s := Rig.sphere(c, rng.randf_range(20.0, 40.0), Vector3(j * 28.0 - 70.0, rng.randf_range(-4, 4), rng.randf_range(-8, 8)), Color(1, 1, 1, 0.94), Vector3(1.0, 0.45, 0.8))
-			s.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			(s.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
 # ---------- далёкий аэропорт: второй терминал, ангары, цистерны, парковка, шоссе ----------
 func _far_airport() -> void:
@@ -823,6 +887,11 @@ func _suburbs() -> void:
 # ---------- самолёты на полосе ----------
 func _process(delta: float) -> void:
 	_crew_update(delta)
+	for h in belt_cleats:
+		h.position.z = h.get_meta("z0", h.position.z) if h.has_meta("z0") else h.position.z
+		if not h.has_meta("z0"):
+			h.set_meta("z0", h.position.z)
+		h.position.z = h.get_meta("z0") + fmod(Time.get_ticks_msec() / 1000.0 * Cfg.BELT_SPEED * Cfg.K, 0.45)
 	if radar != null:
 		radar.rotation.y += delta * 1.6
 	fly_t -= delta

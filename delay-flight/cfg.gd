@@ -12,10 +12,11 @@ const PX := 720.0                           # центр стоянки (x): z0 
 const ROWS := [550.0, 1500.0, 2450.0]       # центры стоянок (y): X = 11, 30, 49 (шаг 57 м)
 const TAXI_X := 1700.0                      # рулёжка (x): z = 34
 const SPAWN_Y := 5400.0                     # откуда выруливают самолёты (y)
-const BELT := Rect2(400, 975, 500, 100)      # багажный пункт между стоянками 1 и 2
-const BELTS := [Rect2(400, 975, 500, 100), Rect2(400, 1925, 500, 100)]
-const COFFEE := Vector2(170, 1025)
-const BURGER := Vector2(170, 1975)
+const BELT := Rect2(20, 985, 440, 80)       # левая лента: из терминала (z=0.4) к стоянкам (z=9.2)
+const BELTS := [Rect2(20, 985, 440, 80), Rect2(20, 1935, 440, 80)]
+const BELT_SPEED := 75.0                    # скорость ленты, px/с
+const COFFEE := Vector2(170, 1190)
+const BURGER := Vector2(170, 2150)
 const DOOR_OFF := Vector2(225, 80)           # багажный люк относительно центра самолёта
 const FUEL_OFF := Vector2(30, 230)           # заправка под крылом
 const BOUNDS := Rect2(100, 20, 1600, 2900)
