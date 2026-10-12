@@ -6,6 +6,7 @@ extends Node3D
 const RUNWAY_Z := 23.5
 
 var flybys: Array = []
+var crew: Array = []
 var radar: Node3D
 var fly_t := 3.0
 
@@ -22,6 +23,9 @@ func _ready() -> void:
 		_stand(i)
 	_taxiway_and_runway()
 	_vehicles()
+	_kenney_vehicles()
+	_terminal_complex()
+	_crew()
 	_extras()
 	_scenery()
 
@@ -221,8 +225,11 @@ func _stand(i: int) -> void:
 	train.rotation_degrees.y = 0
 	add_child(train)
 	if i == 1:
-		var tug := Props.pushback_tug()
+		var tug := Assets.kenney("tractor", 2.2)
+		if tug == null:
+			tug = Props.pushback_tug()
 		tug.position = Vector3(xc - 2.2, 0, z0 + 5.4)
+		tug.rotation_degrees.y = 200.0
 		add_child(tug)
 	if i == 2:
 		var gpu := Props.gpu_cart()
@@ -268,6 +275,91 @@ func _vehicles() -> void:
 	stairs.position = Vector3(25.3, 0, 13.0)
 	stairs.rotation_degrees.y = 180
 	add_child(stairs)
+
+func _kenney_vehicles() -> void:
+	var spots := [
+		["firetruck", 4.4, Vector3(27.4, 0, 5.0), 90.0], ["ambulance", 3.6, Vector3(27.4, 0, 9.6), 90.0],
+		["taxi", 3.2, Vector3(-2.0, 0, 5.2), -90.0], ["police", 3.3, Vector3(-2.0, 0, 8.6), -90.0],
+		["van", 3.6, Vector3(-2.0, 0, 12.0), -90.0], ["delivery", 4.2, Vector3(27.4, 0, 13.8), 90.0],
+	]
+	for s in spots:
+		var v := Assets.kenney(s[0], s[1])
+		if v == null:
+			continue
+		v.position = s[2]
+		v.rotation_degrees.y = s[3]
+		add_child(v)
+
+# Терминальный комплекс (CC-BY, soysascha) — за полосой, как «большой аэропорт» вдали.
+func _terminal_complex() -> void:
+	var m := Assets.load_scene(Assets.TERMINAL)
+	if m == null:
+		return
+	var b := Assets.bounds(m)
+	var k := 34.0 / maxf(b.size.x, 0.0001)
+	var wrap := Node3D.new()
+	wrap.add_child(m)
+	m.scale = m.scale * k
+	var c := b.get_center()
+	m.position = Vector3(-c.x * k, -b.position.y * k, -c.z * k)
+	wrap.position = Vector3(18.0, 0.0, 36.0)
+	wrap.rotation_degrees.y = 180.0
+	add_child(wrap)
+
+# Живые рабочие (Quaternius, CC0) с анимациями ходьбы, работы, приветствий.
+func _crew() -> void:
+	var vests := [Color("ff7a1a"), Color("d7ef2a"), Color("ff4d2e"), Color("ffd24d")]
+	var hats := [Color("ffd24d"), Color("f4f4f4"), Color("ff7a1a"), Color("2b6fd6")]
+	var skins := [Color("e8b48a"), Color("c98e65"), Color("8d5a3c"), Color("f1c9a5")]
+	var z0 := Cfg.PX * Cfg.K
+	var routes := [
+		[Vector2(2.0, 12.9), Vector2(23.5, 12.9)],
+		[Vector2(3.4, 5.0), Vector2(3.4, 9.4), Vector2(6.9, 11.2)],
+		[Vector2(8.8, 3.2), Vector2(17.0, 3.2), Vector2(24.0, 3.4)],
+		[Vector2(5.2 + 2.9, z0 + 0.4), Vector2(5.2 + 2.9, z0 + 2.2)],
+		[Vector2(12.8 + 2.9, z0 + 0.4), Vector2(12.8 + 2.9, z0 + 2.2)],
+		[Vector2(20.4 + 2.9, z0 + 0.4), Vector2(20.4 + 2.9, z0 + 2.2)],
+		[Vector2(26.2, 7.2), Vector2(26.2, 7.2)],
+		[Vector2(0.9, 10.8), Vector2(0.9, 10.8)],
+		[Vector2(16.4, 6.0), Vector2(16.4, 11.6)],
+		[Vector2(9.2, 6.4), Vector2(9.2, 12.2), Vector2(10.4, 12.6)],
+	]
+	for i in routes.size():
+		var w := Assets.worker(vests[i % 4], hats[(i + 1) % 4], skins[(i + 2) % 4])
+		if w == null:
+			return
+		var pts: Array = routes[i]
+		w.position = Vector3(pts[0].x, 0, pts[0].y)
+		add_child(w)
+		var ap := Assets.play(w, "Walk" if pts.size() > 1 else "Idle")
+		crew.append({"node": w, "pts": pts, "i": 0, "wait": randf_range(0.0, 3.0), "ap": ap, "speed": randf_range(1.0, 1.5), "walking": pts.size() > 1})
+
+func _crew_update(delta: float) -> void:
+	for c in crew:
+		var w: Node3D = c.node
+		var pts: Array = c.pts
+		if c.wait > 0.0:
+			c.wait -= delta
+			if c.wait <= 0.0 and pts.size() > 1:
+				c.walking = true
+				Assets.play(w, "Walk")
+			continue
+		if pts.size() < 2:
+			c.wait = randf_range(3.0, 6.0)
+			Assets.play(w, ["Idle", "Wave", "Interact", "Idle_Neutral"].pick_random())
+			continue
+		var tgt: Vector2 = pts[(c.i + 1) % pts.size()]
+		var cur := Vector2(w.position.x, w.position.z)
+		var d := tgt - cur
+		if d.length() < 0.15:
+			c.i = (c.i + 1) % pts.size()
+			c.wait = randf_range(1.5, 5.0)
+			c.walking = false
+			Assets.play(w, ["Interact", "Idle", "Wave", "Idle_Neutral"].pick_random())
+			continue
+		var step: Vector2 = d.normalized() * c.speed * 1.2 * delta
+		w.position += Vector3(step.x, 0, step.y)
+		w.rotation.y = lerp_angle(w.rotation.y, atan2(d.x, d.y), minf(1.0, delta * 8.0))
 
 func _extras() -> void:
 	# мачты освещения
@@ -324,7 +416,7 @@ func _scenery() -> void:
 	rng.seed = 7
 	for i in 90:
 		var x := -30.0 + i * 0.95
-		var z := rng.randf_range(38.0, 50.0)
+		var z := rng.randf_range(46.0, 58.0)
 		var h := rng.randf_range(1.6, 3.4)
 		Rig.cyl(self, 0.1, 0.14, h * 0.4, Vector3(x, h * 0.2, z), Color("5b3a22"))
 		Rig.cyl(self, 0.02, h * 0.38, h, Vector3(x, h * 0.4 + h * 0.5, z), Color("2f6b3a").lerp(Color("3f8a45"), rng.randf()))
@@ -334,6 +426,7 @@ func _scenery() -> void:
 
 # ---------- самолёты на полосе ----------
 func _process(delta: float) -> void:
+	_crew_update(delta)
 	if radar != null:
 		radar.rotation.y += delta * 1.6
 	fly_t -= delta
@@ -368,6 +461,7 @@ func ease_in(u: float) -> float:
 func _spawn_flyby() -> void:
 	var a := Aircraft.new()
 	a.ambient = true
+	a.model_idx = randi() % Assets.FLEET.size()
 	a.livery = [Color("e63946"), Color("2a9d8f"), Color("f4a261"), Color("6c5ce7"), Color("00a8e8")].pick_random()
 	a.flight = ["SU 214", "S7 905", "U6 331", "DP 404"].pick_random()
 	add_child(a)

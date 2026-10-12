@@ -105,10 +105,22 @@ func _setup_environment() -> void:
 func _build_menu_stage() -> void:
 	menu_stage = Node3D.new()
 	world.add_child(menu_stage)
+	var vests := [Color("ff7a1a"), Color("d7ef2a"), Color("ff4d2e"), Color("4da3ff")]
+	var hats := [Color("ffd24d"), Color("f4f4f4"), Color("f4f4f4"), Color("2b6fd6")]
+	var skins := [Color("e8b48a"), Color("c98e65"), Color("f1c9a5"), Color("8d5a3c")]
+	var anims := ["Walk", "Wave", "Interact", "Idle"]
 	for i in 4:
-		var o := People.crew_opts(i)
-		o["s"] = 1.15
-		var rig := People.person(o)
+		var rig: Node3D = Assets.worker(vests[i], hats[i], skins[i])
+		if rig != null:
+			var holder := Node3D.new()
+			holder.add_child(rig)
+			holder.scale = Vector3.ONE * 1.1
+			Assets.play(rig, anims[i])
+			rig = holder
+		else:
+			var o := People.crew_opts(i)
+			o["s"] = 1.15
+			rig = People.person(o)
 		rig.position = Cfg.to3(menu_spot(i))
 		menu_stage.add_child(rig)
 		menu_rigs.append(rig)
@@ -231,6 +243,7 @@ func spawn_plane() -> void:
 	pl.pat = pl.max_pat
 	pl.need = 4 if elapsed > 80.0 else 3
 	pl.livery = LIVERIES.pick_random()
+	pl.model_idx = randi() % Assets.FLEET.size()
 	pl.flight = FLIGHTS.pick_random()
 	plane_layer.add_child(pl)
 	planes[row] = pl
@@ -453,7 +466,8 @@ func _process(delta: float) -> void:
 		for i in menu_rigs.size():
 			var r := menu_rigs[i]
 			r.rotation.y = PI + sin(Time.get_ticks_msec() / 900.0 + i) * 0.35
-			People.animate(r, Time.get_ticks_msec() / 90.0 + i, true)
+			if r.get_node_or_null("Body") != null:
+				People.animate(r, Time.get_ticks_msec() / 90.0 + i, true)
 	var fp_cam: Camera3D = null
 	if mode == "play" and not workers.is_empty():
 		fp_cam = workers[0].cam

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Small airport terminal building complex.
+* source:	https://sketchfab.com/3d-models/small-airport-terminal-building-complex-f93a362f8a1f4e2c92f65310cfdd7fe2
+* author:	soysascha (https://sketchfab.com/soysascha)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Small airport terminal building complex." (https://sketchfab.com/3d-models/small-airport-terminal-building-complex-f93a362f8a1f4e2c92f65310cfdd7fe2) by soysascha (https://sketchfab.com/soysascha) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

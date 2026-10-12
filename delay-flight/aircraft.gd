@@ -34,6 +34,10 @@ var bag_label: Label3D
 var fuel_label: Label3D
 var bar_fill: MeshInstance3D
 var last_pos := Vector2.ZERO
+var model_idx := -1        # индекс в Assets.FLEET; -1 — процедурная модель
+var model_root: Node3D
+var overlay: StandardMaterial3D
+var _tinted := false
 
 func door_pt() -> Vector2:
 	return pos + Cfg.DOOR_OFF
@@ -278,14 +282,36 @@ static func _details(parent: Node3D, livery: Color, wing_mat: StandardMaterial3D
 	Rig.box(parent, Vector3(0.5, 0.012, 0.38), Vector3(1.2, 0.46, 0.0), Color("aab3c0"))
 	Rig.box(parent, Vector3(0.5, 0.012, 0.38), Vector3(-1.5, 0.46, 0.0), Color("aab3c0"))
 
+# Внешняя модель самолёта: нос модели в +Z, поворачиваем носом в -X.
+func _build_imported() -> bool:
+	if model_idx < 0 or model_idx >= Assets.FLEET.size():
+		return false
+	var m := Assets.load_scene(Assets.FLEET[model_idx])
+	if m == null:
+		return false
+	var pivot := Assets.fit(m, 8.8, 6.3)
+	pivot.rotation.y = -PI / 2.0
+	body.add_child(pivot)
+	model_root = pivot
+	var b := Assets.bounds(m)
+	overlay = StandardMaterial3D.new()
+	overlay.albedo_color = Color(1.0, 0.1, 0.1, 0.38)
+	overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return true
+
 func _ready() -> void:
 	body = Node3D.new()
-	body.scale = Vector3.ONE * SCALE
 	body.rotation.y = 0.0
 	add_child(body)
-	var m := build_model(body, livery, flight)
-	body_mat = m.mat
-	beacon = m.beacon
+	var imported := _build_imported()
+	if imported:
+		beacon = Rig.sphere(body, 0.12, Vector3(0, 3.0, 0), Color("ff2d2d"), Vector3.ONE, 3.0)
+	else:
+		body.scale = Vector3.ONE * SCALE
+		var m := build_model(body, livery, flight)
+		body_mat = m.mat
+		beacon = m.beacon
 	beacon.visible = false
 	last_pos = pos
 	if ambient:
@@ -326,5 +352,10 @@ func _process(delta: float) -> void:
 		bar_fill.material_override.emission = col
 		bag_label.text = "багаж %d/%d" % [bags, need]
 		fuel_label.text = "топливо %d%%" % int(fuel)
-	body_mat.albedo_color = Color(1.0, 0.72, 0.72) if delayed else Color.WHITE
+	if body_mat != null:
+		body_mat.albedo_color = Color(1.0, 0.72, 0.72) if delayed else Color.WHITE
+	elif model_root != null and delayed != _tinted:
+		_tinted = delayed
+		for mi in model_root.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).material_overlay = overlay if delayed else null
 	beacon.visible = delayed and int(blink * 3.0) % 2 == 0
