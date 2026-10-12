@@ -71,14 +71,15 @@ func _ready() -> void:
 func _setup_environment() -> void:
 	camera = Camera3D.new()
 	camera.fov = 62.0
-	camera.position = Vector3(13.8, 1.9, 2.9)
+	camera.far = 3000.0
+	camera.position = Vector3(24.0, 1.9, 2.9)
 	add_child(camera)
-	camera.look_at(Vector3(12.9, 1.2, 8.0), Vector3.UP)
+	camera.look_at(Vector3(22.4, 1.2, 8.4), Vector3.UP)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-42, 28, 0)
 	sun.light_energy = 0.8
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 70.0
+	sun.directional_shadow_max_distance = 90.0
 	add_child(sun)
 	var sky_mat := ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color("4a90d9")
@@ -96,7 +97,7 @@ func _setup_environment() -> void:
 	env.tonemap_exposure = 0.9
 	env.fog_enabled = true
 	env.fog_light_color = Color("c4d9ee")
-	env.fog_density = 0.0025
+	env.fog_density = 0.0016
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var we := WorldEnvironment.new()
 	we.environment = env
@@ -126,7 +127,7 @@ func _build_menu_stage() -> void:
 		menu_rigs.append(rig)
 
 func menu_spot(i: int) -> Vector2:
-	return Vector2(430.0, 800.0 - i * 105.0)
+	return Vector2(430.0, 1320.0 - i * 105.0)
 
 func to_screen(p: Vector2, h: float = 0.0) -> Vector2:
 	var cam := get_viewport().get_camera_3d()
@@ -214,7 +215,7 @@ func start_game(n: int) -> void:
 	w.setup(0)
 	w.fp = true
 	w.yaw = PI
-	w.pos = Vector2(130, 460)
+	w.pos = Vector2(130, 560)
 	worker_layer.add_child(w)
 	workers.append(w)
 	mode = "play"
@@ -253,13 +254,13 @@ func update_plane(pl: Aircraft, dt: float, idx: int) -> void:
 		"arriving":
 			var lane := Vector2(Cfg.TAXI_X, Cfg.ROWS[pl.row])
 			if pl.phase == 0:
-				pl.pos = pl.pos.move_toward(lane, 430.0 * dt)
+				pl.pos = pl.pos.move_toward(lane, 700.0 * dt)
 				if pl.pos.distance_to(lane) < 2.0:
 					pl.phase = 1
 			else:
 				var stand := Vector2(Cfg.PX, Cfg.ROWS[pl.row])
 				var d := pl.pos.distance_to(stand)
-				pl.pos = pl.pos.move_toward(stand, clampf(d * 0.9 + 40.0, 40.0, 330.0) * dt)
+				pl.pos = pl.pos.move_toward(stand, clampf(d * 0.9 + 40.0, 40.0, 420.0) * dt)
 				if d < 2.0:
 					pl.pos = stand
 					pl.state = "ready"
@@ -280,12 +281,12 @@ func update_plane(pl: Aircraft, dt: float, idx: int) -> void:
 			var back := Vector2(Cfg.TAXI_X - 30.0, Cfg.ROWS[pl.row])
 			if pl.phase == 0:
 				pl.reverse = true
-				pl.pos = pl.pos.move_toward(back, 230.0 * dt)
+				pl.pos = pl.pos.move_toward(back, 260.0 * dt)
 				if pl.pos.distance_to(back) < 2.0:
 					pl.phase = 1
 			else:
 				pl.reverse = false
-				pl.pos = pl.pos.move_toward(Vector2(back.x, Cfg.SPAWN_Y), 430.0 * dt)
+				pl.pos = pl.pos.move_toward(Vector2(back.x, Cfg.SPAWN_Y), 700.0 * dt)
 				if pl.pos.y >= Cfg.SPAWN_Y - 2.0:
 					planes[idx] = null
 					pl.queue_free()
@@ -296,9 +297,9 @@ func spawn_npc(type: String) -> void:
 	n.type = type
 	n.cd = 1.5
 	n.shout = randf_range(2.0, 4.0)
-	n.pos = Vector2(randf_range(260, 700), Cfg.SPAWN_Y - 100.0)
+	n.pos = Vector2(randf_range(250, 900), randf_range(1900.0, 2250.0))
 	if type == "dispatcher":
-		n.pos = Vector2(135, randf_range(300, 1000))
+		n.pos = Vector2(135, randf_range(300, 2000))
 	npc_layer.add_child(n)
 	npcs.append(n)
 	ft(n.pos, LINES[type].pick_random(), Color("ff8a80"), 34 if type == "muscle" else 22)
@@ -502,13 +503,14 @@ func step(dt: float) -> void:
 
 	bag_t -= dt
 	if bag_t <= 0.0:
+		bag_t = 1.1
+		var belt: Rect2 = Cfg.BELTS.pick_random()
 		var on_belt := 0
 		for b in bags:
-			if Cfg.BELT.has_point(b):
+			if belt.has_point(b):
 				on_belt += 1
-		if on_belt < 7:
-			bag_t = 2.0
-			bags.append(Cfg.BELT.position + Vector2(randf_range(24, Cfg.BELT.size.x - 24), randf_range(24, Cfg.BELT.size.y - 24)))
+		if on_belt < 6:
+			bags.append(belt.position + Vector2(randf_range(24, belt.size.x - 24), randf_range(14, belt.size.y - 14)))
 
 	plane_t -= dt
 	if plane_t <= 0.0:

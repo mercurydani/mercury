@@ -289,7 +289,7 @@ func _build_imported() -> bool:
 	var m := Assets.load_scene(Assets.FLEET[model_idx])
 	if m == null:
 		return false
-	var pivot := Assets.fit(m, 8.8, 6.3)
+	var pivot := Assets.fit(m, 14.0, 11.0)
 	pivot.rotation.y = -PI / 2.0
 	body.add_child(pivot)
 	model_root = pivot
@@ -306,7 +306,7 @@ func _ready() -> void:
 	add_child(body)
 	var imported := _build_imported()
 	if imported:
-		beacon = Rig.sphere(body, 0.12, Vector3(0, 3.0, 0), Color("ff2d2d"), Vector3.ONE, 3.0)
+		beacon = Rig.sphere(body, 0.16, Vector3(0, 4.4, 0), Color("ff2d2d"), Vector3.ONE, 3.0)
 	else:
 		body.scale = Vector3.ONE * SCALE
 		var m := build_model(body, livery, flight)
@@ -317,10 +317,10 @@ func _ready() -> void:
 	if ambient:
 		return
 	info = Node3D.new()
-	info.position = Vector3(0, 4.6, 0)
+	info.position = Vector3(0, 7.2, 0)
 	add_child(info)
-	Rig.box(info, Vector3(2.8, 0.2, 0.1), Vector3.ZERO, Color(0, 0, 0, 0.6))
-	bar_fill = Rig.box(info, Vector3(2.7, 0.13, 0.12), Vector3.ZERO, Color("7dff8a"), Vector3.ZERO, 1.0)
+	Rig.box(info, Vector3(4.2, 0.3, 0.15), Vector3.ZERO, Color(0, 0, 0, 0.6))
+	bar_fill = Rig.box(info, Vector3(4.1, 0.2, 0.17), Vector3.ZERO, Color("7dff8a"), Vector3.ZERO, 1.0)
 	var door := Cfg.to3(Cfg.DOOR_OFF, 2.1)
 	var fuel_p := Cfg.to3(Cfg.FUEL_OFF, 2.1)
 	bag_label = Rig.label(self, "", door, 40, Color("ffd24d"))
@@ -346,7 +346,7 @@ func _process(delta: float) -> void:
 	if ready:
 		var r := clampf(pat / max_pat, 0.0, 1.0)
 		bar_fill.scale.x = maxf(r, 0.001)
-		bar_fill.position.x = -1.35 * (1.0 - r)
+		bar_fill.position.x = -2.05 * (1.0 - r)
 		var col := Color("7dff8a") if r > 0.5 else (Color("ffd24d") if r > 0.25 else Color("ff5a4d"))
 		bar_fill.material_override.albedo_color = col
 		bar_fill.material_override.emission = col
