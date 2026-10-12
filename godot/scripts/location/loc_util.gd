@@ -4,6 +4,25 @@ extends RefCounted
 ## Общие для всех 8 локаций, чтобы не копировать код.
 
 static var _mats := {}
+static var _grain: NoiseTexture2D
+
+
+## Общая мелкая «зернистость» (бетон, рубероид, дерево не выглядят пластиком)
+static func grain() -> NoiseTexture2D:
+	if _grain == null:
+		var n := FastNoiseLite.new()
+		n.noise_type = FastNoiseLite.TYPE_CELLULAR
+		n.frequency = 0.04
+		n.fractal_type = FastNoiseLite.FRACTAL_FBM
+		_grain = NoiseTexture2D.new()
+		_grain.noise = n
+		_grain.width = 256
+		_grain.height = 256
+		_grain.seamless = true
+		var g := Gradient.new()
+		g.colors = PackedColorArray([Color(0.82, 0.82, 0.82), Color(1, 1, 1)])
+		_grain.color_ramp = g
+	return _grain
 
 
 static func mat(c: Color, rough := 0.85, metallic := 0.0) -> StandardMaterial3D:
@@ -14,6 +33,10 @@ static func mat(c: Color, rough := 0.85, metallic := 0.0) -> StandardMaterial3D:
 	m.albedo_color = c
 	m.roughness = rough
 	m.metallic = metallic
+	if c.a >= 1.0:
+		m.albedo_texture = grain()
+		m.uv1_triplanar = true
+		m.uv1_scale = Vector3.ONE * 0.5
 	if c.a < 1.0:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_mats[key] = m
@@ -140,7 +163,11 @@ static func environment(parent: Node, sky_top: Color, sky_horizon: Color, sun_co
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = ambient
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 0.85
+	env.tonemap_exposure = 0.8
+	env.ssao_enabled = true
+	env.glow_enabled = true
+	env.glow_intensity = 0.4
+	env.glow_bloom = 0.05
 	env.fog_enabled = true
 	env.fog_light_color = sky_horizon
 	env.fog_density = fog_density
@@ -148,7 +175,7 @@ static func environment(parent: Node, sky_top: Color, sky_horizon: Color, sun_co
 	add(parent, we, "WorldEnvironment")
 	var sun := DirectionalLight3D.new()
 	sun.light_color = sun_color
-	sun.light_energy = 0.7
+	sun.light_energy = 0.55
 	sun.rotation_degrees = sun_rot
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 90.0

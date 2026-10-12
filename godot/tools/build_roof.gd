@@ -40,7 +40,7 @@ func _init() -> void:
 	root_node = Node3D.new()
 	root_node.name = "Roof"
 	root_node.set_script(load("res://scripts/location/location.gd"))
-	U.environment(root_node, Color(0.38, 0.6, 0.92), Color(1.0, 0.84, 0.66), Color(1.0, 0.9, 0.74), Vector3(-38, -55, 0), 0.0025, 0.5)
+	U.environment(root_node, Color(0.42, 0.55, 0.78), Color(0.98, 0.72, 0.45), Color(1.0, 0.78, 0.48), Vector3(-22, -58, 0), 0.004, 0.36)
 	_surroundings()
 	_roof_a()
 	_roof_b()
