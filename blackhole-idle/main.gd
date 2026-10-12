@@ -162,13 +162,14 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func hole_radius() -> float:
-	return 60.0 + clamp(log(1.0 + run_mass) * 6.0, 0.0, 110.0)
+	return 60.0 + clampf(log(1.0 + run_mass) * 6.0, 0.0, 110.0)
 
 
 func spawn_star(anywhere: bool = false) -> void:
 	var s := get_viewport_rect().size
 	var angle := randf() * TAU
-	var dist := randf_range(hole_radius() + 40.0, max(s.x, s.y) * 0.6) if anywhere else max(s.x, s.y) * 0.6
+	var far: float = maxf(s.x, s.y) * 0.6
+	var dist: float = randf_range(hole_radius() + 40.0, far) if anywhere else far
 	stars.append({
 		"pos": center + Vector2(cos(angle), sin(angle)) * dist,
 		"size": randf_range(1.0, 3.5),
@@ -178,10 +179,10 @@ func spawn_star(anywhere: bool = false) -> void:
 
 func _process(delta: float) -> void:
 	add_mass(auto_rate() * delta)
-	pulse = max(0.0, pulse - delta * 3.0)
+	pulse = maxf(0.0, pulse - delta * 3.0)
 
 	var rate := auto_rate()
-	var want := 40 + int(min(80.0, log(1.0 + rate) * 8.0))
+	var want: int = 40 + int(minf(80.0, log(1.0 + rate) * 8.0))
 	while stars.size() < want:
 		spawn_star()
 	var swallow := hole_radius()
@@ -189,7 +190,7 @@ func _process(delta: float) -> void:
 		var st: Dictionary = stars[i]
 		var to_c: Vector2 = center - st.pos
 		var d := to_c.length()
-		var speed := 30.0 + 40000.0 / max(d, 40.0)
+		var speed: float = 30.0 + 40000.0 / maxf(d, 40.0)
 		var tangent := Vector2(-to_c.y, to_c.x).normalized()
 		st.pos += (to_c.normalized() * speed + tangent * speed * 0.6) * delta
 		if d < swallow * 0.8:
@@ -226,7 +227,6 @@ func update_ui() -> void:
 
 
 func _draw() -> void:
-	var s := get_viewport_rect().size
 	for st in stars:
 		draw_circle(st.pos, st.size, st.color)
 
@@ -239,7 +239,7 @@ func _draw() -> void:
 	draw_circle(center, r, Color(0, 0, 0, 1))
 
 	for f in floaters:
-		var a := 1.0 - f.t
+		var a: float = 1.0 - float(f.t)
 		draw_string(ThemeDB.fallback_font, f.pos, f.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, a))
 
 
@@ -280,7 +280,7 @@ func load_game() -> void:
 	var saved: Array = data.get("levels", [])
 	for i in min(saved.size(), levels.size()):
 		levels[i] = int(saved[i])
-	var away := clamp(Time.get_unix_time_from_system() - float(data.get("time", 0.0)), 0.0, OFFLINE_CAP_SEC)
+	var away: float = clampf(Time.get_unix_time_from_system() - float(data.get("time", 0.0)), 0.0, OFFLINE_CAP_SEC)
 	if away > 5.0:
 		add_mass(auto_rate() * away * 0.5)
 
