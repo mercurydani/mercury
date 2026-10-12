@@ -580,16 +580,10 @@ func _stall() -> void:
 		# Полки с товаром за продавцом
 		for k in 3:
 			Geo.cbox(gm.s("wood"), Vector3(0, 1.1 + k * 0.5, -1.45), Vector3(2.8, 0.05, 0.3), Color(0.75, 0.52, 0.32), 0.01)
+		# Украшения из каталога на полках (scripts/shop_goods.gd)
+		ShopGoods.build(gm, [1.125, 1.625, 2.125], -1.45)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 11
-		for k in 3:
-			for i in 7:
-				var c := Color.from_hsv(rng.randf(), 0.55, 0.9)
-				var pos := Vector3(-1.2 + i * 0.4, 1.22 + k * 0.5, -1.45)
-				if rng.randf() < 0.5:
-					Geo.blob(gm.s("fabric"), pos, Vector3(0.13, 0.11, 0.13), c, rng, 6, 10, 0.08)
-				else:
-					Geo.cbox(gm.s("fabric"), pos, Vector3(0.22, 0.18, 0.16), c, 0.04)
 		# Шапки на верёвке под козырьком
 		Geo.rod(st, Vector3(-1.45, 2.25, 0.35), Vector3(1.45, 2.25, 0.35), 0.01, Color(0.85, 0.85, 0.85), 3)
 		for i in 5:
