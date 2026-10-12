@@ -43,6 +43,7 @@ func _init() -> void:
 	U.environment(root_node, Color(0.42, 0.55, 0.78), Color(0.98, 0.72, 0.45), Color(1.0, 0.78, 0.48), Vector3(-22, -58, 0), 0.004, 0.36)
 	_surroundings()
 	_far_city()
+	_clouds()
 	_roof_a()
 	_roof_b()
 	_roof_c()
@@ -1308,3 +1309,52 @@ func _far_city() -> void:
 		prev = pos
 	U.kind = old
 	U.rounded = true
+
+
+# ---------- облака ----------
+
+func _clouds() -> void:
+	var old_r := U.rounded
+	var c := Node3D.new()
+	U.add(root_node, c, "Clouds")
+	var lit := StandardMaterial3D.new()
+	lit.albedo_color = Color(1.0, 0.96, 0.9)
+	lit.emission_enabled = true
+	lit.emission = Color(1.0, 0.78, 0.55)
+	lit.emission_energy_multiplier = 0.28
+	lit.roughness = 1.0
+	var shade := StandardMaterial3D.new()
+	shade.albedo_color = Color(0.82, 0.74, 0.74)
+	shade.emission_enabled = true
+	shade.emission = Color(0.95, 0.65, 0.5)
+	shade.emission_energy_multiplier = 0.2
+	shade.roughness = 1.0
+	for i in 34:
+		var a := rng.randf() * TAU
+		var r := rng.randf_range(120.0, 650.0)
+		var cl := Node3D.new()
+		U.add(c, cl, "Cloud%d" % i, Vector3(cos(a) * r, rng.randf_range(70.0, 190.0), sin(a) * r))
+		cl.rotation_degrees.y = rng.randf() * 360.0
+		var k := rng.randf_range(0.8, 1.7)
+		var puffs := rng.randi_range(6, 10)
+		for j in puffs:
+			var rad := rng.randf_range(14.0, 26.0) * k
+			var sm := SphereMesh.new()
+			sm.radius = rad
+			sm.height = rad * 1.5
+			sm.radial_segments = 20
+			sm.rings = 10
+			var mi := MeshInstance3D.new()
+			mi.mesh = sm
+			var up := rng.randf_range(0.0, 1.0)
+			mi.material_override = lit if up > 0.25 else shade
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			U.add(cl, mi, "Puff%d" % j, Vector3((j - puffs * 0.5) * 22.0 * k * 0.7 + rng.randf_range(-8, 8), rad * 0.5 * (up if up > 0.25 else 0.0) , rng.randf_range(-12, 12) * k))
+			mi.scale = Vector3(1.0, 0.8, 1.0)
+	# Высокие перистые полосы
+	for i in 10:
+		var a := rng.randf() * TAU
+		var st := U.box(c, "Cirrus%d" % i, Vector3(rng.randf_range(160, 300), 0.6, rng.randf_range(6, 14)), Color(1.0, 0.92, 0.85, 0.5), Vector3(cos(a) * 500, rng.randf_range(260, 340), sin(a) * 500))
+		st.rotation_degrees.y = rng.randf() * 180.0
+		st.get_child(0).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	U.rounded = old_r
