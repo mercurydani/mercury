@@ -143,6 +143,25 @@ func _set_owner(node: Node, owner_node: Node) -> void:
 			_set_owner(c, owner_node)
 
 
+func _khrushchevka(parent: Node, nm: String, pos: Vector3, rot_y: float, sections: int, seed_value: int, color: Color) -> void:
+	var k := StaticBody3D.new()
+	k.set_script(load("res://scripts/khrushchevka.gd"))
+	k.set("sections", sections)
+	k.set("seed_value", seed_value)
+	k.set("panel_color", color)
+	_add(parent, k, nm, pos)
+	k.rotation_degrees.y = rot_y
+
+
+func _tree(parent: Node, pos: Vector3, kind: int, seed_value: int, h: float) -> void:
+	var t := StaticBody3D.new()
+	t.set_script(load("res://scripts/tree.gd"))
+	t.set("kind", kind)
+	t.set("seed_value", seed_value)
+	t.set("height", h)
+	_add(parent, t, "Tree%d" % seed_value, pos)
+
+
 # ---------- окружение и город ----------
 
 func _environment() -> void:
@@ -159,7 +178,7 @@ func _environment() -> void:
 	sky.sky_material = sm
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.45
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.fog_enabled = true
 	env.fog_light_color = Color(1.0, 0.85, 0.7)
@@ -168,7 +187,7 @@ func _environment() -> void:
 	_add(lobby_root, we, "WorldEnvironment")
 	var sun := DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.88, 0.7)
-	sun.light_energy = 0.95
+	sun.light_energy = 0.8
 	sun.rotation_degrees = Vector3(-35, -40, 0)
 	sun.shadow_enabled = true
 	_add(lobby_root, sun, "Sun")
@@ -181,18 +200,11 @@ func _city() -> void:
 	_box(c, "Ground", Vector3(140, 1.0, 140), Color(0.36, 0.37, 0.4), Vector3(0, -0.5, 0))
 	var b := Node3D.new()
 	_add(c, b, "Buildings")
-	var kinds := ["building-small-a", "building-small-b", "building-small-c", "building-small-d", "building-garage"]
-	var i := 0
-	# Северный ряд (фасадом во двор)
-	for x in [-20, -10, 0, 10, 20]:
-		_model(b, "North%d" % i, CITY + kinds[i % 4] + ".glb", Vector3(x, 0, -19), 10.0, 180.0, true)
-		i += 1
-	# Западный и восточный ряды
-	for z in [-9, 1, 11]:
-		_model(b, "West%d" % i, CITY + kinds[(i + 1) % 4] + ".glb", Vector3(-23, 0, z), 10.0, 90.0, true)
-		i += 1
-		_model(b, "East%d" % i, CITY + kinds[(i + 2) % 4] + ".glb", Vector3(23, 0, z), 10.0, -90.0, true)
-		i += 1
+	# Хрущёвки вокруг двора, фасадом с подъездами во двор
+	_khrushchevka(b, "North", Vector3(0, 0, -19.5), 0.0, 4, 11, Color(0.8, 0.78, 0.72))
+	_khrushchevka(b, "West", Vector3(-24.5, 0, 0), 90.0, 3, 12, Color(0.82, 0.74, 0.66))
+	_khrushchevka(b, "East", Vector3(24.5, 0, 0), -90.0, 3, 13, Color(0.74, 0.76, 0.78))
+	_khrushchevka(b, "South", Vector3(0, 0, 31), 180.0, 5, 14, Color(0.8, 0.75, 0.62))
 	# Улица на юге: дорога с фонарями, тротуар и дома напротив
 	var road := Node3D.new()
 	_add(c, road, "Street")
@@ -201,10 +213,6 @@ func _city() -> void:
 		_model(road, "Road%d" % (x + 48), CITY + kind + ".glb", Vector3(x, 0.0, 19), 8.0, 90.0)
 	for x in range(-36, 37, 4):
 		_model(road, "Walk%d" % (x + 36), CITY + "pavement.glb", Vector3(x, 0.0, 14), 4.0)
-	i = 0
-	for x in [-30, -20, -10, 0, 10, 20, 30]:
-		_model(b, "South%d" % i, CITY + kinds[(i + 3) % 5] + ".glb", Vector3(x, 0, 28), 10.0, 0.0, true)
-		i += 1
 	# Припаркованные машины
 	_model(road, "CarGreen", RACE + "vehicle-truck-green.glb", Vector3(-14, 0, 16.5), 1.8, 90.0, true)
 	_model(road, "CarPurple", RACE + "vehicle-truck-purple.glb", Vector3(12, 0, 21.5), 1.8, -90.0, true)
@@ -224,12 +232,55 @@ func _yard() -> void:
 	_box(y, "GatePostL", Vector3(0.5, 2.4, 0.5), Color(0.4, 0.25, 0.15), Vector3(-2.5, 1.2, 12))
 	_box(y, "GatePostR", Vector3(0.5, 2.4, 0.5), Color(0.4, 0.25, 0.15), Vector3(2.5, 1.2, 12))
 	_box(y, "GateSign", Vector3(5.5, 0.6, 0.15), Color(0.95, 0.5, 0.2), Vector3(0, 2.6, 12), false)
-	# Зелень и фонтан
-	_model(y, "TreesNW", CITY + "grass-trees-tall.glb", Vector3(-15, 0, -11), 5.0)
-	_model(y, "TreesSE", CITY + "grass-trees.glb", Vector3(9, 0, 9.5), 4.0)
-	_model(y, "Fountain", CITY + "pavement-fountain.glb", Vector3(-12, -0.2, -6), 5.0, 0.0, true)
-	# Скамейка
-	_box(y, "Bench", Vector3(2.2, 0.5, 0.7), Color(0.6, 0.4, 0.25), Vector3(5, 0.45, 9.5))
+	# Деревья: берёзы, тополя, липы по краям двора и вдоль улицы
+	var trees := Node3D.new()
+	_add(y, trees, "Trees")
+	var spots := [
+		[-16, -12, 0, 8.0], [-16, -8, 2, 7.0], [-16.5, -3, 1, 11.0], [-16, 2, 0, 7.5],
+		[-6, -12.5, 2, 7.5], [-8.5, -12, 0, 8.5], [16.5, -12.5, 1, 12.0],
+		[16.0, -3.6, 2, 8.0], [17, 4, 0, 7.0], [11, 10.5, 2, 7.0], [-5, 10.5, 0, 6.5],
+		[7, 10.8, 0, 7.5], [-16.5, 10.5, 1, 11.0],
+	]
+	var n := 1
+	for sp in spots:
+		_tree(trees, Vector3(sp[0], 0, sp[1]), sp[2], n, sp[3])
+		n += 1
+	for x in range(-34, 35, 7):
+		_tree(trees, Vector3(x + 1.5, 0, 14.6), (n % 3), n, 7.0 + (n % 4))
+		n += 1
+		_tree(trees, Vector3(x - 1.0, 0, 24.2), (n % 3), n, 7.0 + (n % 3))
+		n += 1
+	# Детская площадка: песочница, качели, горка
+	var pg := Node3D.new()
+	_add(y, pg, "Playground", Vector3(-9, 0, -6))
+	_box(pg, "SandboxRim", Vector3(3.2, 0.35, 0.2), Color(0.85, 0.3, 0.25), Vector3(0, 0.17, -1.5))
+	_box(pg, "SandboxRim2", Vector3(3.2, 0.35, 0.2), Color(0.85, 0.3, 0.25), Vector3(0, 0.17, 1.5))
+	_box(pg, "SandboxRim3", Vector3(0.2, 0.35, 3.2), Color(0.85, 0.3, 0.25), Vector3(-1.5, 0.17, 0))
+	_box(pg, "SandboxRim4", Vector3(0.2, 0.35, 3.2), Color(0.85, 0.3, 0.25), Vector3(1.5, 0.17, 0))
+	_box(pg, "Sand", Vector3(2.8, 0.2, 2.8), Color(0.93, 0.82, 0.55), Vector3(0, 0.1, 0), false)
+	_box(pg, "Fungus", Vector3(0.12, 2.0, 0.12), Color(0.4, 0.4, 0.45), Vector3(0, 1.0, 0), false)
+	var cap := CylinderMesh.new()
+	cap.top_radius = 0.1
+	cap.bottom_radius = 1.4
+	cap.height = 0.5
+	cap.radial_segments = 8
+	_mesh(pg, "FungusCap", cap, Color(0.9, 0.25, 0.25), Vector3(0, 2.2, 0))
+	var sw_col := Color(0.3, 0.55, 0.85)
+	_box(pg, "SwingPostL", Vector3(0.12, 2.6, 0.12), sw_col, Vector3(3.5, 1.3, -0.8))
+	_box(pg, "SwingPostR", Vector3(0.12, 2.6, 0.12), sw_col, Vector3(3.5, 1.3, 0.8))
+	_box(pg, "SwingBar", Vector3(0.12, 0.12, 1.8), sw_col, Vector3(3.5, 2.6, 0), false)
+	_box(pg, "SwingSeat", Vector3(0.45, 0.06, 0.6), Color(0.9, 0.75, 0.2), Vector3(3.5, 0.6, 0), false)
+	_box(pg, "SwingRopes", Vector3(0.03, 2.0, 0.5), Color(0.3, 0.3, 0.3), Vector3(3.5, 1.6, 0), false)
+	# Выбивалка для ковров и мусорные баки
+	_box(y, "CarpetRackL", Vector3(0.1, 2.0, 0.1), Color(0.35, 0.5, 0.35), Vector3(9, 1.0, -3.5))
+	_box(y, "CarpetRackR", Vector3(0.1, 2.0, 0.1), Color(0.35, 0.5, 0.35), Vector3(11.5, 1.0, -3.5))
+	_box(y, "CarpetRackBar", Vector3(2.6, 0.08, 0.08), Color(0.35, 0.5, 0.35), Vector3(10.25, 1.9, -3.5), false)
+	_box(y, "Carpet", Vector3(1.6, 1.2, 0.05), Color(0.65, 0.15, 0.2), Vector3(10.25, 1.3, -3.5), false)
+	for i in 3:
+		_box(y, "Bin%d" % i, Vector3(1.1, 1.1, 0.9), Color(0.25, 0.45, 0.3), Vector3(-17.0, 0.55, 6.0 + i * 1.3))
+	# Лавочки у подъездов
+	for x in [-10.6, 1.4]:
+		_box(y, "Bench_%d" % int(x), Vector3(2.0, 0.45, 0.6), Color(0.55, 0.35, 0.22), Vector3(x, 0.3, -12.2))
 	# Гирлянда между домами над двором
 	var cols := [Color(1, 0.3, 0.3), Color(1, 0.9, 0.3), Color(0.3, 0.8, 1), Color(0.5, 1, 0.5)]
 	var g := Node3D.new()
@@ -530,7 +581,7 @@ func _players() -> void:
 	pm.friction = 0.0
 	pm.bounce = 0.0
 	p.physics_material_override = pm
-	_add(holder, p, "Player1", Vector3(3, 0.5, 8))
+	_add(holder, p, "Player1", Vector3(3, 0.5, 3))
 	var cs := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
 	cap.radius = 0.4
@@ -564,12 +615,12 @@ func _players() -> void:
 	var cam := Camera3D.new()
 	cam.top_level = true
 	cam.fov = 65
-	_add(p, cam, "Camera", Vector3(3, 6.5, 17))
+	_add(p, cam, "Camera", Vector3(3, 6.5, 12))
 	var sp := Node3D.new()
 	_add(lobby_root, sp, "SpawnPoints")
 	for i in 4:
 		var m := Marker3D.new()
-		_add(sp, m, "Spawn%d" % (i + 1), Vector3(2 + i * 1.2, 0.5, 8))
+		_add(sp, m, "Spawn%d" % (i + 1), Vector3(2 + i * 1.2, 0.5, 3))
 
 
 func _hud() -> void:
