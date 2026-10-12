@@ -101,7 +101,7 @@ static func cbox(st: SurfaceTool, c: Vector3, s: Vector3, col: Color, r := 0.05,
 
 
 ## Призма/цилиндр по оси Y: низ в c, высота hgt.
-static func prism(st: SurfaceTool, c: Vector3, r_bottom: float, r_top: float, hgt: float, col: Color, n := 8, xf := Transform3D.IDENTITY, caps := true) -> void:
+static func prism(st: SurfaceTool, c: Vector3, r_bottom: float, r_top: float, hgt: float, col: Color, n := 12, xf := Transform3D.IDENTITY, caps := true) -> void:
 	st.set_color(col)
 	var inside := c + Vector3(0, hgt * 0.5, 0)
 	var bot := []
@@ -124,7 +124,7 @@ static func prism(st: SurfaceTool, c: Vector3, r_bottom: float, r_top: float, hg
 
 
 ## Цилиндр между двумя точками (трубы, перила).
-static func rod(st: SurfaceTool, a: Vector3, b: Vector3, radius: float, col: Color, n := 6, xf := Transform3D.IDENTITY) -> void:
+static func rod(st: SurfaceTool, a: Vector3, b: Vector3, radius: float, col: Color, n := 10, xf := Transform3D.IDENTITY) -> void:
 	var dir := b - a
 	var length := dir.length()
 	if length < 0.0001:
@@ -137,7 +137,9 @@ static func rod(st: SurfaceTool, a: Vector3, b: Vector3, radius: float, col: Col
 
 
 ## Неровный low-poly «комок» (крона дерева, куст).
-static func blob(st: SurfaceTool, c: Vector3, radius: Vector3, col: Color, rng: RandomNumberGenerator, rings := 5, segs := 8, jitter := 0.18) -> void:
+static func blob(st: SurfaceTool, c: Vector3, radius: Vector3, col: Color, rng: RandomNumberGenerator, rings := 7, segs := 12, jitter := 0.12, smooth := true) -> void:
+	if smooth:
+		st.set_smooth_group(0)
 	var verts := []
 	for i in rings + 1:
 		var row := []
@@ -159,3 +161,26 @@ static func blob(st: SurfaceTool, c: Vector3, radius: Vector3, col: Color, rng: 
 				poly(st, [verts[i][j], verts[i + 1][j], verts[i][j2]], c)
 			else:
 				poly(st, [verts[i][j], verts[i + 1][j], verts[i + 1][j2], verts[i][j2]], c)
+	st.set_smooth_group(-1)
+
+
+## Двусторонняя карточка с UV (листва, трава). basis задаёт ориентацию и размер.
+static func card(st: SurfaceTool, c: Vector3, b: Basis, col: Color, uv_rect := Rect2(0, 0, 1, 1)) -> void:
+	var x := b.x * 0.5
+	var y := b.y * 0.5
+	var pts := [c - x - y, c + x - y, c + x + y, c - x + y]
+	var uvs := [
+		uv_rect.position + Vector2(0, uv_rect.size.y), uv_rect.position + uv_rect.size,
+		uv_rect.position + Vector2(uv_rect.size.x, 0), uv_rect.position,
+	]
+	st.set_color(col)
+	for idx in [0, 2, 1, 0, 3, 2]:
+		st.set_uv(uvs[idx])
+		st.add_vertex(pts[idx])
+
+
+## Скруглённый «пузырь» вдоль отрезка (подушки, кот-талисман и пр.)
+static func capsule(st: SurfaceTool, a: Vector3, b: Vector3, r: float, col: Color, rng: RandomNumberGenerator) -> void:
+	var steps := 4
+	for i in steps + 1:
+		blob(st, a.lerp(b, float(i) / steps), Vector3.ONE * r, col, rng, 7, 12, 0.0)
