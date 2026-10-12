@@ -11,14 +11,13 @@ extends Node3D
 @export var current_by_tier: PackedFloat32Array = PackedFloat32Array([0.8, 1.0, 1.4])
 
 var _orig_speed := {}
+var _orig_accel := {}
 var _drown_t := {}
 var multiplier := 1.0
-var _loc: Node = null
 
 
 func _ready() -> void:
 	add_to_group("water")
-	_loc = get_tree().get_first_node_in_group("location")
 
 
 func set_tier(t: int) -> void:
@@ -45,9 +44,11 @@ func _physics_process(delta: float) -> void:
 		if d > 0.15 and p.global_position.x < RavineTerrain.FALL_X + 6.0:
 			if not _orig_speed.has(p):
 				_orig_speed[p] = p.move_speed
+				_orig_accel[p] = p.accel
+			p.accel = _orig_accel[p] * 0.25
 			p.move_speed = _orig_speed[p] * clampf(1.0 - d * wade_slow, 0.35, 1.0)
 			var pull := flow_at(p.global_position) * current_speed * multiplier * clampf(d / 1.0, 0.2, 1.8)
-			p.linear_velocity += pull * delta * 2.2
+			p.linear_velocity += pull * delta * 10.0
 			if d > drown_depth:
 				_drown_t[p] = _drown_t.get(p, 0.0) + delta
 				if _drown_t[p] > drown_time:
@@ -55,9 +56,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				_drown_t[p] = maxf(_drown_t.get(p, 0.0) - delta, 0.0)
 		elif _orig_speed.has(p):
-			p.move_speed = _orig_speed[p]
-			_orig_speed.erase(p)
-			_drown_t.erase(p)
+			_leave(p)
 	for n in get_tree().get_nodes_in_group("floaters"):
 		var rb := n as RigidBody3D
 		if rb == null:
@@ -73,14 +72,23 @@ func _physics_process(delta: float) -> void:
 func _drown(p: Player) -> void:
 	_drown_t[p] = 0.0
 	_spawn_duck_ring(p.global_position)
+	_leave(p)
+	var loc := get_tree().get_first_node_in_group("location")
+	if loc and loc.has_method("say"):
+		loc.say(tr("MSG_DROWNED"))
+	if loc and loc.has_signal("player_fell"):
+		loc.player_fell.emit(p)
+	p.respawn()
+
+
+func _leave(p: Player) -> void:
 	if _orig_speed.has(p):
 		p.move_speed = _orig_speed[p]
 		_orig_speed.erase(p)
-	if _loc and _loc.has_method("say"):
-		_loc.say(tr("MSG_DROWNED"))
-	if _loc and _loc.has_signal("player_fell"):
-		_loc.player_fell.emit(p)
-	p.respawn()
+	if _orig_accel.has(p):
+		p.accel = _orig_accel[p]
+		_orig_accel.erase(p)
+	_drown_t.erase(p)
 
 
 ## Утиный круг всплывает на месте и качается на воде.

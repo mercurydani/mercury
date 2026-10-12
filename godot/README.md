@@ -17,11 +17,14 @@
 ## Локации миссий (`scenes/locations/`, дизайн: `design/locations.md`)
 - `roof.tscn` — «Верхотура» (локация 1): крыша хрущёвки, Россия ~2010. Три крыши (A старт, B четырёхэтажка с щитом и вентиляторами, C старый дом с мокрым шифером), соседние дома, двор, машины, площадка. Детали: рубероид со швами и лужами, люк на лестницу, вентшахты, антенны с растяжками, тарелки, кондиционеры, бельё, ковёр на турнике, кресло и ЭЛТ-телевизор, бак, рекламный щит «ОКНА ПВХ».
 - Сложность (`Location.difficulty` или `apply_difficulty(0..2)`): простая — ветер и голуби, кот на щите; средняя — + вентилятор и скользкий шифер, кот на карнизе; сложная — + второй вентилятор и ветер сильнее, кот на трубе. Опасности лежат в группе `hazard` с метой `tier`.
+- `forest.tscn` — «Нора у ручья» (локация 2): овраг с ручьём, омутом и водопадом, лес из MultiMesh (ель, берёза, дуб, трава, цветы, грибы, камыш), стоянка с УАЗ-«буханкой», мостки, три дуба-героя с котом (ветка на 1.5 / 3.4 / 5 м), охотничья вышка, ЛЭП, ржавая «копейка». Рельеф, вода и растительность строятся при загрузке (`scripts/location/forest/`), в .tscn лежат только параметры. Опасности: течение, белки с шишками, скользкий лаз и ложный капкан, плывущие ящики.
 - Скрипты: `scripts/location/` (`location.gd` база всех локаций, `loc_util.gd` помощники генераторов, ветер, скользкая зона, лопасти, голуби, кот). Тексты RU/EN: `location_texts.gd`.
 - Генерация и проверка:
 
       godot --headless --path godot --script res://tools/build_roof.gd
       godot --headless --path godot --script res://tools/smoke_roof.gd
+      godot --headless --path godot --script res://tools/build_forest.gd
+      godot --headless --path godot --script res://tools/smoke_forest.gd
 
 - Скриншоты (нужен рендер): `xvfb-run -a godot --path godot --rendering-method gl_compatibility --rendering-driver opengl3 --resolution 1280x720 --script res://tools/screenshot.gd -- res://scenes/locations/roof.tscn out ru x y z tx ty tz`
 

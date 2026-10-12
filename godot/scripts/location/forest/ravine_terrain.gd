@@ -42,6 +42,8 @@ static func height(x: float, z: float) -> float:
 	var h := bank * 9.0 + bank * bank * 6.0
 	h += _noise.get_noise_2d(x, z) * 5.0 * smoothstep(6.0, 30.0, d)
 	h += _noise2.get_noise_2d(x, z) * 0.22
+	# Берега не уходят под воду вне русла (иначе в низинах разливаются озёра)
+	h = maxf(h, WATER_Y + 0.45 * smoothstep(4.5, 8.0, d))
 	var rim := smoothstep(150.0, 250.0, maxf(absf(x), absf(z)))
 	h += rim * 30.0
 	h -= 1.7 * exp(-pow(d / 3.4, 2.0))
@@ -82,20 +84,12 @@ func _build() -> void:
 			var b := (i + 1) * (n + 1) + j
 			var c := (i + 1) * (n + 1) + j + 1
 			var d := i * (n + 1) + j + 1
-			for idx in [a, c, b, a, d, c]:
+			for idx in [a, b, c, a, c, d]:
 				st.set_color(cols[idx])
 				st.add_vertex(verts[idx])
 	st.generate_normals()
 	var mesh := st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 0.95
-	mat.albedo_texture = LocUtil.tex("plaster")[0]
-	mat.normal_enabled = true
-	mat.normal_texture = LocUtil.tex("concrete")[1]
-	mat.normal_scale = 0.6
-	mat.uv1_triplanar = true
-	mat.uv1_scale = Vector3.ONE * 0.35
+	var mat: Material = Mats.get_mat("grass")
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = mat
