@@ -39,6 +39,8 @@ func _init() -> void:
 	_crossings()
 	_oaks()
 	_landmarks()
+	_village()
+	_life()
 	_hazards()
 	_players_and_checkpoints()
 	U.hud(root_node)
@@ -110,6 +112,7 @@ func _ramp(parent: Node, nm: String, a: Vector3, b: Vector3, w: float, kind: Str
 	U.rounded = true
 	var bm := U.rounded_box(size, 0.07)
 	U.mesh(holder, "Mesh", bm, col)
+	U.rounded = false
 	U.box_shape(holder, size)
 	U.kind = old
 	return holder
@@ -167,6 +170,20 @@ func _forest() -> void:
 	_scatter("Stumps", "stump", 30, 23, {"min_stream": 6.0, "max_slope": 0.8, "exclude": ex})
 	_scatter("Logs", "log", 28, 24, {"min_stream": 6.0, "max_slope": 0.8, "exclude": ex, "tilt_deg": 4.0})
 	_scatter("Reeds", "reeds", 260, 25, {"near_water_only": true, "allow_in_water": true, "min_stream": 0.0, "max_stream": 9.0})
+	# Подлесок и мелочи: больше слоёв, чтобы лес был «густым» вблизи
+	_scatter("Fallen", "fallen", 38, 31, {"min_stream": 6.0, "max_slope": 0.9, "exclude": ex, "tilt_deg": 3.0, "collide_within": 60.0, "collide_radius": 0.5, "collide_height": 0.9, "scale_range": Vector2(0.8, 1.3)})
+	_scatter("Raspberry", "raspberry", 120, 32, {"min_stream": 5.0, "max_slope": 1.0, "exclude": ex})
+	_scatter("Burdock", "burdock", 220, 33, {"min_stream": 3.5, "max_slope": 1.2, "exclude": ex})
+	_scatter("Hogweed", "hogweed", 70, 34, {"min_stream": 7.0, "max_slope": 0.9, "exclude": ex, "x_range": Vector2(-110, 90), "z_range": Vector2(-60, 60)})
+	_scatter("Nettle", "nettle", 240, 35, {"min_stream": 4.0, "max_slope": 1.0, "exclude": ex, "x_range": Vector2(-110, 90), "z_range": Vector2(-50, 50)})
+	_scatter("Litter", "litter", 700, 36, {"min_stream": 7.0, "max_slope": 1.3, "exclude": ex})
+	_scatter("Anthills", "anthill", 26, 37, {"min_stream": 9.0, "max_slope": 0.6, "exclude": ex})
+	_scatter("Cones", "cones", 260, 38, {"min_stream": 9.0, "max_slope": 1.3, "exclude": ex})
+	_scatter("Lilies", "lily", 38, 39, {"on_water": true, "allow_in_water": true, "x_range": Vector2(12, 31), "z_range": Vector2(-6, 14)})
+	_scatter("YoungSpruce", "spruce", 420, 40, {"min_stream": 8.0, "max_slope": 1.2, "scale_range": Vector2(0.25, 0.5), "exclude": ex, "x_range": Vector2(-120, 100), "z_range": Vector2(-70, 70)})
+	_scatter("YoungBirch", "birch", 150, 41, {"min_stream": 8.0, "max_slope": 1.1, "scale_range": Vector2(0.35, 0.6), "exclude": ex, "x_range": Vector2(-120, 100), "z_range": Vector2(-70, 70)})
+	_scatter("MoreFlowers", "flowers", 900, 42, {"min_stream": 3.0, "x_range": Vector2(-110, 90), "z_range": Vector2(-35, 35)})
+	_scatter("MoreBushes", "bush", 260, 43, {"min_stream": 6.0, "max_slope": 1.2, "exclude": ex, "x_range": Vector2(-110, 90), "z_range": Vector2(-60, 60)})
 
 
 func _far_hills() -> void:
@@ -671,3 +688,299 @@ func _players_and_checkpoints() -> void:
 	var c2x := 11.0
 	var c2z := _m(c2x) - 9.5
 	U.checkpoint(cps, "Checkpoint2", 2, Vector3(c2x, _g(c2x, c2z), c2z))
+
+
+# ---------- деревенские детали и жизнь ----------
+
+func _log_wall(parent: Node, pos: Vector3, w: float, d: float, h: float) -> void:
+	# Сруб: брёвна по четырём стенам, венцы с выпусками на углах
+	U.kind = "bark"
+	var rows := int(h / 0.3)
+	for r in rows:
+		var y := 0.18 + r * 0.3
+		for z in [-d * 0.5, d * 0.5]:
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.16
+			cm.bottom_radius = 0.16
+			cm.height = w + 0.5
+			cm.radial_segments = 8
+			var mi := U.mesh(parent, "LogX", cm, Color(0.5, 0.36, 0.22).darkened(rng.randf_range(0.0, 0.2)), pos + Vector3(0, y, z))
+			mi.rotation_degrees.z = 90
+		for x in [-w * 0.5, w * 0.5]:
+			var cm2 := CylinderMesh.new()
+			cm2.top_radius = 0.16
+			cm2.bottom_radius = 0.16
+			cm2.height = d + 0.5
+			cm2.radial_segments = 8
+			var mi2 := U.mesh(parent, "LogZ", cm2, Color(0.48, 0.34, 0.2).darkened(rng.randf_range(0.0, 0.2)), pos + Vector3(x, y + 0.15, 0))
+			mi2.rotation_degrees.x = 90
+
+
+func _cabin(parent: Node, pos: Vector3, yaw: float) -> void:
+	var old := U.kind
+	var cab := Node3D.new()
+	U.add(parent, cab, "Cabin", pos)
+	cab.rotation_degrees.y = yaw
+	var w := 5.2
+	var d := 4.2
+	var h := 2.7
+	var sb := StaticBody3D.new()
+	U.add(cab, sb, "Body", Vector3(0, h * 0.5, 0))
+	U.box_shape(sb, Vector3(w, h, d))
+	_log_wall(cab, Vector3.ZERO, w, d, h)
+	# Фундамент из камней
+	U.kind = "concrete"
+	U.box(cab, "Foundation", Vector3(w + 0.3, 0.3, d + 0.3), Color(0.5, 0.5, 0.47), Vector3(0, 0.1, 0))
+	# Крыша: двускатная из тёса, с коньком и трубой
+	U.kind = "wood"
+	for sg in [-1.0, 1.0]:
+		var rb := U.box(cab, "Roof", Vector3(w + 0.9, 0.12, 2.9), Color(0.38, 0.27, 0.18), Vector3(0, h + 0.95, sg * 1.2))
+		rb.rotation_degrees.x = sg * 32.0
+	U.box(cab, "Ridge", Vector3(w + 1.0, 0.14, 0.2), Color(0.3, 0.2, 0.14), Vector3(0, h + 1.6, 0))
+	U.kind = "brick"
+	U.box(cab, "Chimney", Vector3(0.6, 1.8, 0.6), Color(0.62, 0.34, 0.26), Vector3(1.6, h + 1.4, -0.7))
+	# Окна с занавесками и тёплым светом изнутри, дверь с козырьком, крыльцо
+	U.kind = "paint"
+	for sx in [-1.4, 1.4]:
+		U.box(cab, "WinFrame", Vector3(0.9, 0.8, 0.08), Color(0.25, 0.4, 0.55), Vector3(sx, 1.6, d * 0.5 + 0.1))
+		var glass := U.box(cab, "WinGlow", Vector3(0.7, 0.6, 0.05), Color(1.0, 0.78, 0.4), Vector3(sx, 1.6, d * 0.5 + 0.15))
+		(glass.get_node("Mesh") as MeshInstance3D).material_override = _glow_mat(Color(1.0, 0.8, 0.45))
+		U.box(cab, "Curtain", Vector3(0.22, 0.6, 0.04), Color(0.9, 0.3, 0.3), Vector3(sx - 0.28, 1.6, d * 0.5 + 0.19))
+		U.box(cab, "CurtainR", Vector3(0.22, 0.6, 0.04), Color(0.9, 0.3, 0.3), Vector3(sx + 0.28, 1.6, d * 0.5 + 0.19))
+		U.box(cab, "Shutter", Vector3(0.28, 0.8, 0.05), Color(0.2, 0.5, 0.45), Vector3(sx - 0.62, 1.6, d * 0.5 + 0.12))
+		U.box(cab, "ShutterR", Vector3(0.28, 0.8, 0.05), Color(0.2, 0.5, 0.45), Vector3(sx + 0.62, 1.6, d * 0.5 + 0.12))
+	U.kind = "wood"
+	U.box(cab, "Door", Vector3(0.9, 1.9, 0.08), Color(0.35, 0.22, 0.14), Vector3(0, 1.0, d * 0.5 + 0.08))
+	var step := U.box(cab, "Porch", Vector3(1.8, 0.2, 1.1), Color(0.5, 0.36, 0.22), Vector3(0, 0.1, d * 0.5 + 0.6), true)
+	var light := OmniLight3D.new()
+	light.light_color = Color(1.0, 0.75, 0.4)
+	light.light_energy = 1.6
+	light.omni_range = 9.0
+	light.shadow_enabled = true
+	U.add(cab, light, "Warm", Vector3(0, 1.6, d * 0.5 + 1.2))
+	# Дрова у стены, колода с топором
+	U.kind = "wood"
+	for r in 3:
+		for i in 8:
+			var cy := U.cyl(cab, "Firewood", 0.1, 0.1, 1.0, Color(0.58, 0.42, 0.26).darkened(rng.randf_range(0.0, 0.2)), Vector3(w * 0.5 + 0.15 + r * 0.0, 0.12 + r * 0.2, -1.6 + i * 0.22), 8)
+			cy.rotation_degrees.z = 90
+			cy.position.x = w * 0.5 - 0.25
+	U.cyl(cab, "ChopBlock", 0.35, 0.35, 0.5, Color(0.5, 0.36, 0.22), Vector3(-w * 0.5 - 1.3, 0.25, d * 0.5 + 0.6), 12)
+	U.rod(cab, "AxeHandle", Vector3(-w * 0.5 - 1.3, 0.5, d * 0.5 + 0.6), Vector3(-w * 0.5 - 1.3 + 0.5, 0.95, d * 0.5 + 0.6), 0.03, Color(0.5, 0.35, 0.2))
+	U.box(cab, "AxeHead", Vector3(0.22, 0.14, 0.04), Color(0.55, 0.57, 0.6), Vector3(-w * 0.5 - 1.3 + 0.5, 0.97, d * 0.5 + 0.6))
+	U.kind = old
+
+
+func _glow_mat(c: Color) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = c
+	m.emission_enabled = true
+	m.emission = c
+	m.emission_energy_multiplier = 1.5
+	return m
+
+
+func _village() -> void:
+	var old := U.kind
+	var v := _holder("Village")
+	# Избушка егеря на северном берегу у начала тропы + огород с забором
+	var cx := -40.0
+	var cz := _m(cx) - 14.0
+	_cabin(v, Vector3(cx, _g(cx, cz) - 0.05, cz), 160.0)
+	# Плетёный забор и грядки
+	U.kind = "wood"
+	var gx := cx + 7.0
+	var gz := cz - 2.0
+	for i in 12:
+		var px := gx + i * 0.8
+		U.rod(v, "FencePost%d" % i, Vector3(px, _g(px, gz) - 0.1, gz), Vector3(px, _g(px, gz) + 1.2, gz), 0.05, Color(0.45, 0.33, 0.2))
+	for r in 2:
+		U.rod(v, "FenceRail%d" % r, Vector3(gx, _g(gx, gz) + 0.5 + r * 0.45, gz), Vector3(gx + 8.8, _g(gx + 8.8, gz) + 0.5 + r * 0.45, gz), 0.04, Color(0.5, 0.37, 0.22))
+	U.kind = "grass"
+	for i in 5:
+		var row := U.box(v, "Bed%d" % i, Vector3(5.5, 0.18, 0.7), Color(0.3, 0.2, 0.12), Vector3(gx + 4.4, _g(gx + 4.4, gz - 1.0 - i * 1.0) + 0.05, gz - 1.0 - i * 1.0))
+		for k in 7:
+			var kx := gx + 2.0 + k * 0.7
+			U.sphere(v, "Cabbage", 0.22, Color(0.45, 0.65, 0.35).lerp(Color(0.3, 0.5, 0.25), rng.randf()), Vector3(kx, _g(kx, gz - 1.0 - i * 1.0) + 0.2, gz - 1.0 - i * 1.0), 0.8)
+	# Пугало с мешком вместо головы
+	U.kind = "wood"
+	var sx := gx + 10.5
+	var sz := gz - 3.0
+	var sy := _g(sx, sz)
+	U.rod(v, "ScarePost", Vector3(sx, sy, sz), Vector3(sx, sy + 1.8, sz), 0.05, Color(0.45, 0.33, 0.2))
+	U.rod(v, "ScareArms", Vector3(sx - 0.8, sy + 1.4, sz), Vector3(sx + 0.8, sy + 1.4, sz), 0.04, Color(0.45, 0.33, 0.2))
+	U.kind = "paint"
+	U.sphere(v, "ScareHead", 0.22, Color(0.85, 0.75, 0.55), Vector3(sx, sy + 1.85, sz))
+	U.cyl(v, "ScareHat", 0.35, 0.18, 0.2, Color(0.35, 0.28, 0.15), Vector3(sx, sy + 2.05, sz), 10)
+	U.box(v, "ScareShirt", Vector3(0.7, 0.8, 0.12), Color(0.6, 0.2, 0.2), Vector3(sx, sy + 1.2, sz))
+	# Пчелиные ульи в цветных ящиках
+	U.kind = "wood"
+	for i in 5:
+		var hx := cx - 6.0 - i * 1.4
+		var hz := cz - 3.0 + (i % 2) * 1.0
+		var hy := _g(hx, hz)
+		for k in 4:
+			U.rod(v, "HiveLeg", Vector3(hx + (k % 2) * 0.5 - 0.25, hy - 0.1, hz + (k / 2) * 0.5 - 0.25), Vector3(hx + (k % 2) * 0.5 - 0.25, hy + 0.35, hz + (k / 2) * 0.5 - 0.25), 0.03, Color(0.4, 0.3, 0.2))
+		U.box(v, "Hive", Vector3(0.6, 0.6, 0.6), [Color(0.3, 0.55, 0.8), Color(0.9, 0.8, 0.25), Color(0.85, 0.35, 0.3), Color(0.35, 0.65, 0.4), Color(0.95, 0.95, 0.9)][i], Vector3(hx, hy + 0.65, hz), true)
+		U.box(v, "HiveRoof", Vector3(0.7, 0.06, 0.7), Color(0.3, 0.3, 0.32), Vector3(hx, hy + 0.98, hz))
+	# Стога сена
+	U.kind = "grass"
+	for i in 3:
+		var hx2 := -22.0 + i * 5.0
+		var hz2 := _m(hx2) - 20.0
+		var hy2 := _g(hx2, hz2)
+		var hay := U.cyl(v, "Haystack%d" % i, 1.6, 0.2, 3.2, Color(0.82, 0.7, 0.35), Vector3(hx2, hy2 + 1.5, hz2), 14, 0.95)
+		U.sphere(v, "HayTop", 0.8, Color(0.82, 0.7, 0.35), Vector3(hx2, hy2 + 3.0, hz2), 0.8)
+	# Рулоны сена на поле
+	for i in 4:
+		var rx := 6.0 + i * 3.2
+		var rz := _m(rx) + 22.0
+		var ry := _g(rx, rz)
+		var roll := U.cyl(v, "HayRoll%d" % i, 0.9, 0.9, 1.2, Color(0.85, 0.72, 0.38), Vector3(rx, ry + 0.9, rz), 16, 0.95)
+		roll.rotation_degrees.x = 90
+	# Колодец-журавль у избушки
+	var wx := cx + 3.5
+	var wz := cz + 10.0
+	var wy := _g(wx, wz)
+	U.kind = "concrete"
+	U.cyl(v, "WellRing", 0.8, 0.8, 0.9, Color(0.5, 0.5, 0.47), Vector3(wx, wy + 0.45, wz), 14)
+	U.kind = "wood"
+	U.rod(v, "WellPost", Vector3(wx + 1.2, wy, wz), Vector3(wx + 1.2, wy + 3.4, wz), 0.1, Color(0.42, 0.3, 0.2))
+	U.rod(v, "Sweep", Vector3(wx - 1.8, wy + 4.1, wz), Vector3(wx + 2.4, wy + 3.0, wz), 0.07, Color(0.45, 0.33, 0.2))
+	U.rod(v, "Rope", Vector3(wx - 1.8, wy + 4.1, wz), Vector3(wx - 1.8, wy + 1.6, wz), 0.012, Color(0.6, 0.55, 0.4))
+	U.cyl(v, "Bucket", 0.18, 0.15, 0.26, Color(0.4, 0.4, 0.45), Vector3(wx - 1.8, wy + 1.5, wz), 10)
+	# Качели на дубе: верёвки и доска (декор у тропы)
+	var swx := -28.0
+	var swz := _m(swx) - 10.0
+	var swy := _g(swx, swz)
+	U.rod(v, "SwingBeam", Vector3(swx - 1.8, swy + 4.2, swz), Vector3(swx + 1.8, swy + 4.2, swz), 0.09, Color(0.4, 0.3, 0.2))
+	for sg in [-1.0, 1.0]:
+		U.rod(v, "SwingPost", Vector3(swx + sg * 1.8, swy, swz), Vector3(swx + sg * 1.8, swy + 4.2, swz), 0.1, Color(0.4, 0.3, 0.2))
+		U.rod(v, "SwingRope", Vector3(swx + sg * 0.35, swy + 4.2, swz), Vector3(swx + sg * 0.35, swy + 0.6, swz), 0.012, Color(0.6, 0.5, 0.35))
+	U.box(v, "SwingSeat", Vector3(0.9, 0.05, 0.28), Color(0.55, 0.4, 0.25), Vector3(swx, swy + 0.58, swz))
+	# Пирс и лодка у омута на южном берегу
+	_pier(v)
+	# Дорожные столбики-вешки вдоль тропы вдоль ручья и мостик через канаву
+	U.kind = "wood"
+	for i in 16:
+		var px2 := -70.0 + i * 9.0
+		var pz2 := _m(px2) + 6.8
+		var py2 := _g(px2, pz2)
+		U.rod(v, "TrailPost%d" % i, Vector3(px2, py2 - 0.1, pz2), Vector3(px2, py2 + 0.8, pz2), 0.04, Color(0.45, 0.3, 0.2))
+		U.box(v, "TrailMark%d" % i, Vector3(0.12, 0.1, 0.02), Color(0.9, 0.2, 0.15) if i % 2 == 0 else Color(0.95, 0.95, 0.9), Vector3(px2, py2 + 0.72, pz2 + 0.03))
+	U.kind = old
+
+
+func _pier(parent: Node) -> void:
+	var old := U.kind
+	var px := 18.0
+	var pz0 := _m(px) + 8.0
+	U.kind = "wood"
+	var deck_y := R.WATER_Y + 0.55
+	var pier := StaticBody3D.new()
+	U.add(parent, pier, "Pier", Vector3(px, deck_y, pz0 - 3.5))
+	U.box_shape(pier, Vector3(1.6, 0.12, 8.0), Vector3(0, -0.06, 0))
+	for i in 19:
+		U.box(pier, "Plank%d" % i, Vector3(1.6, 0.06, 0.38), Color(0.55, 0.4, 0.26).darkened(rng.randf_range(0.0, 0.25)), Vector3(0, 0.0, -3.8 + i * 0.42))
+	for i in 5:
+		for sx in [-0.7, 0.7]:
+			U.rod(parent, "PierPile", Vector3(px + sx, deck_y - 2.5, pz0 - 7.3 + i * 1.8), Vector3(px + sx, deck_y + 0.6, pz0 - 7.3 + i * 1.8), 0.1, Color(0.32, 0.24, 0.16))
+	# Лодка: деревянная плоскодонка
+	var boat := Node3D.new()
+	U.add(parent, boat, "Boat", Vector3(px + 2.4, R.WATER_Y + 0.05, pz0 - 6.2))
+	boat.rotation_degrees.y = 20
+	U.kind = "wood"
+	U.box(boat, "Bottom", Vector3(1.2, 0.08, 3.2), Color(0.35, 0.5, 0.55), Vector3(0, 0.0, 0))
+	for sg in [-1.0, 1.0]:
+		var side := U.box(boat, "Side", Vector3(0.08, 0.5, 3.0), Color(0.35, 0.5, 0.55), Vector3(sg * 0.6, 0.25, 0))
+		side.rotation_degrees.z = -sg * 10.0
+	U.box(boat, "Bench", Vector3(1.1, 0.06, 0.3), Color(0.55, 0.4, 0.25), Vector3(0, 0.3, 0.2))
+	U.rod(boat, "Oar", Vector3(-0.2, 0.4, 0.2), Vector3(1.3, 0.1, 0.9), 0.025, Color(0.55, 0.4, 0.25))
+	U.rod(parent, "BoatRope", Vector3(px + 0.7, deck_y + 0.1, pz0 - 6.0), Vector3(px + 2.0, R.WATER_Y + 0.4, pz0 - 6.2), 0.012, Color(0.6, 0.55, 0.4))
+	# Удочки в держателях и ведро с рыбой на пирсе
+	for k in 2:
+		U.rod(parent, "Rod", Vector3(px - 0.55, deck_y + 0.1, pz0 - 4.0 + k * 0.5), Vector3(px - 2.4, deck_y + 1.8, pz0 - 4.8 + k * 0.5), 0.015, Color(0.3, 0.22, 0.14))
+		U.rod(parent, "Line", Vector3(px - 2.4, deck_y + 1.8, pz0 - 4.8 + k * 0.5), Vector3(px - 2.6, R.WATER_Y, pz0 - 5.0 + k * 0.5), 0.004, Color(0.9, 0.9, 0.9))
+		U.sphere(parent, "Float", 0.05, Color(0.95, 0.2, 0.15), Vector3(px - 2.6, R.WATER_Y + 0.03, pz0 - 5.0 + k * 0.5))
+	U.kind = "metal"
+	U.cyl(parent, "FishBucket", 0.2, 0.17, 0.3, Color(0.7, 0.2, 0.2), Vector3(px + 0.5, deck_y + 0.2, pz0 - 2.5), 10)
+	U.kind = old
+
+
+func _life() -> void:
+	var life := _holder("Life")
+	# Светлячки у воды и пыльца в лучах: лёгкие CPU-частицы
+	for i in 6:
+		var x := -70.0 + i * 28.0
+		_motes(life, "Fireflies%d" % i, Vector3(x, 1.4, _m(x)), Vector3(24, 1.8, 14), Color(0.8, 1.0, 0.4), 40, 7.0, 0.045, 3.0)
+		_motes(life, "Pollen%d" % i, Vector3(x + 10.0, 3.5, _m(x) - 10.0), Vector3(24, 3.0, 24), Color(1.0, 0.95, 0.7), 60, 9.0, 0.025, 1.2)
+	# Бабочки: пары крыльев на стебле над цветами (статичные, лёгкие)
+	var old := U.kind
+	U.kind = "paint"
+	for i in 26:
+		var bx := rng.randf_range(-80.0, 70.0)
+		var bz := _m(bx) + rng.randf_range(-12.0, 12.0)
+		if absf(bz - _m(bx)) < 5.0:
+			continue
+		var by := _g(bx, bz) + rng.randf_range(0.6, 1.1)
+		var col: Color = [Color(0.98, 0.7, 0.15), Color(0.95, 0.95, 0.95), Color(0.3, 0.5, 0.95), Color(0.9, 0.3, 0.2)][i % 4]
+		var b := Node3D.new()
+		U.add(life, b, "Butterfly%d" % i, Vector3(bx, by, bz))
+		b.rotation_degrees.y = rng.randf() * 360.0
+		for sg in [-1.0, 1.0]:
+			var wing := U.box(b, "Wing", Vector3(0.12, 0.01, 0.1), col, Vector3(sg * 0.06, 0.0, 0.0))
+			wing.rotation_degrees.z = -sg * 25.0
+		U.box(b, "Body", Vector3(0.012, 0.012, 0.09), Color(0.15, 0.1, 0.1), Vector3.ZERO)
+	# Птицы-силуэты высоко над оврагом
+	for i in 7:
+		var bp := Vector3(rng.randf_range(-80, 60), rng.randf_range(35, 60), rng.randf_range(-40, 40))
+		var bird := Node3D.new()
+		U.add(life, bird, "Bird%d" % i, bp)
+		bird.rotation_degrees.y = rng.randf() * 360.0
+		for sg in [-1.0, 1.0]:
+			var w := U.box(bird, "Wing", Vector3(0.9, 0.04, 0.22), Color(0.08, 0.08, 0.1), Vector3(sg * 0.45, 0.0, 0.0))
+			w.rotation_degrees.z = sg * 18.0
+	# Грибница-кольцо «ведьмино кольцо» у тропы
+	U.kind = "paint"
+	var rcx := -36.0
+	var rcz := _m(rcx) + 15.0
+	for i in 14:
+		var a := TAU * i / 14.0
+		var mx := rcx + cos(a) * 1.6
+		var mz := rcz + sin(a) * 1.6
+		var my := _g(mx, mz)
+		U.cyl(life, "RingStem%d" % i, 0.03, 0.04, 0.2, Color(0.9, 0.88, 0.8), Vector3(mx, my + 0.1, mz), 6)
+		U.sphere(life, "RingCap%d" % i, 0.1, Color(0.8, 0.12, 0.1) if i % 2 == 0 else Color(0.85, 0.65, 0.4), Vector3(mx, my + 0.21, mz), 0.5)
+	U.kind = old
+
+
+func _motes(parent: Node, nm: String, pos: Vector3, extents: Vector3, col: Color, amount: int, life: float, size: float, energy: float) -> void:
+	var ps := CPUParticles3D.new()
+	ps.amount = amount
+	ps.lifetime = life
+	ps.preprocess = life
+	ps.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	ps.emission_box_extents = extents * 0.5
+	ps.direction = Vector3(0, 1, 0)
+	ps.spread = 180.0
+	ps.initial_velocity_min = 0.05
+	ps.initial_velocity_max = 0.35
+	ps.gravity = Vector3(0.04, 0.02, 0.02)
+	ps.damping_min = 0.0
+	ps.damping_max = 0.1
+	ps.visibility_aabb = AABB(-extents, extents * 2.0)
+	var sm := SphereMesh.new()
+	sm.radius = size
+	sm.height = size * 2.0
+	sm.radial_segments = 6
+	sm.rings = 3
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	m.emission_enabled = true
+	m.emission = col
+	m.emission_energy_multiplier = energy
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sm.material = m
+	ps.mesh = sm
+	ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	U.add(parent, ps, nm, pos)

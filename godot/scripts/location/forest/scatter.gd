@@ -21,6 +21,8 @@ extends Node3D
 @export var near_water_only: bool = false
 @export var allow_in_water: bool = false
 @export var tilt_deg: float = 0.0
+## Плавающие листья: только на воде, высота = уровень воды
+@export var on_water: bool = false
 
 
 func _ready() -> void:
@@ -38,7 +40,10 @@ func _ready() -> void:
 			continue
 		var h := RavineTerrain.height(x, z)
 		var wet := h < RavineTerrain.WATER_Y + 0.15
-		if wet and not allow_in_water:
+		if on_water:
+			if not wet or h > RavineTerrain.WATER_Y - 0.3:
+				continue
+		elif wet and not allow_in_water:
 			continue
 		if near_water_only and (h > RavineTerrain.WATER_Y + 0.5 or h < RavineTerrain.WATER_Y - 0.9):
 			continue
@@ -58,7 +63,7 @@ func _ready() -> void:
 		if tilt_deg > 0.0:
 			b = b * Basis(Vector3.RIGHT, deg_to_rad(rng.randf_range(-tilt_deg, tilt_deg)))
 		b = b.scaled(Vector3(s, s * rng.randf_range(0.9, 1.15), s))
-		xforms.append(Transform3D(b, Vector3(x, h - 0.05, z)))
+		xforms.append(Transform3D(b, Vector3(x, (RavineTerrain.WATER_Y + 0.02) if on_water else h - 0.05, z)))
 		if collide_within > 0.0 and d < collide_within:
 			if body == null:
 				body = StaticBody3D.new()

@@ -7,6 +7,8 @@ extends Node3D
 const WATER_Y := -0.55
 const FALL_X := 72.0
 const POND_X := 22.0
+## Вытоптанные пятна: x, смещение от ручья по z, радиус
+const DIRT_SPOTS := [Vector3(-56, 11, 8), Vector3(-40, -14, 6), Vector3(-37, -4, 4), Vector3(18, 5, 5), Vector3(2, -10, 4), Vector3(2, 10, 4), Vector3(-28, -10, 4)]
 
 static var _noise: FastNoiseLite
 static var _noise2: FastNoiseLite
@@ -117,6 +119,11 @@ func _color(x: float, z: float, h: float, rng: RandomNumberGenerator) -> Color:
 		c = sand.lerp(Color(0.5, 0.45, 0.35), clampf((WATER_Y - h) * 0.4, 0.0, 1.0))
 	c = c.lerp(dirt, clampf((s - 0.45) * 2.5, 0.0, 1.0))
 	c = c.lerp(rock, clampf((s - 0.9) * 2.5, 0.0, 1.0))
+	# Вытоптанные места: стоянка, избушка, пирс, колодец, огород
+	for sp in DIRT_SPOTS:
+		var dd := Vector2(x - sp.x, z - (meander(sp.x) + sp.y)).length()
+		if dd < sp.z:
+			c = c.lerp(dirt.lightened(0.1), 0.85 * (1.0 - smoothstep(sp.z * 0.55, sp.z, dd)))
 	# Тропа вдоль ручья: вытоптанная земля
 	if d > 5.0 and d < 7.5:
 		c = c.lerp(dirt.lightened(0.15), 0.4 * (1.0 - absf(d - 6.2) / 1.4))

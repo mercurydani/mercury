@@ -64,7 +64,7 @@ func apply_difficulty(d: int) -> void:
 	if title:
 		title.text = "%s · %s" % [tr(title_key), tr("LOC_DIFFICULTY") % tr("DIFF_%d" % d)]
 	for h in get_tree().get_nodes_in_group("hazard"):
-		var on: bool = int(h.get_meta("tier", 0)) <= d
+		var on: bool = int(h.get_meta("tier", 0)) <= d and d <= int(h.get_meta("tier_max", 2))
 		_set_active(h, on)
 	for w in get_tree().get_nodes_in_group("water"):
 		(w as WaterBody).set_tier(d)
