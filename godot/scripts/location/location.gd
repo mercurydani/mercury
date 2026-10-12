@@ -66,6 +66,8 @@ func apply_difficulty(d: int) -> void:
 	for h in get_tree().get_nodes_in_group("hazard"):
 		var on: bool = int(h.get_meta("tier", 0)) <= d
 		_set_active(h, on)
+	for w in get_tree().get_nodes_in_group("water"):
+		(w as WaterBody).set_tier(d)
 	for w in get_tree().get_nodes_in_group("wind"):
 		var g := w as WindGust
 		if g.strength_by_tier.size() > d:

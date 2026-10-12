@@ -862,21 +862,20 @@ func _roof_c() -> void:
 
 
 func _old_window(parent: Node, pos: Vector3, on_x: bool) -> void:
-	var _k := U.kind
-	U.kind = "paint"
+	_make_rooms()
 	var w := Node3D.new()
 	U.add(parent, w, "OldWindow", pos)
 	if on_x:
 		w.rotation_degrees.y = -90
-	var glass := Color(0.22, 0.3, 0.4)
-	var r := rng.randf()
-	if r < 0.2:
-		glass = Color(1.0, 0.85, 0.5)
-	elif r < 0.45:
-		glass = Color.from_hsv(rng.randf(), 0.35, 0.75)
 	U.box(w, "Frame", Vector3(1.3, 1.5, 0.08), Color(0.95, 0.95, 0.92), Vector3.ZERO)
-	U.box(w, "Glass", Vector3(1.1, 1.3, 0.1), glass, Vector3.ZERO)
-	U.box(w, "Mullion", Vector3(0.06, 1.3, 0.12), Color(0.95, 0.95, 0.92), Vector3.ZERO)
+	var gm := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(1.1, 1.3, 0.1)
+	gm.mesh = bm
+	gm.material_override = _room_mats[rng.randi() % _room_mats.size()]
+	U.add(w, gm, "Room", Vector3(0, 0, 0.01))
+	U.box(w, "Mullion", Vector3(0.05, 1.3, 0.12), Color(0.95, 0.95, 0.92), Vector3.ZERO)
+	U.box(w, "Transom", Vector3(1.1, 0.05, 0.12), Color(0.95, 0.95, 0.92), Vector3(0, 0.3, 0))
 	U.box(w, "Sill", Vector3(1.5, 0.08, 0.3), Color(0.7, 0.68, 0.64), Vector3(0, -0.8, 0.12))
 	if rng.randf() < 0.4:
 		U.box(w, "Flowerpot", Vector3(0.3, 0.2, 0.2), Color(0.7, 0.35, 0.25), Vector3(0.3, -0.65, 0.13))
@@ -884,7 +883,6 @@ func _old_window(parent: Node, pos: Vector3, on_x: bool) -> void:
 
 
 # ---------- трап и мостик ----------
-	U.kind = _k
 
 
 func _ramp_and_planks() -> void:
@@ -999,59 +997,7 @@ func _cat() -> void:
 	var m2 := Marker3D.new()
 	U.add(spots, m2, "Chimney", Vector3(C_RIDGE_X, 0.99, 2.8))
 	m2.rotation_degrees.y = 200
-	var cat := Node3D.new()
-	cat.set_script(load("res://scripts/location/rescue_cat.gd"))
-	U.add(root_node, cat, "Cat", m0.position)
-	var v := Node3D.new()
-	U.add(cat, v, "Visual")
-	var fur := Color(0.95, 0.6, 0.2)
-	var dark := Color(0.7, 0.35, 0.1)
-	U.sphere(v, "Body", 0.28, fur, Vector3(0, 0.3, 0), 1.15)
-	U.sphere(v, "Belly", 0.2, Color(1.0, 0.92, 0.8), Vector3(0, 0.28, 0.17), 1.0)
-	U.sphere(v, "Haunch", 0.2, fur, Vector3(0.17, 0.2, -0.06), 0.9)
-	U.sphere(v, "HaunchL", 0.2, fur, Vector3(-0.17, 0.2, -0.06), 0.9)
-	for i in 3:
-		U.box(v, "Stripe%d" % i, Vector3(0.36, 0.05, 0.05), dark, Vector3(0, 0.45 - i * 0.08, -0.15 + i * 0.1)).rotation_degrees.x = 15 * (i - 1)
-	var head := Node3D.new()
-	U.add(v, head, "Head", Vector3(0, 0.72, 0.1))
-	U.sphere(head, "HeadMesh", 0.24, fur, Vector3.ZERO, 0.9)
-	U.sphere(head, "Muzzle", 0.1, Color(1.0, 0.92, 0.8), Vector3(0, -0.06, 0.18), 0.8)
-	U.sphere(head, "Nose", 0.03, Color(0.95, 0.5, 0.55), Vector3(0, -0.02, 0.26))
-	for s in [-1.0, 1.0]:
-		var ear := U.cyl(head, "Ear", 0.09, 0.0, 0.2, fur, Vector3(s * 0.14, 0.2, 0.0), 4)
-		ear.rotation_degrees.z = -s * 18
-		U.cyl(head, "EarIn", 0.05, 0.0, 0.14, Color(0.95, 0.6, 0.65), Vector3(s * 0.14, 0.19, 0.04), 4).rotation_degrees.z = -s * 18
-		# Усы
-		for k in 3:
-			U.rod(head, "Whisker", Vector3(s * 0.08, -0.05 - k * 0.015, 0.22), Vector3(s * 0.36, -0.03 - k * 0.05, 0.2), 0.008, Color(0.95, 0.95, 0.95))
-	var eyes := Node3D.new()
-	U.add(v, eyes, "Eyes", Vector3(0, 0.76, 0.3))
-	for s in [-1.0, 1.0]:
-		U.sphere(eyes, "EyeWhite", 0.07, Color.WHITE, Vector3(s * 0.1, 0, 0), 1.2)
-		U.sphere(eyes, "Pupil", 0.045, Color(0.08, 0.1, 0.12), Vector3(s * 0.1, -0.01, 0.045), 1.2)
-		U.sphere(eyes, "Glint", 0.015, Color.WHITE, Vector3(s * 0.1 + 0.015, 0.02, 0.085))
-	# Ошейник с биркой «Мурзик»
-	U.cyl(v, "Collar", 0.2, 0.2, 0.05, Color(0.85, 0.15, 0.2), Vector3(0, 0.58, 0.1), 14).rotation_degrees.x = 20
-	U.sphere(v, "Tag", 0.035, Color(0.95, 0.8, 0.2), Vector3(0, 0.52, 0.28), 1.0)
-	# Лапы и хвост
-	for s in [-1.0, 1.0]:
-		U.sphere(v, "Paw", 0.08, Color(1.0, 0.92, 0.8), Vector3(s * 0.12, 0.06, 0.2), 0.7)
-	var tail := Node3D.new()
-	U.add(v, tail, "Tail", Vector3(0, 0.12, -0.28))
-	for i in 5:
-		var seg := U.sphere(tail, "Seg%d" % i, 0.07 - i * 0.004, fur if i != 4 else dark, Vector3(0.0, 0.06 + i * 0.08, -0.05 - i * 0.04), 1.0)
-	var bubble := Label3D.new()
-	bubble.text = "CAT_MEOW"
-	bubble.font_size = 64
-	bubble.pixel_size = 0.012
-	bubble.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	bubble.modulate = Color(1, 1, 1)
-	bubble.outline_size = 14
-	bubble.outline_modulate = Color(0.1, 0.1, 0.1)
-	bubble.no_depth_test = true
-	U.add(cat, bubble, "Bubble", Vector3(0, 1.4, 0))
-	U.trigger(cat, "Trigger", "PROMPT_RESCUE", Vector3(0, 0.6, 0), 1.9)
-	U.kind = _k
+	CatBuilder.build(root_node, m0.position)
 
 
 func _players_and_checkpoints() -> void:
@@ -1140,6 +1086,119 @@ func _bucket(parent: Node, pos: Vector3, col: Color) -> void:
 	U.rod(b, "Handle2", Vector3(0.0, 0.5, 0), Vector3(0.22, 0.33, 0), 0.015, Color(0.7, 0.7, 0.72), 0.4, 0.6)
 
 
+# ---------- интерьеры квартир за стёклами ----------
+
+var _rooms: Array[Image] = []
+var _room_tex: Array[ImageTexture] = []
+var _room_mats: Array[StandardMaterial3D] = []
+
+
+## Комната в одноточечной перспективе: потолок, пол, боковые стены, задняя стена с обоями,
+## ковёр на стене, «стенка»-шкаф, торшер или лампа, телевизор, штора. lit — свет горит.
+func _room_image(lit: bool, seed_value: int) -> Image:
+	var r := RandomNumberGenerator.new()
+	r.seed = seed_value
+	var n := 64
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var wall := Color.from_hsv(r.randf_range(0.0, 0.14) if r.randf() < 0.7 else r.randf(), r.randf_range(0.15, 0.4), r.randf_range(0.6, 0.85))
+	var floor_c := Color(0.45, 0.3, 0.18).lerp(Color(0.6, 0.45, 0.28), r.randf())
+	var ceil_c := Color(0.92, 0.9, 0.84)
+	var light := 1.0 if lit else 0.42
+	var m := 0.22
+	var carpet_x := r.randi_range(14, 34)
+	var cabinet_side := -1 if r.randf() < 0.5 else 1
+	var curtain := Color.from_hsv(r.randf(), r.randf_range(0.3, 0.6), r.randf_range(0.5, 0.8))
+	for y in n:
+		for x in n:
+			var u := float(x) / n - 0.5
+			var v := float(y) / n - 0.5
+			var hm := 0.5 - m
+			var c: Color
+			if absf(u) < hm and absf(v) < hm:
+				# задняя стена: обои в полоску
+				c = wall.darkened(0.08 if (x / 3) % 2 == 0 else 0.0)
+				var bx := float(x) / n
+				var by := float(y) / n
+				# ковёр на стене
+				if x >= carpet_x and x < carpet_x + 16 and y >= 14 and y < 34:
+					c = Color(0.65, 0.12, 0.15) if ((x + y) / 3) % 4 != 0 else Color(0.9, 0.7, 0.3)
+					if absi(x - carpet_x - 8) + absi(y - 24) < 6:
+						c = Color(0.15, 0.25, 0.5)
+				# «стенка»: тёмное дерево со стёклами
+				elif (cabinet_side < 0 and x < 19) or (cabinet_side > 0 and x >= n - 19):
+					if y > 22:
+						c = Color(0.34, 0.2, 0.12) if ((x + y) % 7) != 0 else Color(0.5, 0.35, 0.22)
+				# телевизор на тумбе
+				if y > 38 and x > 26 and x < 40:
+					c = Color(0.18, 0.2, 0.22) if y < 46 else Color(0.4, 0.28, 0.18)
+				c = c.lerp(Color(0.3, 0.3, 0.32), 0.15)
+			elif absf(u) > absf(v):
+				# боковые стены темнее с глубиной
+				var depth := (absf(u) - hm) / m
+				c = wall.darkened(0.15 + depth * 0.35)
+				if u < 0 and cabinet_side < 0 and y > 22 and y < 50:
+					c = Color(0.3, 0.18, 0.1)
+			elif v < 0:
+				c = ceil_c.darkened(clampf((absf(v) - hm) / m * 0.2, 0.0, 0.3))
+			else:
+				c = floor_c.darkened(clampf((absf(v) - hm) / m * 0.3, 0.0, 0.35))
+			img.set_pixel(x, y, c.darkened(1.0 - light) if not lit else c)
+	# светильник: абажур с ореолом
+	var lx := r.randi_range(24, 40)
+	var lamp := Color(1.0, 0.85, 0.5) if lit else Color(0.8, 0.7, 0.5)
+	for dy in range(-6, 7):
+		for dx in range(-6, 7):
+			var d := sqrt(dx * dx + dy * dy)
+			if d < 6.0 and lit:
+				var base := img.get_pixel(lx + dx, 8 + dy)
+				img.set_pixel(lx + dx, 8 + dy, base.lerp(Color(1.0, 0.95, 0.7), 1.0 - d / 6.0))
+	for dy in range(0, 4):
+		for dx in range(-3 + dy, 4 - dy):
+			img.set_pixel(lx + dx, 9 + dy, lamp)
+	# шторы по краям: складки
+	var cw := r.randi_range(5, 9)
+	for y in n:
+		for x in cw:
+			var k := 0.88 if (x % 3) == 0 else 1.0
+			var a := curtain.darkened(0.0 if lit else 0.5) * k
+			img.set_pixel(x, y, a)
+			img.set_pixel(n - 1 - x, y, a)
+	for x in n:
+		for y in 4:
+			img.set_pixel(x, y, curtain.darkened(0.15 if lit else 0.55))
+	# растение на подоконнике
+	if r.randf() < 0.6:
+		var px := r.randi_range(cw + 2, n - cw - 10)
+		for dy in 10:
+			var w := 3 + (6 - absi(dy - 3)) / 2
+			for dx in range(-w, w):
+				if px + dx >= 0 and px + dx < n:
+					img.set_pixel(px + dx, n - 14 + dy, Color(0.25, 0.5, 0.2) if dy < 6 else Color(0.7, 0.35, 0.25))
+	return img
+
+
+func _make_rooms() -> void:
+	if not _rooms.is_empty():
+		return
+	for i in 10:
+		var lit := i % 3 == 0
+		var img := _room_image(lit, 500 + i)
+		_rooms.append(img)
+		var big := img.duplicate() as Image
+		big.resize(128, 128, Image.INTERPOLATE_NEAREST)
+		_room_tex.append(ImageTexture.create_from_image(big))
+		var mt := StandardMaterial3D.new()
+		mt.albedo_texture = _room_tex[i]
+		mt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		mt.roughness = 0.35
+		mt.metallic_specular = 0.8
+		if lit:
+			mt.emission_enabled = true
+			mt.emission_texture = _room_tex[i]
+			mt.emission_energy_multiplier = 0.9
+		_room_mats.append(mt)
+
+
 # ---------- дальний город: кварталы до горизонта ----------
 
 const FAR_COLORS := [Color(0.9, 0.86, 0.76), Color(0.85, 0.8, 0.7), Color(0.82, 0.84, 0.86), Color(0.9, 0.82, 0.68), Color(0.78, 0.8, 0.74), Color(0.88, 0.78, 0.72), Color(0.8, 0.75, 0.8)]
@@ -1152,25 +1211,24 @@ var _far_mats := {}
 func _facade_texture() -> ImageTexture:
 	if _win_tex:
 		return _win_tex
-	var img := Image.create(256, 256, true, Image.FORMAT_RGBA8)
+	_make_rooms()
+	var img := Image.create(512, 512, true, Image.FORMAT_RGBA8)
 	img.fill(Color(0.95, 0.94, 0.92))
-	var cell := 64
+	var cell := 128
 	for fy in 4:
 		for fx in 4:
 			var x0 := fx * cell
 			var y0 := fy * cell
-			var lit := rng.randf() < 0.14
-			var glass := Color(1.0, 0.85, 0.5) if lit else Color(0.28, 0.34, 0.44).lerp(Color(0.5, 0.52, 0.58), rng.randf() * 0.6)
-			if not lit and rng.randf() < 0.3:
-				glass = Color.from_hsv(rng.randf(), 0.3, 0.75)  # шторы
-			img.fill_rect(Rect2i(x0 + 15, y0 + 14, 34, 36), Color(0.97, 0.97, 0.95))
-			img.fill_rect(Rect2i(x0 + 18, y0 + 17, 28, 30), glass)
-			img.fill_rect(Rect2i(x0 + 31, y0 + 17, 2, 30), Color(0.97, 0.97, 0.95))
+			img.fill_rect(Rect2i(x0 + 30, y0 + 26, 68, 72), Color(0.97, 0.97, 0.95))
+			var room: Image = _rooms[rng.randi() % _rooms.size()].duplicate()
+			room.resize(60, 64, Image.INTERPOLATE_BILINEAR)
+			img.blit_rect(room, Rect2i(0, 0, 60, 64), Vector2i(x0 + 34, y0 + 30))
+			img.fill_rect(Rect2i(x0 + 63, y0 + 30, 2, 64), Color(0.97, 0.97, 0.95))
 			if fx % 2 == 0:
-				img.fill_rect(Rect2i(x0 + 8, y0 + 50, 48, 10), Color(0.55, 0.62, 0.7).lerp(Color(0.8, 0.5, 0.35), rng.randf() * 0.7))
+				img.fill_rect(Rect2i(x0 + 16, y0 + 100, 96, 20), Color(0.55, 0.62, 0.7).lerp(Color(0.8, 0.5, 0.35), rng.randf() * 0.7))
 	for i in 5:
-		img.fill_rect(Rect2i(0, i * cell - 1 if i > 0 else 0, 256, 2), Color(0.6, 0.58, 0.55))
-		img.fill_rect(Rect2i(i * cell - 1 if i > 0 else 0, 0, 2, 256), Color(0.7, 0.68, 0.65))
+		img.fill_rect(Rect2i(0, i * cell - 1 if i > 0 else 0, 512, 2), Color(0.6, 0.58, 0.55))
+		img.fill_rect(Rect2i(i * cell - 1 if i > 0 else 0, 0, 2, 512), Color(0.7, 0.68, 0.65))
 	img.generate_mipmaps()
 	_win_tex = ImageTexture.create_from_image(img)
 	return _win_tex
