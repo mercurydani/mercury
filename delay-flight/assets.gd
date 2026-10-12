@@ -9,6 +9,7 @@ const TERMINAL := "res://assets/models/terminal/scene.gltf"
 const KENNEY := "res://assets/models/kenney/%s.glb"
 
 const FLEET := [BAE, POLY_A, POLY_B]
+const LENGTHS := [8.7, 12.5, 14.8]       # реальные длины: 26 м, 37.6 м, 44.5 м (единица = 3 м)
 
 static func load_scene(path: String) -> Node3D:
 	if not ResourceLoader.exists(path):
@@ -49,7 +50,7 @@ static func fit(model: Node3D, target_len: float, target_span: float = 0.0) -> N
 	model.position = Vector3(-c.x * k, -b.position.y * k, -c.z * k)
 	return wrap
 
-static func kenney(name: String, length: float = 3.0) -> Node3D:
+static func kenney(name: String, length: float = 1.5) -> Node3D:
 	var m := load_scene(KENNEY % name)
 	if m == null:
 		return null
@@ -60,6 +61,7 @@ static func worker(vest: Color, hat: Color, skin: Color, shirt: Color = Color(0,
 	var w := load_scene(WORKER)
 	if w == null:
 		return null
+	w.scale = Vector3.ONE * (Cfg.PERSON * 0.95)
 	for mi in w.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		for s in m.mesh.get_surface_count():
@@ -75,6 +77,19 @@ static func worker(vest: Color, hat: Color, skin: Color, shirt: Color = Color(0,
 							d.albedo_color = shirt
 				m.set_surface_override_material(s, d)
 	return w
+
+# Делает материалы импортированных моделей менее «пластиковыми»: слегка металлик, умеренная шероховатость.
+static func polish(root: Node, metallic: float, rough: float) -> void:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		for s in m.mesh.get_surface_count():
+			var mat := m.get_active_material(s)
+			if mat is StandardMaterial3D:
+				var d := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+				d.metallic = metallic
+				d.roughness = rough
+				d.metallic_specular = 0.6
+				m.set_surface_override_material(s, d)
 
 static func play(model: Node, anim: String, speed: float = 1.0) -> AnimationPlayer:
 	for ap in model.find_children("*", "AnimationPlayer", true, false):

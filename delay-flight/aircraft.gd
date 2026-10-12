@@ -289,8 +289,11 @@ func _build_imported() -> bool:
 	var m := Assets.load_scene(Assets.FLEET[model_idx])
 	if m == null:
 		return false
-	var pivot := Assets.fit(m, 14.0, 11.0)
+	var plen: float = Assets.LENGTHS[model_idx]
+	Assets.polish(m, 0.28, 0.34)
+	var pivot := Assets.fit(m, plen)
 	pivot.rotation.y = -PI / 2.0
+	pivot.position.x = (plen - Cfg.LREF) / 2.0     # носы всех самолётов у одной линии
 	body.add_child(pivot)
 	model_root = pivot
 	var b := Assets.bounds(m)
@@ -306,7 +309,7 @@ func _ready() -> void:
 	add_child(body)
 	var imported := _build_imported()
 	if imported:
-		beacon = Rig.sphere(body, 0.16, Vector3(0, 4.4, 0), Color("ff2d2d"), Vector3.ONE, 3.0)
+		beacon = Rig.sphere(body, 0.1, Vector3(0, 2.6, 0), Color("ff2d2d"), Vector3.ONE, 3.0)
 	else:
 		body.scale = Vector3.ONE * SCALE
 		var m := build_model(body, livery, flight)
@@ -316,16 +319,21 @@ func _ready() -> void:
 	last_pos = pos
 	if ambient:
 		return
-	info = Node3D.new()
-	info.position = Vector3(0, 7.2, 0)
-	add_child(info)
-	Rig.box(info, Vector3(4.2, 0.3, 0.15), Vector3.ZERO, Color(0, 0, 0, 0.6))
-	bar_fill = Rig.box(info, Vector3(4.1, 0.2, 0.17), Vector3.ZERO, Color("7dff8a"), Vector3.ZERO, 1.0)
-	var door := Cfg.to3(Cfg.DOOR_OFF, 2.1)
-	var fuel_p := Cfg.to3(Cfg.FUEL_OFF, 2.1)
-	bag_label = Rig.label(self, "", door, 40, Color("ffd24d"))
-	fuel_label = Rig.label(self, "", fuel_p, 40, Color("ff9f43"))
-	info.visible = false
+	var door := Cfg.to3(Cfg.DOOR_OFF, 0.9)
+	var fuel_p := Cfg.to3(Cfg.FUEL_OFF, 0.9)
+	bag_label = _ring_label(door, Color("ffd24d"))
+	fuel_label = _ring_label(fuel_p, Color("ff9f43"))
+
+# Маленькая подпись над зоной работ: видна только вблизи и перекрывается предметами.
+func _ring_label(p: Vector3, col: Color) -> Label3D:
+	var l := Rig.label(self, "", p, 40, col)
+	l.pixel_size = 0.0032
+	l.no_depth_test = false
+	l.outline_size = 6
+	l.visibility_range_end = 9.0
+	l.visibility_range_end_margin = 3.0
+	l.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+	return l
 
 func _process(delta: float) -> void:
 	blink += delta
@@ -340,16 +348,9 @@ func _process(delta: float) -> void:
 			wd = -wd
 		body.rotation.y = lerp_angle(body.rotation.y, atan2(wd.y, -wd.x), minf(1.0, delta * 2.4))
 	var ready := state == "ready"
-	info.visible = ready
 	bag_label.visible = ready
 	fuel_label.visible = ready
 	if ready:
-		var r := clampf(pat / max_pat, 0.0, 1.0)
-		bar_fill.scale.x = maxf(r, 0.001)
-		bar_fill.position.x = -2.05 * (1.0 - r)
-		var col := Color("7dff8a") if r > 0.5 else (Color("ffd24d") if r > 0.25 else Color("ff5a4d"))
-		bar_fill.material_override.albedo_color = col
-		bar_fill.material_override.emission = col
 		bag_label.text = "багаж %d/%d" % [bags, need]
 		fuel_label.text = "топливо %d%%" % int(fuel)
 	if body_mat != null:

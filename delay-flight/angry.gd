@@ -21,14 +21,15 @@ var alarm: Label3D
 const NAMES := {"pilot": "пилот", "dispatcher": "диспетчер", "hooligan": "пилот-хулиган", "muscle": "КАЧОК"}
 
 func _ready() -> void:
-	rig = People.person(People.npc_opts(type))
+	var o := People.npc_opts(type)
+	o["s"] = float(o.get("s", 1.0)) * Cfg.PERSON
+	rig = People.person(o)
 	add_child(rig)
-	var height: float = {"pilot": 2.6, "dispatcher": 2.5, "hooligan": 2.6, "muscle": 5.6}[type]
-	Rig.label(self, NAMES[type], Vector3(0, height, 0), 30 if type == "muscle" else 20, Color("ffb3a8"))
 	if type == "muscle":
-		glow = Rig.sphere(self, 2.2, Vector3(0, 2.4, 0), Color(1, 0.15, 0.1, 0.22), Vector3.ONE, 1.0)
+		glow = Rig.sphere(self, 0.8, Vector3(0, 0.8, 0), Color(1, 0.15, 0.1, 0.22), Vector3.ONE, 1.0)
 		glow.visible = false
-		alarm = Rig.label(self, "!!!", Vector3(0, 6.6, 0), 80, Color("ff2d2d"))
+		alarm = Rig.label(self, "!!!", Vector3(0, 2.0, 0), 80, Color("ff2d2d"))
+		alarm.pixel_size = 0.004
 		alarm.visible = false
 
 func _process(delta: float) -> void:

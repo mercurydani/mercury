@@ -14,40 +14,45 @@ func _initialize() -> void:
 		if main.planes.all(func(p): return p == null or p.state == "ready"):
 			break
 	var w: Worker = main.workers[0]
-	w.pos = Vector2(130, 560)
+	w.pos = Vector2(140, 1225)
 	w.yaw = PI
 	await _frames(3)
 	_save("fp_a")
-	w.pos = Vector2(820, 765)
+	w.pos = Vector2(1180, 1500)
 	w.yaw = 0.0
-	w.pitch = 0.42
+	w.pitch = 0.22
 	await _frames(3)
 	_save("fp_sign")
 	w.pitch = 0.0
-	w.pos = Vector2(1000, 765)
+	w.pos = Vector2(1500, 1025)
 	w.yaw = PI
-	w.pitch = 0.05
+	w.pitch = 0.04
 	await _frames(3)
 	_save("fp_far")
-	w.pos = Vector2(330, 1000)
+	w.pos = Vector2(760, 1030)
+	w.yaw = PI * 0.5
+	w.pitch = 0.08
+	await _frames(3)
+	_save("fp_side")
+	w.pos = Vector2(700, 1260)
 	w.yaw = PI * 0.62
 	await _frames(3)
 	_save("fp_b")
-	w.pos = Vector2(250, 1120)
+	w.pos = Vector2(1000, 1030)
 	w.yaw = PI
 	w.item = "bag"
 	main.spawn_npc("pilot")
 	main.spawn_npc("hooligan")
 	main.spawn_npc("muscle")
-	main.npcs[0].pos = Vector2(380, 1060)
-	main.npcs[1].pos = Vector2(340, 1200)
-	main.npcs[2].pos = Vector2(430, 1180)
+	main.npcs[0].pos = Vector2(1050, 1000)
+	main.npcs[1].pos = Vector2(1100, 1090)
+	main.npcs[2].pos = Vector2(1180, 1020)
 	main.npcs[2].wind = 0.5
 	await _frames(3)
 	_save("fp_c")
 	main.workers.clear()
-	main.camera.position = Vector3(22.0, 40.0, -6.0)
-	main.camera.look_at(Vector3(22.0, 0.0, 28.0), Vector3.UP)
+	main.camera.position = Vector3(30.0, 120.0, -30.0)
+	main.camera.look_at(Vector3(30.0, 0.0, 60.0), Vector3.UP)
 	await _frames(3)
 	_save("overview")
 	quit()

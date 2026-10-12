@@ -28,6 +28,7 @@ var planes: Array = [null, null, null]
 var npcs: Array[Angry] = []
 var bags: Array[Vector2] = []
 var texts: Array = []
+var feed: Array = []          # лента событий: {text, color, tag, t}
 
 var anger := 0.0
 var time_left := Cfg.SHIFT
@@ -71,34 +72,67 @@ func _ready() -> void:
 func _setup_environment() -> void:
 	camera = Camera3D.new()
 	camera.fov = 62.0
-	camera.far = 3000.0
-	camera.position = Vector3(24.0, 1.9, 2.9)
+	camera.far = 3500.0
+	camera.near = 0.12
+	camera.position = Vector3(34.0, 0.75, 5.8)
 	add_child(camera)
-	camera.look_at(Vector3(22.4, 1.2, 8.4), Vector3.UP)
+	camera.look_at(Vector3(31.4, 0.5, 11.5), Vector3.UP)
+	# низкое солнце: длинные мягкие тени, тёплый свет
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-42, 28, 0)
-	sun.light_energy = 0.8
+	sun.rotation_degrees = Vector3(-34, 38, 0)
+	sun.light_color = Color(1.0, 0.94, 0.84)
+	sun.light_energy = 1.35
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 90.0
+	sun.shadow_bias = 0.04
+	sun.shadow_normal_bias = 1.2
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_max_distance = 260.0
+	sun.directional_shadow_blend_splits = true
+	sun.light_angular_distance = 0.6
 	add_child(sun)
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("4a90d9")
-	sky_mat.sky_horizon_color = Color("bcd8f0")
-	sky_mat.ground_horizon_color = Color("bcd8f0")
-	sky_mat.ground_bottom_color = Color("6b7789")
+	sky_mat.sky_top_color = Color(0.22, 0.43, 0.8)
+	sky_mat.sky_horizon_color = Color(0.74, 0.84, 0.93)
+	sky_mat.ground_horizon_color = Color(0.74, 0.84, 0.93)
+	sky_mat.ground_bottom_color = Color(0.45, 0.5, 0.55)
+	sky_mat.sky_curve = 0.18
+	sky_mat.sun_angle_max = 28.0
+	sky_mat.sun_curve = 0.12
+	sky_mat.use_debanding = true
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("8f9bb3")
-	env.ambient_light_energy = 0.5
-	env.tonemap_exposure = 0.9
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.6
+	env.ambient_light_color = Color(0.62, 0.64, 0.68)
+	env.ambient_light_sky_contribution = 0.5
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.0
+	env.tonemap_white = 6.0
+	env.glow_enabled = true
+	env.glow_intensity = 0.55
+	env.glow_bloom = 0.08
+	env.glow_hdr_threshold = 1.05
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 1.0
 	env.fog_enabled = true
-	env.fog_light_color = Color("c4d9ee")
-	env.fog_density = 0.0016
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.fog_light_color = Color(0.7, 0.8, 0.9)
+	env.fog_density = 0.0007
+	env.fog_sun_scatter = 0.12
+	env.fog_aerial_perspective = 0.55
+	# дополнительные эффекты работают в Forward+/Mobile (запуск: godot --rendering-method forward_plus)
+	if RenderingServer.get_rendering_device() != null:
+		env.ssao_enabled = true
+		env.ssao_radius = 1.2
+		env.ssao_intensity = 2.0
+		env.ssil_enabled = true
+		env.ssr_enabled = true
+		env.ssr_max_steps = 64
+		get_viewport().use_taa = true
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -120,14 +154,14 @@ func _build_menu_stage() -> void:
 			rig = holder
 		else:
 			var o := People.crew_opts(i)
-			o["s"] = 1.15
+			o["s"] = 1.15 * Cfg.PERSON
 			rig = People.person(o)
 		rig.position = Cfg.to3(menu_spot(i))
 		menu_stage.add_child(rig)
 		menu_rigs.append(rig)
 
 func menu_spot(i: int) -> Vector2:
-	return Vector2(430.0, 1320.0 - i * 105.0)
+	return Vector2(550.0, 1660.0 - i * 65.0)
 
 func to_screen(p: Vector2, h: float = 0.0) -> Vector2:
 	var cam := get_viewport().get_camera_3d()
@@ -199,6 +233,7 @@ func start_game(n: int) -> void:
 	npcs.clear()
 	bags.clear()
 	texts.clear()
+	feed.clear()
 	planes = [null, null, null]
 	anger = 0.0
 	time_left = Cfg.SHIFT
@@ -215,14 +250,25 @@ func start_game(n: int) -> void:
 	w.setup(0)
 	w.fp = true
 	w.yaw = PI
-	w.pos = Vector2(130, 560)
+	w.pos = Vector2(140, 1225)
 	worker_layer.add_child(w)
 	workers.append(w)
 	mode = "play"
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
+# Важные события — в ленту; мелочи («+10», «Не то!») — маленькие всплывашки рядом с источником.
 func ft(pos: Vector2, text: String, color: Color = Color.WHITE, size: int = 22) -> void:
-	texts.append({"pos": pos, "text": text, "color": color, "size": size, "t": 1.6})
+	if size >= 26:
+		push_feed(text, color)
+	else:
+		texts.append({"pos": pos, "text": text, "color": color, "size": size, "t": 1.4})
+
+func push_feed(text: String, color: Color = Color.WHITE, tag: String = "") -> void:
+	feed.push_front({"text": text, "color": color, "tag": tag, "t": 7.0})
+	if feed.size() > 6:
+		feed.pop_back()
+
+const SPEAKERS := {"pilot": "Капитан", "dispatcher": "Диспетчер", "hooligan": "Пилот-хулиган", "muscle": "КАЧОК"}
 
 func show_banner(text: String) -> void:
 	banner_text = text
@@ -245,22 +291,30 @@ func spawn_plane() -> void:
 	pl.need = 4 if elapsed > 80.0 else 3
 	pl.livery = LIVERIES.pick_random()
 	pl.model_idx = randi() % Assets.FLEET.size()
-	pl.flight = FLIGHTS.pick_random()
+	pl.flight = _free_flight()
 	plane_layer.add_child(pl)
 	planes[row] = pl
+
+func _free_flight() -> String:
+	var used: Array = []
+	for p in planes:
+		if p != null:
+			used.append(p.flight)
+	var pool: Array = FLIGHTS.filter(func(f): return not used.has(f))
+	return pool.pick_random() if not pool.is_empty() else FLIGHTS.pick_random()
 
 func update_plane(pl: Aircraft, dt: float, idx: int) -> void:
 	match pl.state:
 		"arriving":
 			var lane := Vector2(Cfg.TAXI_X, Cfg.ROWS[pl.row])
 			if pl.phase == 0:
-				pl.pos = pl.pos.move_toward(lane, 700.0 * dt)
+				pl.pos = pl.pos.move_toward(lane, 1500.0 * dt)
 				if pl.pos.distance_to(lane) < 2.0:
 					pl.phase = 1
 			else:
 				var stand := Vector2(Cfg.PX, Cfg.ROWS[pl.row])
 				var d := pl.pos.distance_to(stand)
-				pl.pos = pl.pos.move_toward(stand, clampf(d * 0.9 + 40.0, 40.0, 420.0) * dt)
+				pl.pos = pl.pos.move_toward(stand, clampf(d * 0.9 + 60.0, 60.0, 700.0) * dt)
 				if d < 2.0:
 					pl.pos = stand
 					pl.state = "ready"
@@ -269,24 +323,24 @@ func update_plane(pl: Aircraft, dt: float, idx: int) -> void:
 			if pl.pat <= 0.0 and not pl.delayed:
 				pl.delayed = true
 				anger += 12.0
-				ft(pl.pos, "РЕЙС ЗАДЕРЖАН!", Color("ff5a4d"), 30)
-				show_banner("Рейс %s задержан — народ звереет!" % pl.flight)
+				push_feed("Рейс %s задержан!" % pl.flight, Color("ff6b5e"), "ДИСПЕТЧЕРСКАЯ")
+				show_banner("Рейс %s задержан. Пассажиры недовольны." % pl.flight)
 			if pl.bags >= pl.need and pl.fuel >= 100.0:
 				pl.state = "leaving"
 				var pts := 30 if pl.delayed else 100 + roundi(pl.pat)
 				score += pts
 				departed += 1
-				ft(pl.pos, "+%d" % pts, Color("7dff8a"), 34)
+				push_feed("Рейс %s вылетел  +%d" % [pl.flight, pts], Color("5ee0c4"), "ВЫЛЕТ")
 		"leaving":
 			var back := Vector2(Cfg.TAXI_X - 30.0, Cfg.ROWS[pl.row])
 			if pl.phase == 0:
 				pl.reverse = true
-				pl.pos = pl.pos.move_toward(back, 260.0 * dt)
+				pl.pos = pl.pos.move_toward(back, 450.0 * dt)
 				if pl.pos.distance_to(back) < 2.0:
 					pl.phase = 1
 			else:
 				pl.reverse = false
-				pl.pos = pl.pos.move_toward(Vector2(back.x, Cfg.SPAWN_Y), 700.0 * dt)
+				pl.pos = pl.pos.move_toward(Vector2(back.x, Cfg.SPAWN_Y), 1500.0 * dt)
 				if pl.pos.y >= Cfg.SPAWN_Y - 2.0:
 					planes[idx] = null
 					pl.queue_free()
@@ -297,14 +351,14 @@ func spawn_npc(type: String) -> void:
 	n.type = type
 	n.cd = 1.5
 	n.shout = randf_range(2.0, 4.0)
-	n.pos = Vector2(randf_range(250, 900), randf_range(1900.0, 2250.0))
+	n.pos = Vector2(randf_range(250, 1500), randf_range(2400.0, 2850.0))
 	if type == "dispatcher":
-		n.pos = Vector2(135, randf_range(300, 2000))
+		n.pos = Vector2(115, randf_range(300, 2800))
 	npc_layer.add_child(n)
 	npcs.append(n)
-	ft(n.pos, LINES[type].pick_random(), Color("ff8a80"), 34 if type == "muscle" else 22)
+	push_feed(LINES[type].pick_random(), Color("ff8a80"), SPEAKERS[type])
 	if type == "muscle":
-		show_banner("ТЯЖЁЛЫЕ ШАГИ… ПРЯЧЬ ЧЕМОДАНЫ!")
+		show_banner("Внимание! Сотрудник службы безопасности в ярости. Спрячьте багаж.")
 		shake = 14.0
 
 func nearest_worker(p: Vector2) -> Worker:
@@ -335,7 +389,7 @@ func update_npc(n: Angry, dt: float) -> void:
 		if n.shout <= 0.0:
 			n.shout = 6.0
 			shake = maxf(shake, 9.0)
-			ft(n.pos + Vector2(0, -60), LINES.dispatcher.pick_random(), Color("ff8a80"), 28)
+			push_feed(LINES.dispatcher.pick_random(), Color("ff8a80"), SPEAKERS["dispatcher"])
 			var live: Array = planes.filter(func(p): return p != null and p.state == "ready")
 			if not live.is_empty():
 				var pl: Aircraft = live.pick_random()
@@ -356,7 +410,7 @@ func update_npc(n: Angry, dt: float) -> void:
 				for w in workers:
 					if n.pos.distance_to(w.pos) < 190.0:
 						hit_worker(w, n.pos, 1700.0, 1.6)
-						ft(w.pos + Vector2(0, -50), "БАБАХ!", Color("ff5a4d"), 36)
+						push_feed("БАБАХ! Тебя отправили в полёт", Color("ff6b5e"), "КАЧОК")
 				var near: Array = planes.filter(func(p): return p != null)
 				near.sort_custom(func(a, b): return n.pos.distance_to(a.pos) < n.pos.distance_to(b.pos))
 				if not near.is_empty() and near[0].state == "ready":
@@ -401,7 +455,7 @@ func try_calm(w: Worker) -> bool:
 	var muscle := best.type == "muscle"
 	score += 150 if muscle else 25
 	anger = maxf(0.0, anger - (15.0 if muscle else 5.0))
-	ft(best.pos + Vector2(0, -80), "ОН УШЁЛ САМ! +150" if muscle else "Спасибо… +25", Color("7dff8a"), 38 if muscle else 22)
+	push_feed("Он ушёл сам!  +150" if muscle else "Успокоен: %s  +25" % SPEAKERS[best.type], Color("5ee0c4"), "ПЕРРОН")
 	return true
 
 # ---------- игроки ----------
@@ -474,8 +528,8 @@ func _process(delta: float) -> void:
 		fp_cam = workers[0].cam
 	if fp_cam != null:
 		fp_cam.current = true
-		fp_cam.h_offset = randf_range(-shake, shake) * 0.03
-		fp_cam.v_offset = randf_range(-shake, shake) * 0.03
+		fp_cam.h_offset = randf_range(-shake, shake) * 0.008
+		fp_cam.v_offset = randf_range(-shake, shake) * 0.008
 	else:
 		camera.current = true
 	_sync_bags()
@@ -483,13 +537,13 @@ func _process(delta: float) -> void:
 func _sync_bags() -> void:
 	while bag_layer.get_child_count() < bags.size():
 		var n := Rig.item("bag")
-		n.scale = Vector3.ONE * 1.4
+		n.scale = Vector3.ONE * 0.55
 		bag_layer.add_child(n)
 	var kids := bag_layer.get_children()
 	for i in kids.size():
 		kids[i].visible = i < bags.size()
 		if i < bags.size():
-			kids[i].position = Cfg.to3(bags[i], 0.35)
+			kids[i].position = Cfg.to3(bags[i], 0.12)
 
 func step(dt: float) -> void:
 	if mode != "play":
@@ -552,6 +606,9 @@ func step(dt: float) -> void:
 		t.t -= dt
 		t.pos.y -= 22.0 * dt
 	texts = texts.filter(func(t): return t.t > 0.0)
+	for f in feed:
+		f.t -= dt
+	feed = feed.filter(func(f): return f.t > 0.0)
 	banner_t = maxf(0.0, banner_t - dt)
 
 	if anger >= 100.0:
