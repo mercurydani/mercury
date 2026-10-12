@@ -38,10 +38,14 @@ func _ready() -> void:
 	_taxiways_and_runway()
 	_service_road()
 	_kenney_vehicles()
-	_crew()
 	_extras()
+	_terminal_details()
+	_apron_props()
+	_stains()
+	_far_extras()
 	_far_airport()
 	_suburbs()
+	_crew()
 	var baked := Baker.bake(self)
 	print("Airport: baked %d meshes" % baked)
 
@@ -50,6 +54,23 @@ func _ready() -> void:
 func _solid(x: float, z: float, sx: float, sz: float) -> void:
 	solids_px.append(Rect2(Vector2((z - sz / 2.0) / Cfg.K, (x - sx / 2.0) / Cfg.K), Vector2(sz / Cfg.K, sx / Cfg.K)))
 
+# Мягкая тень-«контакт» под техникой: заземляет объекты (в Compatibility нет SSAO).
+func _contact_shadow(pos: Vector3, size: Vector2, yaw_deg: float) -> void:
+	var pm := PlaneMesh.new()
+	pm.size = size * 1.35
+	var mi := MeshInstance3D.new()
+	mi.mesh = pm
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = Tex.blob(128, 11, 0.12)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	mi.material_override = m
+	mi.position = Vector3(pos.x, 0.05, pos.z)
+	mi.rotation_degrees.y = yaw_deg
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+
 # Ставит объект на сцену и делает его непроходимым. size = (ширина по X, длина по Z) до поворота.
 func _place(n: Node3D, pos: Vector3, yaw_deg: float, size: Vector2) -> void:
 	n.position = pos
@@ -57,6 +78,7 @@ func _place(n: Node3D, pos: Vector3, yaw_deg: float, size: Vector2) -> void:
 	add_child(n)
 	var turned := absf(sin(deg_to_rad(yaw_deg))) > 0.7
 	_solid(pos.x, pos.z, size.y if turned else size.x, size.x if turned else size.y)
+	_contact_shadow(pos, size, yaw_deg)
 
 func _plane(size: Vector2, center: Vector3, mat: StandardMaterial3D) -> void:
 	var pm := PlaneMesh.new()
@@ -454,11 +476,11 @@ func _stand(i: int) -> void:
 	var t := 6.0
 	while t < z0 + 8.6:
 		for dx in [-8.5, 8.5]:
-			dashes.append(_xf(Vector3(xc + dx, Y_PAINT, t), Vector3(0.1, 0.03, 0.4)))
+			dashes.append(_xf(Vector3(xc + dx, Y_PAINT, t), Vector3(0.09, 0.02, 0.36)))
 		t += 1.0
 	var x := -8.5
 	while x < 8.5:
-		dashes.append(_xf(Vector3(xc + x, Y_PAINT, z0 + 8.6), Vector3(0.4, 0.03, 0.1)))
+		dashes.append(_xf(Vector3(xc + x, Y_PAINT, z0 + 8.6), Vector3(0.36, 0.02, 0.09)))
 		x += 1.0
 	_mm(_box_mesh(), dashes, red)
 	# большой номер стоянки на асфальте
@@ -648,6 +670,57 @@ func _kenney_vehicles() -> void:
 			continue
 		_place(v, s[2], s[3], Vector2(1.0, float(s[1])))
 
+# Резервируемые под самолёты прямоугольники стоянок (для проверки маршрутов экипажа).
+func _stand_rects() -> Array:
+	var out: Array = []
+	var len_px := Cfg.LREF / Cfg.K
+	for y in Cfg.ROWS:
+		out.append(Rect2(Cfg.PX - len_px * 0.5, y - 0.34 / Cfg.K, len_px, 0.68 / Cfg.K))
+		out.append(Rect2(Cfg.PX - len_px * 0.12, y - len_px * 0.48, len_px * 0.34, len_px * 0.96))
+	return out
+
+func _free_px(p: Vector2, r: float, extra: Array) -> bool:
+	for rc: Rect2 in solids_px:
+		if rc.grow(r).has_point(p):
+			return false
+	for rc: Rect2 in extra:
+		if rc.grow(r).has_point(p):
+			return false
+	return true
+
+func _route_free(pts: Array, extra: Array) -> bool:
+	for s in pts.size():
+		var a: Vector2 = pts[s]
+		var b: Vector2 = pts[(s + 1) % pts.size()]
+		var steps := int(a.distance_to(b) / 0.2) + 1
+		for k in steps + 1:
+			var p := a.lerp(b, float(k) / steps)
+			if not _free_px(Vector2(p.y / Cfg.K, p.x / Cfg.K), 14.0, extra):
+				return false
+	return true
+
+# Подбирает свободный маршрут: сдвигает его вбок; если не вышло — рабочий стоит у ближайшей свободной точки.
+func _fit_route(pts: Array) -> Array:
+	var extra := _stand_rects()
+	if _route_free(pts, extra):
+		return pts
+	var best: Array = []
+	for off in [0.6, -0.6, 1.2, -1.2, 2.0, -2.0, 3.0, -3.0, 4.5, -4.5, 6.0, -6.0]:
+		for axis in [0, 1]:
+			var shifted: Array = []
+			for q: Vector2 in pts:
+				shifted.append(q + (Vector2(off, 0) if axis == 0 else Vector2(0, off)))
+			if _route_free(shifted, extra):
+				return shifted
+	# не нашли: ищем свободную точку рядом с началом и стоим
+	var p0: Vector2 = pts[0]
+	for rad in [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0]:
+		for ang in 16:
+			var cand: Vector2 = p0 + Vector2(cos(ang * TAU / 16.0), sin(ang * TAU / 16.0)) * rad
+			if _free_px(Vector2(cand.y / Cfg.K, cand.x / Cfg.K), 14.0, extra):
+				return [cand, cand]
+	return [p0, p0]
+
 func _crew() -> void:
 	var vests := [Color("ff7a1a"), Color("d7ef2a"), Color("ff4d2e"), Color("ffd24d")]
 	var hats := [Color("ffd24d"), Color("f4f4f4"), Color("ff7a1a"), Color("2b6fd6")]
@@ -676,7 +749,7 @@ func _crew() -> void:
 		if w == null:
 			return
 		w.set_meta("nobake", true)
-		var pts: Array = routes[i]
+		var pts: Array = _fit_route(routes[i])
 		w.position = Vector3(pts[0].x, 0, pts[0].y)
 		add_child(w)
 		var ap := Assets.play(w, "Walk" if pts.size() > 1 else "Idle")
@@ -883,6 +956,216 @@ func _suburbs() -> void:
 	for k in 10:
 		var s := Rig.sphere(self, 1.0, Vector3(-900.0 + k * 220.0, -20.0, rng.randf_range(2100.0, 2500.0)), Color("6d8f78").lerp(Color("8aa09a"), rng.randf()), Vector3(rng.randf_range(260, 420), rng.randf_range(160, 300), rng.randf_range(160, 300)))
 		s.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+# ---------- детали терминала ----------
+func _terminal_details() -> void:
+	var x0 := CX - TERM_W / 2.0
+	# жалюзи-козырьки над остеклением
+	var fins: Array = []
+	for i in int(TERM_W / 2.5):
+		for k in 3:
+			fins.append(_xf(Vector3(x0 + 2.25 + i * 2.5, 5.85 + k * 0.18, 0.55 - k * 0.04), Vector3(2.2, 0.04, 0.55 + k * 0.08)))
+	_mm(_box_mesh(), fins, _flat(Color("cfd5de"), 0.45, 0.5), true)
+	# скамьи, урны, ограждения, камеры у колонн козырька
+	var benches: Array = []
+	var bins: Array = []
+	for i in 14:
+		var x := x0 + 4.5 + i * 9.0
+		benches.append(_xf(Vector3(x, 0.15, 3.9), Vector3(0.6, 0.02, 0.17)))
+		benches.append(_xf(Vector3(x, 0.28, 4.0), Vector3(0.6, 0.15, 0.02)))
+		for sx in [-1.0, 1.0]:
+			benches.append(_xf(Vector3(x + sx * 0.26, 0.07, 3.92), Vector3(0.025, 0.14, 0.15)))
+		bins.append(_xf(Vector3(x + 0.9, 0.14, 4.0), Vector3(0.13, 0.28, 0.13)))
+	_mm(_box_mesh(), benches, _flat(Color("3f4651"), 0.5, 0.5))
+	_mm(_box_mesh(), bins, _flat(Color("5d6a7e"), 0.4, 0.6))
+	for i in 17:
+		var cx := x0 + 0.5 + i * 7.5
+		Rig.box(self, Vector3(0.05, 0.05, 0.08), Vector3(cx + 0.1, 3.6, 4.5), Color("1c1f24"))
+		Rig.sphere(self, 0.03, Vector3(cx + 0.1, 3.57, 4.56), Color("1c1f24"))
+		Rig.box(self, Vector3(0.05, 0.14, 0.04), Vector3(cx, 0.6, 4.56), Color("c4271f"))        # огнетушитель
+		Rig.box(self, Vector3(0.3, 0.12, 0.03), Vector3(cx, 2.3, 4.56), Color("1b7a4a"), Vector3.ZERO, 1.2)   # табличка «выход»
+	# часы над центральным входом
+	Rig.cyl(self, 0.8, 0.8, 0.12, Vector3(CX, 5.2, 0.5), Color("f0f2f6"), Vector3(90, 0, 0))
+	Rig.torus(self, 0.78, 0.86, Vector3(CX, 5.2, 0.5), Color("23262b"), Vector3(90, 0, 0))
+	Rig.box(self, Vector3(0.05, 0.6, 0.03), Vector3(CX, 5.4, 0.58), Color("15171c"))
+	Rig.box(self, Vector3(0.04, 0.42, 0.03), Vector3(CX + 0.18, 5.22, 0.58), Color("15171c"), Vector3(0, 0, -60))
+	# кровля: парапет, световые фонари, вентиляция, антенны
+	Rig.box(self, Vector3(TERM_W + 1.0, 0.6, 0.12), Vector3(CX, 7.9, 0.5), Color("39465c"))
+	var sky_l: Array = []
+	for i in 12:
+		sky_l.append(_xf(Vector3(x0 + 10.0 + i * 10.0, 7.9, -4.0), Vector3(5.0, 0.35, 3.0)))
+	_mm(_box_mesh(), sky_l, _flat(Color("27425c"), 0.1, 0.8))
+	for i in 9:
+		var vx := x0 + 6.0 + i * 15.0
+		Rig.cyl(self, 0.3, 0.3, 1.0, Vector3(vx, 8.4, -12.0), Color("aab4c3"))
+		Rig.cyl(self, 0.38, 0.38, 0.06, Vector3(vx, 8.95, -12.0), Color("5d6a7e"))
+	for k in 4:
+		Rig.cyl(self, 0.04, 0.05, 6.0 + k, Vector3(x0 + 20.0 + k * 22.0, 11.0, -9.0), Color("c8ced8"))
+		Rig.sphere(self, 0.1, Vector3(x0 + 20.0 + k * 22.0, 14.1 + k, -9.0), Color("ff2d2d"), Vector3.ONE, 3.0)
+	# пассажиры в телетрапах (видны сквозь остеклённую полосу)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 44
+	var pcols := [Color("c0392b"), Color("2980b9"), Color("27ae60"), Color("8e44ad"), Color("f39c12"), Color("34495e")]
+	for g in GATES:
+		for k in 4:
+			var pp := Props.passenger(pcols[rng.randi() % pcols.size()], Color("e8b48a"))
+			pp.scale = Vector3.ONE * 0.36
+			pp.position = Vector3(g - 3.0 + rng.randf_range(-0.3, 0.3), 2.3, 1.6 + k * 1.2)
+			add_child(pp)
+
+# ---------- мелочи перрона ----------
+func _apron_props() -> void:
+	var z0 := Cfg.PX * Cfg.K
+	var chocks: Array = []
+	for g in [11.0, 30.0, 49.0]:
+		# колодки и конусы у стоек шасси
+		for dx in [-0.45, 0.45]:
+			chocks.append(_xf(Vector3(g + dx, 0.07, z0 + 0.7), Vector3(0.08, 0.12, 0.34), 0.0))
+		chocks.append(_xf(Vector3(g, 0.07, 8.9), Vector3(0.08, 0.12, 0.34)))
+		# табличка стоянки на столбе
+		Rig.cyl(self, 0.02, 0.02, 0.8, Vector3(g + 5.6, 0.4, 6.6), Color("3a3f48"))
+		Rig.box(self, Vector3(0.45, 0.3, 0.03), Vector3(g + 5.6, 0.85, 6.6), Color("f0b61c"))
+		var l := Rig.label(self, "A%d" % int((g - 11.0) / 19.0 + 1.0), Vector3(g + 5.6, 0.85, 6.62), 50, Color("15171c"), false)
+		l.pixel_size = 0.0055
+		l.outline_size = 0
+	_mm(_box_mesh(), chocks, _flat(Color("f0b61c"), 0.6))
+	# зоны стоянки техники вдоль служебной дороги и пожарные гидранты
+	var zones: Array = []
+	for k in 22:
+		var x := -26.0 + k * 6.2
+		zones.append(_xf(Vector3(x, Y_PAINT, 29.2), Vector3(5.2, 0.03, 0.08)))
+		zones.append(_xf(Vector3(x, Y_PAINT, 25.4), Vector3(5.2, 0.03, 0.08)))
+		zones.append(_xf(Vector3(x - 2.6, Y_PAINT, 27.3), Vector3(0.08, 0.03, 3.9)))
+	_mm(_box_mesh(), zones, _flat(Color("e9edf2"), 0.8))
+	for k in 12:
+		var hx := -20.0 + k * 11.0
+		Rig.cyl(self, 0.08, 0.1, 0.35, Vector3(hx, 0.18, 24.6), Color("c4271f"))
+		Rig.sphere(self, 0.1, Vector3(hx, 0.38, 24.6), Color("c4271f"))
+	# высокие мачты прожекторов перрона
+	for x in [-36.0, 24.0, 84.0]:
+		var m := Props.light_mast(14.0)
+		m.position = Vector3(x, 0, 24.0)
+		m.rotation_degrees.y = 180
+		add_child(m)
+		_solid(x, 24.0, 0.7, 0.7)
+	# ограждение перрона со стороны рулёжки (сетка)
+	var posts: Array = []
+	for k in 120:
+		posts.append(_xf(Vector3(-40.0 + k * 1.5, 0.9, 30.0), Vector3(0.07, 1.8, 0.07)))
+	_mm(_box_mesh(), posts, _flat(Color("8d97a6"), 0.5, 0.6))
+	_mm(_box_mesh(), [_xf(Vector3(CX + 18.0, 1.7, 30.0), Vector3(180.0, 0.05, 0.05)), _xf(Vector3(CX + 18.0, 0.2, 30.0), Vector3(180.0, 0.05, 0.05))], _flat(Color("8d97a6"), 0.5, 0.6))
+	_mm(_box_mesh(), [_xf(Vector3(CX + 18.0, 1.0, 30.0), Vector3(180.0, 1.5, 0.01))], _flat(Color(0.7, 0.75, 0.8), 0.6, 0.4))
+
+# Масляные пятна, следы шин, потёртости: разбивают повторяющуюся текстуру.
+func _stains() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 61
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(1, 1)
+	var mats: Array = []
+	for s in 3:
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = Tex.blob(128, 20 + s, 0.42)
+		m.albedo_color = Color(1, 1, 1, 0.38)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		mats.append(m)
+	for s in 3:
+		var xfs: Array = []
+		for k in 110:
+			var x := rng.randf_range(-30.0, 90.0)
+			var z := rng.randf_range(5.0, 28.0)
+			var sc := rng.randf_range(0.5, 2.6)
+			xfs.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sc, 1.0, sc * rng.randf_range(0.5, 1.4))), Vector3(x, 0.035 + s * 0.004, z)))
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = pm
+		mm.instance_count = xfs.size()
+		for i in xfs.size():
+			mm.set_instance_transform(i, xfs[i])
+		var mi := MultiMeshInstance3D.new()
+		mi.multimesh = mm
+		mi.material_override = mats[s]
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+
+# ---------- дальние объекты аэропорта ----------
+func _far_extras() -> void:
+	var corr := Tex.material(Tex.corrugated(128, Color("a9b3c0")), Vector2(1.0, 1.0), 0.55, 0.9)
+	corr.uv1_triplanar = true
+	corr.uv1_scale = Vector3(0.55, 0.55, 0.55)
+	corr.metallic = 0.4
+	var winm := Tex.material(Tex.windows(128, 0.22), Vector2(1, 1), 0.2, 0.5)
+	winm.uv1_triplanar = true
+	winm.uv1_scale = Vector3(0.22, 0.22, 0.22)
+	winm.metallic = 0.5
+	# пожарная часть и диспетчерский центр
+	var fs := Rig.box(self, Vector3(34.0, 8.0, 14.0), Vector3(-70.0, 4.0, 62.0), Color.WHITE)
+	fs.material_override = _flat(Color("d9a98a"), 0.8)
+	Rig.box(self, Vector3(34.4, 0.6, 14.4), Vector3(-70.0, 8.2, 62.0), Color("8d3a2a"))
+	for k in 4:
+		var door := Rig.box(self, Vector3(6.6, 5.6, 0.2), Vector3(-82.0 + k * 8.0, 2.8, 62.0 - 7.05), Color.WHITE)
+		door.material_override = _flat(Color("c4271f"), 0.6)
+		for r in 6:
+			Rig.box(self, Vector3(6.4, 0.06, 0.05), Vector3(-82.0 + k * 8.0, 0.7 + r * 0.9, 62.0 - 7.2), Color("8b1b15"))
+	var ff := Assets.kenney("firetruck", 3.4)
+	if ff != null:
+		ff.position = Vector3(-62.0, 0, 52.0)
+		ff.rotation_degrees.y = 20.0
+		add_child(ff)
+	# грузовой терминал с доками
+	var cg := Rig.box(self, Vector3(90.0, 12.0, 24.0), Vector3(150.0, 6.0, 66.0), Color.WHITE)
+	cg.material_override = winm
+	Rig.box(self, Vector3(90.4, 0.8, 24.4), Vector3(150.0, 12.2, 66.0), Color("5d6a7e"))
+	for k in 12:
+		var dd := Rig.box(self, Vector3(4.2, 3.4, 0.3), Vector3(110.0 + k * 7.0, 1.7, 66.0 - 12.1), Color.WHITE)
+		dd.material_override = _flat(Color("39465c"), 0.5, 0.4)
+		Rig.box(self, Vector3(4.6, 0.4, 3.0), Vector3(110.0 + k * 7.0, 0.5, 66.0 - 13.4), Color("8d96a3"))
+	# отель-башня и парковочный дом с окнами
+	var hotel := Rig.box(self, Vector3(24.0, 70.0, 24.0), Vector3(CX + 150.0, 35.0, 360.0), Color.WHITE)
+	hotel.material_override = winm
+	var garage := Rig.box(self, Vector3(70.0, 20.0, 40.0), Vector3(-50.0, 10.0, 360.0), Color.WHITE)
+	garage.material_override = corr
+	for k in 5:
+		Rig.box(self, Vector3(70.4, 0.5, 40.4), Vector3(-50.0, 3.8 + k * 3.9, 360.0), Color("3a3f48"))
+	# склад ГСМ и ангары с гофрированными стенами
+	for hx in [[-190.0, 250.0, 60.0, 20.0, 40.0], [-120.0, 240.0, 46.0, 17.0, 34.0]]:
+		var w := Rig.box(self, Vector3(hx[2], hx[3], hx[4]), Vector3(hx[0], hx[3] / 2.0 + 0.01, hx[1]), Color.WHITE)
+		w.material_override = corr
+	# антенны глиссады/курса за концом полосы
+	var ant: Array = []
+	for k in 16:
+		ant.append(_xf(Vector3(520.0 + k * 0.0, 2.2, RUNWAY_Z - 12.0 + k * 1.6), Vector3(0.08, 4.4, 0.4)))
+		ant.append(_xf(Vector3(520.0, 4.5, RUNWAY_Z - 12.0 + k * 1.6), Vector3(0.9, 0.05, 0.05)))
+	_mm(_box_mesh(), ant, _flat(Color("c8ced8"), 0.5, 0.6))
+	Rig.box(self, Vector3(2.0, 1.4, 1.6), Vector3(518.0, 0.7, RUNWAY_Z), Color("dfe5ee"))
+	# опоры ЛЭП и водонапорная башня
+	for k in 5:
+		var px := -200.0 + k * 140.0
+		for sx in [-1.0, 1.0]:
+			for sz in [-1.0, 1.0]:
+				Rig.box(self, Vector3(0.4, 30.0, 0.4), Vector3(px + sx * 1.6, 15.0, 440.0 + sz * 1.6), Color("8d97a6"), Vector3(sz * -3.0, 0, sx * 3.0))
+		Rig.box(self, Vector3(14.0, 0.4, 0.4), Vector3(px, 30.0, 440.0), Color("8d97a6"))
+		Rig.box(self, Vector3(10.0, 0.3, 0.3), Vector3(px, 26.0, 440.0), Color("8d97a6"))
+		if k < 4:
+			for cy in [30.0, 26.0]:
+				for ox in [-6.0, 6.0]:
+					Rig.cyl(self, 0.05, 0.05, 140.0, Vector3(px + 70.0, cy - 1.2, 440.0 + ox * 0.1), Color("23262b"), Vector3(0, 0, 90))
+	Rig.cyl(self, 4.5, 4.5, 8.0, Vector3(-200.0, 28.0, 520.0), Color("e8ecf1"))
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			Rig.cyl(self, 0.25, 0.3, 24.0, Vector3(-200.0 + sx * 3.0, 12.0, 520.0 + sz * 3.0), Color("8d97a6"))
+	Rig.cyl(self, 0.0, 4.8, 3.0, Vector3(-200.0, 33.5, 520.0), Color("c4271f"))
+	# рекламные щиты вдоль шоссе
+	for k in 6:
+		var bxx := -150.0 + k * 90.0
+		Rig.box(self, Vector3(14.0, 6.0, 0.4), Vector3(bxx, 8.5, 318.0), Color("14284d"))
+		Rig.box(self, Vector3(0.5, 6.0, 0.5), Vector3(bxx - 5.0, 3.0, 318.0), Color("5d6a7e"))
+		Rig.box(self, Vector3(0.5, 6.0, 0.5), Vector3(bxx + 5.0, 3.0, 318.0), Color("5d6a7e"))
+		var bl := Rig.label(self, ["ОТЕЛЬ", "ТАКСИ", "КАФЕ", "ПАРКОВКА", "АВИАБИЛЕТЫ", "ДОБРО ПОЖАЛОВАТЬ"][k], Vector3(bxx, 8.5, 318.25), 90, Color("ffd24d"), false)
+		bl.pixel_size = 0.03
+		bl.outline_size = 0
 
 # ---------- самолёты на полосе ----------
 func _process(delta: float) -> void:

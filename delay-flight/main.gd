@@ -101,7 +101,7 @@ func _setup_environment() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.42
+	env.ambient_light_energy = 0.5
 	env.ambient_light_color = Color(0.62, 0.64, 0.68)
 	env.ambient_light_sky_contribution = 0.5
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
@@ -223,7 +223,7 @@ func hint_for(w: Worker) -> String:
 		if pl != null and pl.state == "ready" and pl.fuel < 100.0 and w.pos.distance_to(pl.fuel_pt()) < 85.0:
 			return "Держи [Пробел] — заправка"
 	for b in bags:
-		if b.distance_to(w.pos) < 60.0:
+		if b.distance_to(w.pos) < 85.0:
 			return "[Пробел] взять чемодан"
 	if w.pos.distance_to(Cfg.COFFEE) < 90.0:
 		return "[Пробел] взять кофе"
@@ -530,7 +530,7 @@ func update_worker(w: Worker, dt: float) -> void:
 		else:
 			var bi := -1
 			for i in bags.size():
-				if bags[i].distance_to(w.pos) < 60.0:
+				if bags[i].distance_to(w.pos) < 85.0:
 					bi = i
 					break
 			if bi >= 0:

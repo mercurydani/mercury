@@ -237,3 +237,76 @@ static func material(t: Dictionary, tile: Vector2, rough: float = 0.9, normal_st
 	m.uv1_scale = Vector3(tile.x, tile.y, 1.0)
 	m.roughness = rough
 	return m
+
+
+# Гофрированный металл (ангары): вертикальные рёбра, карта нормалей.
+static func corrugated(size: int = 128, col: Color = Color("aeb7c4")) -> Dictionary:
+	var key := "corr_" + col.to_html()
+	if _cache.has(key):
+		return _cache[key]
+	var fine := _field(51, size, 0.06, 3)
+	var rgb := PackedByteArray()
+	rgb.resize(size * size * 3)
+	var bump := PackedByteArray()
+	bump.resize(size * size)
+	for y in size:
+		for x in size:
+			var i := y * size + x
+			var rib: float = 0.5 + 0.5 * sin(float(x) / size * TAU * 8.0)
+			var k: float = 0.78 + rib * 0.3 + (fine[i] / 255.0 - 0.5) * 0.12
+			rgb[i * 3] = clampi(int(col.r * 255.0 * k), 0, 255)
+			rgb[i * 3 + 1] = clampi(int(col.g * 255.0 * k), 0, 255)
+			rgb[i * 3 + 2] = clampi(int(col.b * 255.0 * k), 0, 255)
+			bump[i] = int(rib * 255.0)
+	_cache[key] = _finish(size, rgb, bump, 2.5)
+	return _cache[key]
+
+# Фасад здания с окнами (отель, склад): тёмное стекло, сетка светлых перекрытий.
+static func windows(size: int = 128, lit: float = 0.25) -> Dictionary:
+	var key := "win_%d" % int(lit * 100)
+	if _cache.has(key):
+		return _cache[key]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	var rgb := PackedByteArray()
+	rgb.resize(size * size * 3)
+	var bump := PackedByteArray()
+	bump.resize(size * size)
+	var cell := size / 8
+	for y in size:
+		for x in size:
+			var i := y * size + x
+			var cx := x % cell
+			var cy := y % cell
+			var frame: bool = cx < 2 or cy < 3
+			var col := Color("c9ced6") if frame else Color("2c4666")
+			if not frame:
+				var wi := (x / cell) + (y / cell) * 8
+				var r := RandomNumberGenerator.new()
+				r.seed = wi * 31 + 5
+				if r.randf() < lit:
+					col = Color("e8d79a")
+			rgb[i * 3] = int(col.r * 255.0)
+			rgb[i * 3 + 1] = int(col.g * 255.0)
+			rgb[i * 3 + 2] = int(col.b * 255.0)
+			bump[i] = 255 if frame else 120
+	_cache[key] = _finish(size, rgb, bump, 1.5)
+	return _cache[key]
+
+# Мягкое пятно (альфа): масляные пятна, следы шин, контактные тени.
+static func blob(size: int = 128, seed_: int = 3, ragged: float = 0.35) -> ImageTexture:
+	var key := "blob_%d_%d" % [seed_, int(ragged * 100)]
+	if _cache.has(key):
+		return _cache[key]
+	var n := _noise(seed_, 0.045, 3)
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	for y in size:
+		for x in size:
+			var d := Vector2(x - size / 2.0, y - size / 2.0).length() / (size / 2.0)
+			var v := n.get_noise_2d(x, y) * ragged
+			var a := clampf(1.0 - (d + v), 0.0, 1.0)
+			a = a * a * (3.0 - 2.0 * a)
+			img.set_pixel(x, y, Color(0.03, 0.03, 0.035, a * 0.85))
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
