@@ -70,15 +70,15 @@ func _ready() -> void:
 
 func _setup_environment() -> void:
 	camera = Camera3D.new()
-	camera.fov = 48.0
-	camera.position = Vector3(12.8, 17.5, 18.5)
+	camera.fov = 62.0
+	camera.position = Vector3(13.8, 1.9, 2.9)
 	add_child(camera)
-	camera.look_at(Vector3(12.8, 0.0, 7.6), Vector3.UP)
+	camera.look_at(Vector3(12.9, 1.2, 8.0), Vector3.UP)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-52, -35, 0)
-	sun.light_energy = 0.85
+	sun.rotation_degrees = Vector3(-42, 28, 0)
+	sun.light_energy = 0.8
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 60.0
+	sun.directional_shadow_max_distance = 70.0
 	add_child(sun)
 	var sky_mat := ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color("4a90d9")
@@ -92,7 +92,11 @@ func _setup_environment() -> void:
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("8f9bb3")
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.5
+	env.tonemap_exposure = 0.9
+	env.fog_enabled = true
+	env.fog_light_color = Color("c4d9ee")
+	env.fog_density = 0.0025
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var we := WorldEnvironment.new()
 	we.environment = env
@@ -104,7 +108,7 @@ func _build_menu_stage() -> void:
 	for i in 4:
 		var role: Dictionary = Cfg.ROLES[i]
 		var rig := Rig.person({
-			"s": 3.0, "shirt": role.shirt, "vest": role.vest, "hat": role.hat,
+			"s": 1.3, "shirt": role.shirt, "vest": role.vest, "hat": role.hat,
 			"hat_col": role.hat_col, "ears": role.ears, "skin": role.skin,
 		})
 		rig.position = Cfg.to3(menu_spot(i))
@@ -112,24 +116,61 @@ func _build_menu_stage() -> void:
 		menu_rigs.append(rig)
 
 func menu_spot(i: int) -> Vector2:
-	return Vector2(380.0 + i * 175.0, 420.0)
+	return Vector2(430.0, 800.0 - i * 105.0)
 
 func to_screen(p: Vector2, h: float = 0.0) -> Vector2:
-	return camera.unproject_position(Cfg.to3(p, h))
+	var cam := get_viewport().get_camera_3d()
+	var p3 := Cfg.to3(p, h)
+	if cam == null or cam.is_position_behind(p3):
+		return Vector2(-9999, -9999)
+	return cam.unproject_position(p3)
+
+# Подсказка у прицела: что можно сделать прямо сейчас.
+func hint_for(w: Worker) -> String:
+	if w.stun > 0.0:
+		return ""
+	if w.item == "bag":
+		for pl in planes:
+			if pl != null and pl.state == "ready" and pl.bags < pl.need and w.pos.distance_to(pl.door_pt()) < 90.0:
+				return "[Пробел] сдать чемодан"
+		return "[Пробел] бросить чемодан"
+	if w.item != "":
+		for n in npcs:
+			if n.pos.distance_to(w.pos) < 110.0:
+				return "[Пробел] успокоить: %s" % ("бургер" if w.item == "burger" else "кофе")
+		return "[Пробел] бросить"
+	for pl in planes:
+		if pl != null and pl.state == "ready" and pl.fuel < 100.0 and w.pos.distance_to(pl.fuel_pt()) < 85.0:
+			return "Держи [Пробел] — заправка"
+	for b in bags:
+		if b.distance_to(w.pos) < 60.0:
+			return "[Пробел] взять чемодан"
+	if w.pos.distance_to(Cfg.COFFEE) < 90.0:
+		return "[Пробел] взять кофе"
+	if w.pos.distance_to(Cfg.BURGER) < 90.0:
+		return "[Пробел] взять бургер"
+	return ""
 
 # ---------- ввод ----------
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
+	if event is InputEventMouseMotion and mode == "play" and not workers.is_empty():
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			var w: Worker = workers[0]
+			w.yaw -= event.relative.x * 0.0025
+			w.pitch = clampf(w.pitch - event.relative.y * 0.0025, -1.35, 1.35)
+	elif event is InputEventMouseButton and event.pressed and mode == "play":
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_ESCAPE:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		match mode:
 			"menu":
-				match event.physical_keycode:
-					KEY_1: start_game(1)
-					KEY_2: start_game(2)
-					KEY_3: start_game(3)
-					KEY_4: start_game(4)
+				if event.physical_keycode in [KEY_1, KEY_ENTER, KEY_SPACE]:
+					start_game(1)
 			"end":
 				if event.physical_keycode == KEY_R:
 					mode = "menu"
+					Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 			"play":
 				for w in workers:
 					if w.idx < 2 and Worker.KEYS[w.idx].act == event.physical_keycode:
@@ -159,13 +200,15 @@ func start_game(n: int) -> void:
 	npc_t = 8.0
 	shake = 0.0
 	banner_t = 0.0
-	for i in n:
-		var w := Worker.new()
-		w.setup(i)
-		w.pos = Vector2(420 + i * 70, 380)
-		worker_layer.add_child(w)
-		workers.append(w)
+	var w := Worker.new()
+	w.setup(0)
+	w.fp = true
+	w.yaw = PI
+	w.pos = Vector2(130, 460)
+	worker_layer.add_child(w)
+	workers.append(w)
 	mode = "play"
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func ft(pos: Vector2, text: String, color: Color = Color.WHITE, size: int = 22) -> void:
 	texts.append({"pos": pos, "text": text, "color": color, "size": size, "t": 1.6})
@@ -185,7 +228,7 @@ func spawn_plane() -> void:
 	var row: int = free.pick_random()
 	var pl := Aircraft.new()
 	pl.row = row
-	pl.pos = Vector2(Cfg.W + 260, Cfg.ROWS[row])
+	pl.pos = Vector2(Cfg.TAXI_X, Cfg.SPAWN_Y)
 	pl.max_pat = maxf(28.0, 46.0 - elapsed / 8.0)
 	pl.pat = pl.max_pat
 	pl.need = 4 if elapsed > 80.0 else 3
@@ -197,28 +240,44 @@ func spawn_plane() -> void:
 func update_plane(pl: Aircraft, dt: float, idx: int) -> void:
 	match pl.state:
 		"arriving":
-			pl.pos += Vector2(-650.0 * dt, 0.0)
-			if pl.pos.x <= Cfg.PX:
-				pl.pos = Vector2(Cfg.PX, pl.pos.y)
-				pl.state = "ready"
+			var lane := Vector2(Cfg.TAXI_X, Cfg.ROWS[pl.row])
+			if pl.phase == 0:
+				pl.pos = pl.pos.move_toward(lane, 430.0 * dt)
+				if pl.pos.distance_to(lane) < 2.0:
+					pl.phase = 1
+			else:
+				var stand := Vector2(Cfg.PX, Cfg.ROWS[pl.row])
+				var d := pl.pos.distance_to(stand)
+				pl.pos = pl.pos.move_toward(stand, clampf(d * 0.9 + 40.0, 40.0, 330.0) * dt)
+				if d < 2.0:
+					pl.pos = stand
+					pl.state = "ready"
 		"ready":
 			pl.pat -= dt
 			if pl.pat <= 0.0 and not pl.delayed:
 				pl.delayed = true
 				anger += 12.0
-				ft(pl.pos + Vector2(0, -150), "РЕЙС ЗАДЕРЖАН!", Color("ff5a4d"), 30)
+				ft(pl.pos, "РЕЙС ЗАДЕРЖАН!", Color("ff5a4d"), 30)
 				show_banner("Рейс %s задержан — народ звереет!" % pl.flight)
 			if pl.bags >= pl.need and pl.fuel >= 100.0:
 				pl.state = "leaving"
 				var pts := 30 if pl.delayed else 100 + roundi(pl.pat)
 				score += pts
 				departed += 1
-				ft(pl.pos + Vector2(0, -150), "+%d" % pts, Color("7dff8a"), 34)
+				ft(pl.pos, "+%d" % pts, Color("7dff8a"), 34)
 		"leaving":
-			pl.pos += Vector2(520.0 * dt, 0.0)
-			if pl.pos.x > Cfg.W + 300:
-				planes[idx] = null
-				pl.queue_free()
+			var back := Vector2(Cfg.TAXI_X - 30.0, Cfg.ROWS[pl.row])
+			if pl.phase == 0:
+				pl.reverse = true
+				pl.pos = pl.pos.move_toward(back, 230.0 * dt)
+				if pl.pos.distance_to(back) < 2.0:
+					pl.phase = 1
+			else:
+				pl.reverse = false
+				pl.pos = pl.pos.move_toward(Vector2(back.x, Cfg.SPAWN_Y), 430.0 * dt)
+				if pl.pos.y >= Cfg.SPAWN_Y - 2.0:
+					planes[idx] = null
+					pl.queue_free()
 
 # ---------- злые сотрудники ----------
 func spawn_npc(type: String) -> void:
@@ -226,12 +285,12 @@ func spawn_npc(type: String) -> void:
 	n.type = type
 	n.cd = 1.5
 	n.shout = randf_range(2.0, 4.0)
-	n.pos = Vector2(Cfg.W + 40, randf_range(170, Cfg.H - 60))
+	n.pos = Vector2(randf_range(260, 700), Cfg.SPAWN_Y - 100.0)
 	if type == "dispatcher":
-		n.pos = Vector2(randf_range(600, 1080), 150)
+		n.pos = Vector2(135, randf_range(300, 1000))
 	npc_layer.add_child(n)
 	npcs.append(n)
-	ft(Vector2(clampf(n.pos.x, 330, Cfg.W - 330), n.pos.y - 60), LINES[type].pick_random(), Color("ff8a80"), 34 if type == "muscle" else 22)
+	ft(n.pos, LINES[type].pick_random(), Color("ff8a80"), 34 if type == "muscle" else 22)
 	if type == "muscle":
 		show_banner("ТЯЖЁЛЫЕ ШАГИ… ПРЯЧЬ ЧЕМОДАНЫ!")
 		shake = 14.0
@@ -270,7 +329,7 @@ func update_npc(n: Angry, dt: float) -> void:
 				var pl: Aircraft = live.pick_random()
 				pl.bags = maxi(0, pl.bags - 1)
 				pl.fuel = maxf(0.0, pl.fuel - 20.0)
-				ft(pl.pos + Vector2(0, -100), "Чемодан потерян!", Color("ffd24d"))
+				ft(pl.pos, "Чемодан потерян!", Color("ffd24d"))
 		return
 	var t := nearest_worker(n.pos)
 	if t == null:
@@ -346,7 +405,7 @@ func update_worker(w: Worker, dt: float) -> void:
 			w.pos += d * Cfg.SPEED * dt
 			w.moving = true
 			w.dir = d.normalized()
-	w.pos = Vector2(clampf(w.pos.x, 22.0, Cfg.W - 22.0), clampf(w.pos.y, 150.0, Cfg.H - 30.0))
+	w.pos = Vector2(clampf(w.pos.x, Cfg.BOUNDS.position.x, Cfg.BOUNDS.end.x), clampf(w.pos.y, Cfg.BOUNDS.position.y, Cfg.BOUNDS.end.y))
 
 	if w.pressed and w.stun <= 0.0:
 		if w.item == "bag":
@@ -368,7 +427,7 @@ func update_worker(w: Worker, dt: float) -> void:
 		else:
 			var bi := -1
 			for i in bags.size():
-				if bags[i].distance_to(w.pos) < 48.0:
+				if bags[i].distance_to(w.pos) < 60.0:
 					bi = i
 					break
 			if bi >= 0:
@@ -397,8 +456,15 @@ func _process(delta: float) -> void:
 			var r := menu_rigs[i]
 			r.rotation.y = PI + sin(Time.get_ticks_msec() / 900.0 + i) * 0.35
 			Rig.animate(r, Time.get_ticks_msec() / 90.0 + i, true)
-	camera.h_offset = randf_range(-shake, shake) * 0.03 if mode == "play" else 0.0
-	camera.v_offset = randf_range(-shake, shake) * 0.03 if mode == "play" else 0.0
+	var fp_cam: Camera3D = null
+	if mode == "play" and not workers.is_empty():
+		fp_cam = workers[0].cam
+	if fp_cam != null:
+		fp_cam.current = true
+		fp_cam.h_offset = randf_range(-shake, shake) * 0.03
+		fp_cam.v_offset = randf_range(-shake, shake) * 0.03
+	else:
+		camera.current = true
 	_sync_bags()
 
 func _sync_bags() -> void:

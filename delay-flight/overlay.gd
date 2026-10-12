@@ -11,6 +11,8 @@ func _draw() -> void:
 		var col: Color = t.color
 		col.a = a
 		var sp: Vector2 = game.to_screen(t.pos, 1.8)
+		if sp.x < -5000.0:
+			continue
 		sp.x = clampf(sp.x, 400.0, 880.0)
 		draw_string_outline(font, sp + Vector2(-500, 0), t.text, HORIZONTAL_ALIGNMENT_CENTER, 1000, t.size, 6, Color(0, 0, 0, a))
 		draw_string(font, sp + Vector2(-500, 0), t.text, HORIZONTAL_ALIGNMENT_CENTER, 1000, t.size, col)

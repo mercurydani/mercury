@@ -1,45 +1,49 @@
 extends SceneTree
-# Делает скриншоты меню и игры для визуальной проверки.
+# Скриншоты меню и игры от первого лица (нужен xvfb и opengl3).
 
 func _initialize() -> void:
 	var main: Node = load("res://main.tscn").instantiate()
 	root.add_child(main)
-	await process_frame
-	await process_frame
+	await _frames(3)
 	_save("menu")
-	main.start_game(2)
-	main.workers[0].pos = Vector2(500, 300)
-	main.workers[1].pos = Vector2(600, 420)
-	main.workers[1].item = "bag"
-	main.workers[0].item = "coffee"
-	main.step(4.0)
-	main.spawn_plane()
-	main.spawn_plane()
-	main.step(3.0)
-	main.planes[1].pos = Vector2(Cfg.PX, 405.0)
-	main.workers[0].pos = main.planes[1].door_pt() + Vector2(10, 70)
-	main.workers[1].pos = main.planes[1].fuel_pt() + Vector2(0, 60)
-	main.workers[1].item = ""
-	main.workers[1].fueling = true
-	main.bags.append(Vector2(300, 420))
-	await process_frame
-	await process_frame
-	_save("calm")
-	main.anger = 70.0
+	main.start_game(1)
+	for i in 3:
+		main.spawn_plane()
+	for i in 400:
+		main.step(0.1)
+		if main.planes.all(func(p): return p == null or p.state == "ready"):
+			break
+	var w: Worker = main.workers[0]
+	w.pos = Vector2(130, 450)
+	w.yaw = PI
+	await _frames(3)
+	_save("fp_a")
+	w.pos = Vector2(300, 880)
+	w.yaw = PI * 0.62
+	await _frames(3)
+	_save("fp_b")
+	w.pos = Vector2(250, 700)
+	w.yaw = PI
+	w.item = "bag"
 	main.spawn_npc("pilot")
 	main.spawn_npc("hooligan")
-	main.spawn_npc("dispatcher")
 	main.spawn_npc("muscle")
-	main.npcs[3].pos = Vector2(900, 330)
-	main.npcs[3].wind = 0.5
-	main.npcs[0].pos = Vector2(700, 480)
-	main.npcs[1].pos = Vector2(560, 560)
-	main.shake = 0.0
-	main.planes[0].pat = 5.0 if main.planes[0] else 0.0
-	await process_frame
-	await process_frame
-	_save("game")
+	main.npcs[0].pos = Vector2(380, 640)
+	main.npcs[1].pos = Vector2(340, 760)
+	main.npcs[2].pos = Vector2(430, 560)
+	main.npcs[2].wind = 0.5
+	await _frames(3)
+	_save("fp_c")
+	main.workers.clear()
+	main.camera.position = Vector3(12.8, 7.0, 0.6)
+	main.camera.look_at(Vector3(12.8, 0.0, 14.0), Vector3.UP)
+	await _frames(3)
+	_save("overview")
 	quit()
+
+func _frames(n: int) -> void:
+	for i in n:
+		await process_frame
 
 func _save(n: String) -> void:
 	root.get_viewport().get_texture().get_image().save_png("/tmp/%s.png" % n)

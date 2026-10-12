@@ -22,9 +22,17 @@ func _draw() -> void:
 		"menu": _menu()
 		"play":
 			_bar()
+			_crosshair()
 		"end":
 			_bar()
 			_end()
+
+func _crosshair() -> void:
+	draw_circle(Vector2(640, 360), 3.0, Color(1, 1, 1, 0.85))
+	draw_arc(Vector2(640, 360), 9.0, 0, TAU, 24, Color(1, 1, 1, 0.35), 2.0)
+	var hint: String = game.hint_for(game.workers[0]) if not game.workers.is_empty() else ""
+	if hint != "":
+		_t(hint, 640, 420, 26, Color("ffd24d"))
 
 func _bar() -> void:
 	Paint.round_rect(self, Rect2(8, 8, 1264, 38), Color(0, 0, 0, 0.55), 10)
@@ -51,10 +59,8 @@ func _menu() -> void:
 		var role: Dictionary = Cfg.ROLES[i]
 		var sp: Vector2 = game.to_screen(game.menu_spot(i), 0.0)
 		_t(role.name, sp.x, 500, 22, Cfg.PLAYER_COLORS[i])
-		var ctl: String = ["WASD + Пробел", "Стрелки + Enter", "Геймпад 1", "Геймпад 2"][i]
-		_t(ctl, sp.x, 526, 16, Color("c8d0db"))
-	_t("Нажми 1 · 2 · 3 · 4 — число игроков", 640, 590, 30, Color("7dff8a"))
-	_t("Взять / отдать — действие. У крыла держи действие — заправка.", 640, 646, 20)
+	_t("Нажми Пробел — начать смену", 640, 590, 30, Color("7dff8a"))
+	_t("Мышь — смотреть, WASD — ходить, Пробел — взять / отдать. У крыла держи Пробел — заправка.", 640, 646, 20)
 	_t("Кофе успокаивает пилота и диспетчера. Бургер — качка.", 640, 676, 20)
 
 func _end() -> void:
