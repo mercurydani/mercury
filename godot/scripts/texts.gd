@@ -21,6 +21,8 @@ const DATA := {
 		"MSG_PET": "Мур! Удача +%s%%",
 		"MSG_TOOLS_STUB": "Здесь будут висеть купленные инструменты (заглушка)",
 		"HUD_MONEY": "Мяудоллары: %d",
+		"MSG_CHECKPOINT": "Чекпоинт %d! [R] — вернуться сюда",
+		"MSG_PRIZE": "Достижение: Покоритель крыши! Подушка студии твоя",
 	},
 	"en": {
 		"PROMPT_SIT": "Sit in the van",
@@ -39,6 +41,8 @@ const DATA := {
 		"MSG_PET": "Purr! Luck +%s%%",
 		"MSG_TOOLS_STUB": "Your bought tools will hang here (stub)",
 		"HUD_MONEY": "Meow dollars: %d",
+		"MSG_CHECKPOINT": "Checkpoint %d! [R] to return here",
+		"MSG_PRIZE": "Achievement: Rooftop Conqueror! The studio pillow is yours",
 	},
 }
 

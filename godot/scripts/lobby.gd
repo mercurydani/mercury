@@ -25,6 +25,8 @@ func _ready() -> void:
 	$Stall/Trigger.interacted.connect(func(_p: Node3D) -> void: _show(tr("MSG_SHOP_STUB")))
 	$SlotMachine/Trigger.interacted.connect(func(_p: Node3D) -> void: _show(tr("MSG_SLOT_STUB")))
 	$Mascot/Trigger.interacted.connect(func(p: Node3D) -> void: mascot.pet(p))
+	player.checkpoint_reached.connect(func(i: int) -> void: _show(tr("MSG_CHECKPOINT") % (i + 1)))
+	$Parkour/Prize.collected.connect(func(_p: Node3D) -> void: _show(tr("MSG_PRIZE")))
 	_update_money()
 
 
@@ -53,7 +55,8 @@ func _setup_input() -> void:
 	var map := {
 		"move_forward": KEY_W, "move_back": KEY_S,
 		"move_left": KEY_A, "move_right": KEY_D,
-		"jump": KEY_SPACE, "interact": KEY_E,
+		"jump": KEY_SPACE, "interact": KEY_E, "respawn": KEY_R,
+		"cam_left": KEY_LEFT, "cam_right": KEY_RIGHT,
 	}
 	for action in map:
 		if not InputMap.has_action(action):

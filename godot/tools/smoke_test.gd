@@ -14,7 +14,13 @@ func _init() -> void:
 	van.request_search(player)
 	van.take_seat(player)
 	van.request_search(player)
-	var ok := msgs.size() == 2 and player.seated
+	var parkour := lobby.get_node("Parkour")
+	var checkpoints := 0
+	for c in parkour.get_children():
+		if c is Checkpoint:
+			checkpoints += 1
+	var ok := msgs.size() == 2 and player.seated and checkpoints == 4 and parkour.has_node("Prize")
+	print("checkpoints: ", checkpoints)
 	print("messages: ", msgs, " seated: ", player.seated)
 	print("SMOKE ", "OK" if ok else "FAIL")
 	quit(0 if ok else 1)
