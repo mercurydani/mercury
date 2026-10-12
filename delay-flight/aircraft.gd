@@ -90,8 +90,14 @@ static func fuselage_mesh(livery: Color) -> ArrayMesh:
 			var p01: Array = grid[i][j2]
 			var p10: Array = grid[i + 1][j]
 			var p11: Array = grid[i + 1][j2]
+			var u0 := float(i) / n
+			var u1 := float(i + 1) / n
+			var v0 := float(j) / m
+			var v1 := float(j + 1) / m
+			var uvs := {p00: Vector2(u0, v0), p10: Vector2(u1, v0), p11: Vector2(u1, v1), p01: Vector2(u0, v1)}
 			for q in [p00, p10, p11, p00, p11, p01]:
 				st.set_color(q[1])
+				st.set_uv(uvs[q])
 				st.add_vertex(q[0])
 	st.generate_normals()
 	return st.commit()
@@ -117,13 +123,20 @@ static func slab(corners: Array, normal: Vector3, th: float, col: Color) -> Arra
 	]
 	for f in faces:
 		for k in [0, 1, 2, 0, 2, 3]:
-			st.add_vertex(f[k])
+			var p: Vector3 = f[k]
+			st.set_uv(Vector2(p.x + p.z * 0.3, p.z + p.y * 0.5) * 0.35)
+			st.add_vertex(p)
 	st.generate_normals()
 	return st.commit()
 
 static func _vc_mat(rough: float = 0.4, metal: float = 0.1) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
+	var t := Tex.fuselage()
+	mat.albedo_texture = t.albedo
+	mat.normal_enabled = true
+	mat.normal_texture = t.normal
+	mat.normal_scale = 0.6
 	mat.roughness = rough
 	mat.metallic = metal
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -178,6 +191,7 @@ static func build_model(parent: Node3D, livery: Color, flight: String) -> Dictio
 		# навигационные огни
 		var lc := Color("ff2d2d") if sz < 0.0 else Color("2dff6a")
 		Rig.sphere(parent, 0.05, Vector3(1.62, 1.1, 2.2 * sz), lc, Vector3.ONE, 3.0)
+	_details(parent, livery, wing_mat)
 	# киль
 	var fin := [
 		Vector3(2.3, 1.55, 0), Vector3(3.2, 1.8, 0),
@@ -192,8 +206,11 @@ static func build_model(parent: Node3D, livery: Color, flight: String) -> Dictio
 			Rig.sphere(parent, 0.065, Vector3(-2.0 + i * 0.26, 1.35, 0.565 * sz), Color("5aa9ff"), Vector3(0.8, 1.0, 0.25), 0.4)
 	# шасси
 	for g in [Vector3(-2.1, 0.5, 0), Vector3(0.7, 0.5, 0.45), Vector3(0.7, 0.5, -0.45)]:
-		Rig.cyl(parent, 0.04, 0.04, 0.6, g, Color("333b4a"))
-		Rig.cyl(parent, 0.15, 0.15, 0.13, g + Vector3(0, -0.25, 0.0), Color("15181f"), Vector3(90, 0, 0))
+		Rig.cyl(parent, 0.045, 0.045, 0.6, g, Color("9aa4b3"))
+		Rig.cyl(parent, 0.02, 0.02, 0.45, g + Vector3(0.12, 0.05, 0.0), Color("333b4a"), Vector3(0, 0, 40))
+		for wz in ([-0.1, 0.1] if g.x > 0.0 else [-0.07, 0.07]):
+			Rig.cyl(parent, 0.17, 0.17, 0.1, g + Vector3(0, -0.28, wz), Color("15181f"), Vector3(90, 0, 0))
+			Rig.cyl(parent, 0.085, 0.085, 0.105, g + Vector3(0, -0.28, wz), Color("c8ced8"), Vector3(90, 0, 0))
 	# номер рейса на борту
 	for sz in [-1.0, 1.0]:
 		var l := Rig.label(parent, flight, Vector3(-0.2, 1.1, 0.585 * sz), 40, Color("2b3345"), false)
@@ -203,6 +220,63 @@ static func build_model(parent: Node3D, livery: Color, flight: String) -> Dictio
 			l.rotation_degrees.y = 180
 	out.beacon = Rig.sphere(parent, 0.1, Vector3(0.5, 1.68, 0), Color("ff2d2d"), Vector3.ONE, 3.0)
 	return out
+
+static func _details(parent: Node3D, livery: Color, wing_mat: StandardMaterial3D) -> void:
+	var metal := Color("9aa4b3")
+	var seam := Color("aeb6c3")
+	for sz in [-1.0, 1.0]:
+		var y0 := 0.85
+		# закрылки и элероны (накладки на крыле)
+		for seg: Array in [[0.5, 1.2, 0.0], [1.3, 2.0, 0.0]]:
+			var t0: float = (float(seg[0]) - 0.45) / 1.7
+			var t1: float = (float(seg[1]) - 0.45) / 1.7
+			var xa := lerpf(0.95, 1.2, t0) - 0.02
+			var xb := lerpf(0.95, 1.2, t1) - 0.02
+			var fl := [
+				Vector3(lerpf(0.55, 1.2, t0), y0 + 0.28 * t0 + 0.06, seg[0] * sz),
+				Vector3(xa + 0.0, y0 + 0.28 * t0 + 0.06, seg[0] * sz),
+				Vector3(xb, y0 + 0.28 * t1 + 0.06, seg[1] * sz),
+				Vector3(lerpf(0.55, 1.2, t1), y0 + 0.28 * t1 + 0.06, seg[1] * sz),
+			]
+			if sz < 0.0:
+				fl.reverse()
+			_mesh_node(parent, slab(fl, Vector3.UP, 0.012, seam), wing_mat)
+		# воздушные тормоза-линии на передней кромке
+		Rig.box(parent, Vector3(0.04, 0.02, 1.7), Vector3(0.33, y0 + 0.17, 1.25 * sz), Color("c0c8d4"), Vector3(0, 21 * sz, 0))
+		# стойки-пилоны двигателей уже есть; обтекатель шасси на крыле
+		Rig.sphere(parent, 0.28, Vector3(0.75, 0.7, 0.55 * sz), Color("e4e8ee"), Vector3(2.2, 0.55, 0.9))
+		# лопатки вентилятора и обтекатель
+		var ex := 0.3
+		var ez: float = 1.0 * sz
+		for k in 12:
+			var fb := Rig.box(parent, Vector3(0.012, 0.19, 0.045), Vector3(ex - 0.52, 0.58, ez), Color("c8ced8"), Vector3(k * 30.0, 0, 0))
+			fb.rotation_degrees.x = k * 30.0
+		Rig.cyl(parent, 0.0, 0.07, 0.14, Vector3(ex - 0.6, 0.58, ez), Color("e8ecf2"), Vector3(0, 0, 90))
+		Rig.torus(parent, 0.22, 0.29, Vector3(ex - 0.575, 0.58, ez), Color("d0d6df"), Vector3(0, 0, 90)).scale = Vector3(1.0, 0.5, 1.0)
+		Rig.cyl(parent, 0.16, 0.09, 0.22, Vector3(ex + 0.62, 0.58, ez), Color("3a404c"), Vector3(0, 0, 90))
+		Rig.cyl(parent, 0.28, 0.28, 0.02, Vector3(ex + 0.2, 0.58 + 0.275, ez), Color("e63946"), Vector3(0, 0, 90)).scale = Vector3(1.0, 1.0, 0.1)
+		# створки шасси
+		Rig.box(parent, Vector3(0.9, 0.02, 0.28), Vector3(0.7, 0.48, 0.58 * sz), Color("aab3c0"), Vector3(0, 0, 0))
+	# ветровые стёкла кабины
+	for k in 4:
+		var sx := -1.0 + k * 0.5 - 0.25
+		Rig.box(parent, Vector3(0.2, 0.2, 0.012), Vector3(-2.55 - 0.02 * abs(sx), 1.43, sx * 0.42), Color("0e1e33"), Vector3(0, sx * 38.0, -24), 0.15)
+	# нос: радом и приёмник
+	Rig.sphere(parent, 0.2, Vector3(-3.15, 1.05, 0), Color("565d6a"), Vector3(0.9, 0.9, 0.9))
+	Rig.cyl(parent, 0.012, 0.012, 0.3, Vector3(-3.0, 1.18, 0.38), Color("c8ced8"), Vector3(0, 0, 90))
+	Rig.cyl(parent, 0.012, 0.012, 0.3, Vector3(-3.0, 1.18, -0.38), Color("c8ced8"), Vector3(0, 0, 90))
+	# антенны, приёмники, маяк, спутниковый обтекатель
+	Rig.cyl(parent, 0.015, 0.015, 0.4, Vector3(-1.4, 1.8, 0), Color("333b4a"))
+	Rig.cyl(parent, 0.015, 0.015, 0.3, Vector3(1.6, 0.4, 0), Color("333b4a"))
+	Rig.sphere(parent, 0.25, Vector3(-0.6, 1.62, 0), Color("f4f6f9"), Vector3(2.2, 0.35, 0.8))
+	Rig.sphere(parent, 0.06, Vector3(3.3, 1.55, 0), Color("ffffff"), Vector3.ONE, 3.0)
+	# АПУ и рули
+	Rig.cyl(parent, 0.14, 0.04, 0.5, Vector3(3.5, 1.38, 0), Color("3a404c"), Vector3(0, 0, 90))
+	Rig.box(parent, Vector3(0.02, 1.0, 0.12), Vector3(3.3, 2.4, 0), seam, Vector3(0, 0, 14))
+	Rig.cyl(parent, 0.1, 0.1, 0.02, Vector3(3.0, 2.35, 0.075), livery, Vector3(90, 0, 0))
+	# багажные люки на брюхе
+	Rig.box(parent, Vector3(0.5, 0.012, 0.38), Vector3(1.2, 0.46, 0.0), Color("aab3c0"))
+	Rig.box(parent, Vector3(0.5, 0.012, 0.38), Vector3(-1.5, 0.46, 0.0), Color("aab3c0"))
 
 func _ready() -> void:
 	body = Node3D.new()

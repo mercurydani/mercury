@@ -64,10 +64,9 @@ func act_held() -> bool:
 	return Input.is_joy_button_pressed(joy_device(), JOY_BUTTON_A)
 
 func _ready() -> void:
-	rig = Rig.person({
-		"s": 2.0, "shirt": role.shirt, "vest": role.vest, "hat": role.hat, "hat_col": role.hat_col,
-		"ears": role.ears, "skin": role.skin,
-	})
+	var o := People.crew_opts(idx)
+	o["s"] = 1.2
+	rig = People.person(o)
 	add_child(rig)
 	var col: Color = Cfg.PLAYER_COLORS[idx]
 	var ring := Rig.cyl(self, 0.7, 0.7, 0.02, Vector3(0, 0.012, 0), Color(col, 0.75), Vector3.ZERO, 1.2)
@@ -119,7 +118,7 @@ func _process(delta: float) -> void:
 	rig.rotation.y = lerp_angle(rig.rotation.y, atan2(dir.y, dir.x), minf(1.0, delta * 14.0))
 	rig.rotation.x = lerpf(rig.rotation.x, -1.45 if lying else 0.0, minf(1.0, delta * 12.0))
 	rig.position.y = lerpf(rig.position.y, 0.16 if lying else 0.0, minf(1.0, delta * 12.0))
-	Rig.animate(rig, walk, moving and not lying)
+	People.animate(rig, walk, moving and not lying)
 	hold.rotation.y += delta * 2.0
 	stars.visible = stun > 0.0
 	stars.rotation.y += delta * 6.0

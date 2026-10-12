@@ -6,11 +6,13 @@ extends Node3D
 const RUNWAY_Z := 23.5
 
 var flybys: Array = []
+var radar: Node3D
 var fly_t := 3.0
 
 func _ready() -> void:
 	_ground()
 	_terminal()
+	_interior()
 	_tower()
 	_bridges()
 	_belt()
@@ -19,6 +21,8 @@ func _ready() -> void:
 	for i in 3:
 		_stand(i)
 	_taxiway_and_runway()
+	_vehicles()
+	_extras()
 	_scenery()
 
 func _tex(base: Color, line: Color, size: int = 128, w: int = 3) -> ImageTexture:
@@ -55,11 +59,15 @@ func _flat(col: Color, rough: float = 0.95) -> StandardMaterial3D:
 	return m
 
 func _ground() -> void:
-	_plane(Vector2(260, 260), Vector3(12.8, -0.03, 60), _flat(Color("5f8f48")))                   # трава
-	_plane(Vector2(90, 14.8), Vector3(12.8, 0.0, 7.4), _surface(Color("6b717c"), Color("585d67"), 2.6, Vector2(90, 14.8)))   # перрон
-	_plane(Vector2(90, 3.0), Vector3(12.8, 0.006, 16.1), _flat(Color("3a3f49")))                  # рулёжка
-	_plane(Vector2(90, 4.2), Vector3(12.8, 0.006, RUNWAY_Z), _flat(Color("2e323b")))              # полоса
-	_plane(Vector2(90, 3.4), Vector3(12.8, 0.003, 19.3), _flat(Color("6a6f78")))                  # перемычка
+	_plane(Vector2(260, 260), Vector3(12.8, -0.03, 60), Tex.material(Tex.grass(), Vector2(60, 60), 0.95))
+	_plane(Vector2(90, 14.8), Vector3(12.8, 0.0, 7.4), Tex.material(Tex.concrete(256, 0.5, 1), Vector2(90 / 3.2, 14.8 / 3.2), 0.92, 0.5))
+	_plane(Vector2(90, 3.0), Vector3(12.8, 0.006, 16.1), Tex.material(Tex.asphalt(256, 0.26), Vector2(90 / 3.0, 1.0), 0.9, 0.9))
+	_plane(Vector2(90, 4.2), Vector3(12.8, 0.006, RUNWAY_Z), Tex.material(Tex.asphalt(256, 0.2), Vector2(90 / 3.0, 1.4), 0.88, 0.9))
+	_plane(Vector2(90, 3.4), Vector3(12.8, 0.003, 19.3), Tex.material(Tex.concrete(256, 0.5, 1), Vector2(90 / 3.2, 1.1), 0.92, 0.8))
+	# следы шин в зоне касания
+	for k in 6:
+		Rig.box(self, Vector3(3.5, 0.008, 0.07), Vector3(2.5 + k * 0.4, 0.013, RUNWAY_Z - 0.7 + (k % 2) * 0.12), Color(0.08, 0.08, 0.09, 0.55))
+		Rig.box(self, Vector3(3.5, 0.008, 0.07), Vector3(2.5 + k * 0.4, 0.013, RUNWAY_Z + 0.7 + (k % 2) * 0.12), Color(0.08, 0.08, 0.09, 0.55))
 
 func _terminal() -> void:
 	var cx := 12.8
@@ -81,6 +89,39 @@ func _terminal() -> void:
 	Rig.box(self, Vector3(9.0, 1.1, 0.25), Vector3(cx, 5.1, 2.3), Color("1b2a52"))
 	Rig.label(self, "АЭРОПОРТ", Vector3(cx, 5.1, 2.45), 160, Color("ffd24d"), false)
 	Rig.label(self, "ВЫЛЕТ · DEPARTURES", Vector3(cx, 4.35, 2.4), 52, Color("e8eef5"), false)
+
+func _interior() -> void:
+	# пол и потолок зала, стойки регистрации, колонны, свет
+	Rig.box(self, Vector3(40, 0.1, 5.4), Vector3(12.8, 0.07, -0.6), Color("c9c2b6"))
+	Rig.box(self, Vector3(40, 0.12, 5.4), Vector3(12.8, 3.55, -0.6), Color("e8e6e0"))
+	for i in 24:
+		var x := -6.0 + i * 1.7
+		Rig.box(self, Vector3(1.2, 0.04, 0.3), Vector3(x, 3.47, 0.4), Color("fff6d8"), Vector3.ZERO, 2.2)
+		Rig.box(self, Vector3(0.28, 3.5, 0.28), Vector3(x + 0.85, 1.75, -0.2), Color("dcd8d0"))
+	for i in 7:
+		var x := -4.0 + i * 5.1
+		Rig.box(self, Vector3(2.6, 0.9, 0.7), Vector3(x, 0.5, -1.3), Color("2b3a55"))
+		Rig.box(self, Vector3(2.6, 0.06, 0.8), Vector3(x, 0.98, -1.3), Color("e8e6e0"))
+		Rig.box(self, Vector3(1.8, 0.6, 0.06), Vector3(x, 2.4, -1.6), Color("1b2a52"))
+		Rig.label(self, "СТОЙКА %d" % (i + 1), Vector3(x, 2.4, -1.56), 34, Color("ffd24d"), false)
+	# табло вылетов: всё «ЗАДЕРЖАН» — тематическая шутка
+	var board := Rig.box(self, Vector3(6.2, 2.0, 0.12), Vector3(8.0, 2.3, 1.7), Color("0b1220"))
+	Rig.label(self, "ВЫЛЕТ     РЕЙС      КУДА        СТАТУС", Vector3(8.0, 3.1, 1.78), 34, Color("ffd24d"), false)
+	var rows := [["12:40", "SU 214", "СОЧИ", "ЗАДЕРЖАН"], ["12:55", "S7 905", "ПИТЕР", "ЗАДЕРЖАН"], ["13:10", "U6 331", "ПЕРМЬ", "ЗАДЕРЖАН"], ["13:30", "DP 404", "ОМСК", "ЗАДЕРЖАН!!"], ["??:??", "FV 77", "ТУДА", "ЖДИТЕ"]]
+	for k in rows.size():
+		var r: Array = rows[k]
+		var col := Color("ff5a4d") if k < 4 else Color("7dff8a")
+		Rig.label(self, "%s   %s   %s   %s" % r, Vector3(8.0, 2.7 - k * 0.32, 1.78), 30, col, false)
+	# пассажиры за стеклом
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 21
+	var cols := [Color("c0392b"), Color("2980b9"), Color("27ae60"), Color("8e44ad"), Color("f39c12"), Color("34495e"), Color("e67e22")]
+	var skins := [Color("e8b48a"), Color("c98e65"), Color("8d5a3c"), Color("f1c9a5")]
+	for k in 46:
+		var pp := Props.passenger(cols[rng.randi() % cols.size()], skins[rng.randi() % skins.size()])
+		pp.position = Vector3(rng.randf_range(-5.0, 31.0), 0.12, rng.randf_range(0.5, 1.7))
+		pp.rotation_degrees.y = rng.randf_range(0, 360)
+		add_child(pp)
 
 func _bridges() -> void:
 	for i in 3:
@@ -104,6 +145,12 @@ func _tower() -> void:
 	Rig.cyl(self, 2.9, 2.9, 0.3, Vector3(x, 16.9, z), Color("333b4a"))
 	Rig.cyl(self, 0.05, 0.05, 2.5, Vector3(x, 18.3, z), Color("333b4a"))
 	Rig.sphere(self, 0.15, Vector3(x, 19.6, z), Color("ff2d2d"), Vector3.ONE, 3.0)
+	radar = Node3D.new()
+	radar.position = Vector3(x + 1.6, 17.3, z)
+	add_child(radar)
+	Rig.cyl(self, 0.06, 0.06, 0.5, Vector3(x + 1.6, 17.15, z), Color("333b4a"))
+	Rig.box(radar, Vector3(2.0, 0.7, 0.08), Vector3(0, 0.45, 0), Color("c8ced8"))
+	Rig.box(radar, Vector3(0.1, 0.1, 0.6), Vector3(0, 0.45, 0.3), Color("333b4a"))
 
 func _belt() -> void:
 	var r := Cfg.BELT
@@ -165,29 +212,23 @@ func _stand(i: int) -> void:
 		ring.scale = Vector3(1, 0.05, 1)
 		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(ring)
-	# заправщик
-	var tz := z0 + 1.0
-	var tx := xc + 3.6
-	Rig.cyl(self, 0.55, 0.55, 2.3, Vector3(tx, 1.0, tz), Color("e9edf2"), Vector3(90, 0, 0))
-	Rig.cyl(self, 0.56, 0.56, 0.25, Vector3(tx, 1.0, tz - 0.4), Color("e63946"), Vector3(90, 0, 0))
-	Rig.box(self, Vector3(0.95, 0.95, 0.9), Vector3(tx, 0.85, tz - 1.6), Color("e63946"))
-	Rig.box(self, Vector3(0.9, 0.4, 0.04), Vector3(tx, 1.05, tz - 2.07), Color(0.5, 0.8, 1.0, 0.8))
-	for wz in [-1.6, -0.2, 0.9]:
-		for wx in [-0.48, 0.48]:
-			Rig.cyl(self, 0.22, 0.22, 0.18, Vector3(tx + wx, 0.22, tz + wz), Color("15181f"), Vector3(0, 0, 90))
-	Rig.sphere(self, 0.07, Vector3(tx, 1.7, tz - 1.6), Color("ffb020"), Vector3.ONE, 3.0)
-	# багажная тележка
-	var cx := xc + 2.7
-	var cz := z0 + 3.9
-	Rig.box(self, Vector3(1.0, 0.12, 2.0), Vector3(cx, 0.35, cz), Color("e0b020"))
-	for wz in [-0.7, 0.7]:
-		Rig.cyl(self, 0.14, 0.14, 0.1, Vector3(cx + 0.45, 0.14, cz + wz), Color("15181f"), Vector3(0, 0, 90))
-		Rig.cyl(self, 0.14, 0.14, 0.1, Vector3(cx - 0.45, 0.14, cz + wz), Color("15181f"), Vector3(0, 0, 90))
-	for k in 3:
-		var b := Rig.item("bag")
-		b.position = Vector3(cx + (k - 1) * 0.0, 0.42, cz - 0.6 + k * 0.6)
-		b.scale = Vector3.ONE * 1.6
-		add_child(b)
+	# заправщик и багажный поезд у стоянки
+	var fuel := Props.fuel_truck()
+	fuel.position = Vector3(xc + 3.65, 0, z0 + 0.8)
+	add_child(fuel)
+	var train := Props.baggage_train(2)
+	train.position = Vector3(xc + 2.55, 0, z0 + 2.6)
+	train.rotation_degrees.y = 0
+	add_child(train)
+	if i == 1:
+		var tug := Props.pushback_tug()
+		tug.position = Vector3(xc - 2.2, 0, z0 + 5.4)
+		add_child(tug)
+	if i == 2:
+		var gpu := Props.gpu_cart()
+		gpu.position = Vector3(xc - 1.6, 0, z0 - 3.0)
+		gpu.rotation_degrees.y = 25
+		add_child(gpu)
 	# конусы
 	for off in [Vector2(-3.6, 4.7), Vector2(3.6, 4.7), Vector2(-3.6, 14.2), Vector2(3.6, 14.2)]:
 		var c := Vector3(xc + off.x, 0, off.y)
@@ -216,12 +257,74 @@ func _taxiway_and_runway() -> void:
 	n9.rotation_degrees = Vector3(-90, 180, 0)
 	n9.outline_size = 0
 
+func _vehicles() -> void:
+	var bus := Props.bus()
+	bus.position = Vector3(1.2, 0, 12.4)
+	add_child(bus)
+	var cat := Props.catering_truck()
+	cat.position = Vector3(25.3, 0, 9.0)
+	add_child(cat)
+	var stairs := Props.stairs_truck()
+	stairs.position = Vector3(25.3, 0, 13.0)
+	stairs.rotation_degrees.y = 180
+	add_child(stairs)
+
+func _extras() -> void:
+	# мачты освещения
+	for x in [0.8, 9.0, 16.6, 24.8]:
+		var m := Props.light_mast(7.0)
+		m.position = Vector3(x, 0, 14.5)
+		m.rotation_degrees.y = 180
+		add_child(m)
+	# рулёжные указатели
+	for i in 3:
+		var sgn := Props.taxi_sign("A%d  ←" % (i + 1))
+		sgn.position = Vector3(Cfg.ROWS[i] * Cfg.K, 0, 17.95)
+		sgn.rotation_degrees.y = 180
+		add_child(sgn)
+	# ветроуказатели
+	for p in [Vector3(27.5, 0, 19.3), Vector3(-6.0, 0, 19.3)]:
+		var w := Props.windsock()
+		w.position = p
+		add_child(w)
+	# флагштоки у входа
+	for x in [1.2, 24.4]:
+		Rig.cyl(self, 0.05, 0.06, 6.0, Vector3(x, 3.0, 5.6), Color("c8ced8"))
+		Rig.box(self, Vector3(1.3, 0.8, 0.03), Vector3(x + 0.7, 5.5, 5.6), Color("e63946") if x < 10 else Color("2a6fd6"))
+		Rig.box(self, Vector3(1.3, 0.27, 0.035), Vector3(x + 0.7, 5.5, 5.6), Color("f4f4f4"))
+	# крыша терминала: вентиляция, мачты, антенна
+	for x in [-3.0, 4.0, 9.0, 20.0, 29.0]:
+		Rig.box(self, Vector3(2.2, 0.8, 1.6), Vector3(x, 5.9, -1.5), Color("aab4c3"))
+		Rig.cyl(self, 0.5, 0.5, 0.15, Vector3(x - 0.5, 6.35, -1.5), Color("333b4a"))
+		Rig.cyl(self, 0.5, 0.5, 0.15, Vector3(x + 0.5, 6.35, -1.5), Color("333b4a"))
+	Rig.cyl(self, 0.05, 0.05, 4.0, Vector3(14.0, 7.5, -1.8), Color("c8ced8"))
+	Rig.sphere(self, 0.1, Vector3(14.0, 9.6, -1.8), Color("ff2d2d"), Vector3.ONE, 3.0)
+	# ангар за полосой
+	var hx := -9.0
+	var hz := 31.0
+	Rig.box(self, Vector3(14, 4.5, 9), Vector3(hx, 2.25, hz), Color("aeb7c4"))
+	var roof := Rig.cyl(self, 4.5, 4.5, 14, Vector3(hx, 4.5, hz), Color("8d97a6"), Vector3(0, 0, 90))
+	roof.scale = Vector3(1.0, 1.0, 1.0)
+	Rig.box(self, Vector3(8, 4.4, 0.1), Vector3(hx, 2.2, hz - 4.55), Color("39465c"))
+	Rig.label(self, "АНГАР №3", Vector3(hx, 5.0, hz - 4.6), 120, Color("ffd24d"), false)
+	# облака
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 99
+	for k in 16:
+		var c := Node3D.new()
+		c.position = Vector3(rng.randf_range(-40, 70), rng.randf_range(22, 40), rng.randf_range(60, 150))
+		add_child(c)
+		for j in 5:
+			var s := Rig.sphere(c, rng.randf_range(3.0, 6.0), Vector3(j * 4.0 - 8.0, rng.randf_range(-1, 1), rng.randf_range(-2, 2)), Color(1, 1, 1, 0.92), Vector3(1.0, 0.5, 0.8))
+			s.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			(s.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
 func _scenery() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for i in 90:
 		var x := -30.0 + i * 0.95
-		var z := rng.randf_range(30.0, 40.0)
+		var z := rng.randf_range(38.0, 50.0)
 		var h := rng.randf_range(1.6, 3.4)
 		Rig.cyl(self, 0.1, 0.14, h * 0.4, Vector3(x, h * 0.2, z), Color("5b3a22"))
 		Rig.cyl(self, 0.02, h * 0.38, h, Vector3(x, h * 0.4 + h * 0.5, z), Color("2f6b3a").lerp(Color("3f8a45"), rng.randf()))
@@ -231,6 +334,8 @@ func _scenery() -> void:
 
 # ---------- самолёты на полосе ----------
 func _process(delta: float) -> void:
+	if radar != null:
+		radar.rotation.y += delta * 1.6
 	fly_t -= delta
 	if fly_t <= 0.0:
 		fly_t = randf_range(9.0, 18.0)

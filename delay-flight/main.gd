@@ -106,11 +106,9 @@ func _build_menu_stage() -> void:
 	menu_stage = Node3D.new()
 	world.add_child(menu_stage)
 	for i in 4:
-		var role: Dictionary = Cfg.ROLES[i]
-		var rig := Rig.person({
-			"s": 1.3, "shirt": role.shirt, "vest": role.vest, "hat": role.hat,
-			"hat_col": role.hat_col, "ears": role.ears, "skin": role.skin,
-		})
+		var o := People.crew_opts(i)
+		o["s"] = 1.15
+		var rig := People.person(o)
 		rig.position = Cfg.to3(menu_spot(i))
 		menu_stage.add_child(rig)
 		menu_rigs.append(rig)
@@ -455,7 +453,7 @@ func _process(delta: float) -> void:
 		for i in menu_rigs.size():
 			var r := menu_rigs[i]
 			r.rotation.y = PI + sin(Time.get_ticks_msec() / 900.0 + i) * 0.35
-			Rig.animate(r, Time.get_ticks_msec() / 90.0 + i, true)
+			People.animate(r, Time.get_ticks_msec() / 90.0 + i, true)
 	var fp_cam: Camera3D = null
 	if mode == "play" and not workers.is_empty():
 		fp_cam = workers[0].cam
