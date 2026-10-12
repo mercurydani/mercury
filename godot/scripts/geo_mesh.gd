@@ -17,7 +17,7 @@ func build() -> ArrayMesh:
 	for key in _tools:
 		var st: SurfaceTool = _tools[key]
 		st.generate_normals()
-		if key == "leaves" or key == "grass_blades":
+		if key in ["leaves", "grass_blades", "interior"]:
 			st.generate_tangents()
 		st.commit(mesh)
 		mesh.surface_set_material(mesh.get_surface_count() - 1, Mats.get_mat(key))

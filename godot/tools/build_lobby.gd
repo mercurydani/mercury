@@ -597,15 +597,19 @@ func _stall() -> void:
 			Geo.blob(gm.s("fabric"), Vector3(-1.0 + i * 0.5, 2.05, 0.35), Vector3(0.14, 0.14, 0.14), hc, rng, 7, 12, 0.03)
 			Geo.blob(gm.s("fabric"), Vector3(-1.0 + i * 0.5, 2.22, 0.35), Vector3(0.05, 0.05, 0.05), Color(0.97, 0.95, 0.9), rng, 5, 8, 0.0))
 	_box_shape(s, Vector3(3.4, 2.8, 2.2), Vector3(0, 1.4, -0.7))
-	# Баб Нюра: персонаж Kenney + платок и шаль
-	var n := _model(s, "BabNyura", PLAT + "character.glb", Vector3(0, 0.2, -0.8), 1.2)
-	_proc(n, "Clothes", Vector3.ZERO, func(gm: GeoMesh) -> void:
-		var st := gm.s("fabric")
-		var rng := RandomNumberGenerator.new()
-		rng.seed = 5
-		Geo.blob(st, Vector3(0, 1.17, -0.03), Vector3(0.36, 0.26, 0.36), Color(0.82, 0.2, 0.25), rng, 8, 14, 0.03)
-		Geo.prism(st, Vector3(0, 0.55, 0), 0.47, 0.3, 0.35, Color(0.55, 0.4, 0.7), 16)
-		Geo.rod(st, Vector3(-0.12, 0.98, 0.32), Vector3(0.12, 0.98, 0.32), 0.03, Color(0.15, 0.15, 0.15), 4))
+	# Баб Нюра: процедурная бабушка с анимацией (scripts/babushka.gd)
+	var n := Node3D.new()
+	n.set_script(load("res://scripts/babushka.gd"))
+	_add(s, n, "BabNyura", Vector3(0, 0.2, -0.8))
+	# Лампочка под крышей ларька, чтобы бабушку было видно
+	var bulb := OmniLight3D.new()
+	_add(s, bulb, "StallLight", Vector3(0, 2.35, -0.2))
+	bulb.light_color = Color(1.0, 0.8, 0.55)
+	bulb.light_energy = 1.3
+	bulb.omni_range = 3.5
+	_proc(s, "Bulb", Vector3.ZERO, func(gm: GeoMesh) -> void:
+		Geo.rod(gm.s("metal"), Vector3(0, 2.66, -0.2), Vector3(0, 2.45, -0.2), 0.008, Color(0.1, 0.1, 0.1), 4)
+		Geo.blob(gm.s("lit"), Vector3(0, 2.4, -0.2), Vector3(0.05, 0.06, 0.05), Color(1, 1, 1), RandomNumberGenerator.new(), 6, 10, 0.0))
 	# Примерочная: зеркало в раме на ножках
 	_proc(s, "Mirror", Vector3(2.5, 0, -0.6), func(gm: GeoMesh) -> void:
 		var st := gm.s("wood")

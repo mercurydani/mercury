@@ -137,7 +137,7 @@ static func rod(st: SurfaceTool, a: Vector3, b: Vector3, radius: float, col: Col
 
 
 ## Неровный low-poly «комок» (крона дерева, куст).
-static func blob(st: SurfaceTool, c: Vector3, radius: Vector3, col: Color, rng: RandomNumberGenerator, rings := 7, segs := 12, jitter := 0.12, smooth := true) -> void:
+static func blob(st: SurfaceTool, c: Vector3, radius: Vector3, col: Color, rng: RandomNumberGenerator, rings := 7, segs := 12, jitter := 0.12, smooth := true, xf := Transform3D.IDENTITY) -> void:
 	if smooth:
 		st.set_smooth_group(0)
 	var verts := []
@@ -156,11 +156,11 @@ static func blob(st: SurfaceTool, c: Vector3, radius: Vector3, col: Color, rng: 
 			var shade: Color = col.lightened(rng.randf_range(0.0, 0.12)) if i < rings / 2 else col.darkened(rng.randf_range(0.0, 0.15))
 			st.set_color(shade)
 			if i == 0:
-				poly(st, [verts[0][j], verts[1][j], verts[1][j2]], c)
+				poly(st, [verts[0][j], verts[1][j], verts[1][j2]], c, xf)
 			elif i == rings - 1:
-				poly(st, [verts[i][j], verts[i + 1][j], verts[i][j2]], c)
+				poly(st, [verts[i][j], verts[i + 1][j], verts[i][j2]], c, xf)
 			else:
-				poly(st, [verts[i][j], verts[i + 1][j], verts[i + 1][j2], verts[i][j2]], c)
+				poly(st, [verts[i][j], verts[i + 1][j], verts[i + 1][j2], verts[i][j2]], c, xf)
 	st.set_smooth_group(-1)
 
 
