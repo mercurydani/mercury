@@ -552,7 +552,7 @@ func _roof(parent: Node) -> void:
 		bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		bm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		bm.albedo_color = Color(0.45, 0.55, 0.85, 0.07)
+		bm.albedo_color = Color(0.45, 0.55, 0.85, 0.035)
 		bm.cull_mode = BaseMaterial3D.CULL_DISABLED
 		mi.material_override = bm
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -687,13 +687,13 @@ func _pallet_load(parent: Node, base: Vector3, r: RandomNumberGenerator) -> void
 
 func _racks() -> void:
 	# R1 (север): верхняя полка проходима, y=6.25
-	_rack("RackR1", -14.0, -15.0, 12, 6.25, 6.7, 11)
+	_rack("RackR1", -9.0, -15.0, 10, 6.25, 6.7, 11)
 	# R2 (середина): глухая стойка
-	_rack("RackR2", -14.0, -4.0, 12, 0.0, 6.7, 12)
+	_rack("RackR2", -12.0, -4.0, 11, 0.0, 6.7, 12)
 	# R3 (юг): средняя полка проходима, y=4.25; нижняя часть закрыта, самые верхние уровни пустые
-	var r3 := _rack("RackR3", -14.0, 7.0, 12, 4.25, 6.7, 13)
+	var r3 := _rack("RackR3", -12.0, 7.0, 11, 4.25, 6.7, 13)
 	# Свободно стоящие стеллажи у стен: низкие
-	_rack("RackW1", -30.0, -9.0, 2, 0.0, 6.7, 14)
+	_rack("RackW1", -29.0, 14.0, 2, 0.0, 6.7, 14)
 	_rack("RackW2", 29.0, 18.2, 1, 0.0, 6.7, 15, false)
 
 
@@ -789,16 +789,16 @@ func _routes() -> void:
 	# Пандус на полку R3 (средняя): от зоны погрузки (x=21) до торца полки (x=4, y=4.25), z=7
 	_slab(rt, "RampR3", Vector3(21.0, 0.0, 7.0), Vector3(4.2, 4.25, 7.0), 1.5, Color(0.3, 0.32, 0.35))
 	# Галерея вдоль западной стены на уровне полки R3 (y=4.25): x=-31.5, z от 7 до -13
-	var gal := _sb(rt, "Gallery", Vector3(1.6, 0.12, 21.0), Color(0.3, 0.32, 0.35), Vector3(-31.6, 4.19, -3.4), "metal", 0.6, 0.3)
+	var gal := _sb(rt, "Gallery", Vector3(1.6, 0.12, 22.0), Color(0.3, 0.32, 0.35), Vector3(-31.6, 4.19, -3.9), "metal", 0.6, 0.3)
 	for sg in [-1.0, 1.0]:
-		var rx := -31.6 + sg * 0.8
-		_vb(rt, "GalRail", Vector3(0.05, 0.05, 21.0), Color(0.2, 0.35, 0.6), Vector3(rx, 5.3, -3.4), "metal")
-		for i in 14:
+		var rx: float = -31.6 + sg * 0.8
+		_vb(rt, "GalRail", Vector3(0.05, 0.05, 22.0), Color(0.2, 0.35, 0.6), Vector3(rx, 5.3, -3.9), "metal")
+		for i in 15:
 			_vb(rt, "GalPost", Vector3(0.05, 1.1, 0.05), Color(0.2, 0.35, 0.6), Vector3(rx, 4.75, 6.5 - i * 1.5))
 	# Подъём с галереи на верх R1 (y=6.25): пандус вдоль стены от z=-12 до z=-15 не хватит, поэтому два марша
-	_slab(rt, "RampTop", Vector3(-31.6, 4.25, -12.5), Vector3(-28.6, 6.25, -15.0), 1.5, Color(0.3, 0.32, 0.35))
+	_slab(rt, "RampTop", Vector3(-31.0, 4.25, -14.5), Vector3(-24.3, 6.25, -14.5), 1.5, Color(0.3, 0.32, 0.35))
 	# Ступенька-мостик между полкой R3 (x=-32 торец) и галереей: настил на уровне 4.25
-	_sb(rt, "ShelfBridge", Vector3(2.6, 0.12, 1.5), Color(0.3, 0.32, 0.35), Vector3(-31.3, 4.19, 7.0), "metal", 0.6, 0.3)
+	_sb(rt, "ShelfBridge", Vector3(4.6, 0.12, 1.5), Color(0.3, 0.32, 0.35), Vector3(-30.7, 4.19, 7.0), "metal", 0.6, 0.3)
 
 
 # ---------- таблички ----------
@@ -817,7 +817,7 @@ func _signs() -> void:
 	_sign(s, Vector3(18.0, 2.0, 19.7), "SIGN_WH_VOLT", 180.0, Color(0.95, 0.4, 0.2))
 	_sign(s, Vector3(-6.0, 2.4, 19.7), "SIGN_WH_NOSMOKE", 180.0, Color(0.9, 0.9, 0.9))
 	_sign(s, Vector3(33.7, 2.4, 10.0), "SIGN_WH_DOCK", 90.0, Color(0.95, 0.85, 0.2))
-	_sign(s, Vector3(20.5, 2.2, -4.0), "SIGN_WH_FORK", 90.0, Color(0.95, 0.85, 0.2))
+	_sign(s, Vector3(22.5, 2.2, 4.0), "SIGN_WH_FORK", 90.0, Color(0.95, 0.85, 0.2))
 	_sign(s, Vector3(-33.7, 2.4, -14.0), "SIGN_WH_EXIT", 90.0, Color(0.2, 0.7, 0.3))
 
 
@@ -895,8 +895,8 @@ func _hazards() -> void:
 	panel.set_script(load("res://scripts/location/warehouse/shock_panel.gd"))
 	U.add(hz, panel, "ShockPanel", Vector3(19.0, 1.0, 17.8))
 	var cs := CollisionShape3D.new()
-	cs.shape = _bshape(Vector3(4.5, 3.0, 4.0))
-	cs.position = Vector3(0, 0.5, 0)
+	cs.shape = _bshape(Vector3(4.5, 3.0, 5.0))
+	cs.position = Vector3(0, 0.5, -0.6)
 	panel.add_child(cs)
 	var cab := _vb(panel, "Cabinet", Vector3(1.8, 2.2, 0.5), Color(0.5, 0.52, 0.5), Vector3(0, 0.8, 1.7), "metal", 0.5, 0.3)
 	_vb(panel, "Door", Vector3(1.6, 2.0, 0.04), Color(0.6, 0.62, 0.6), Vector3(0, 0.8, 1.42), "metal")
@@ -930,7 +930,7 @@ func _hazards() -> void:
 	U.add(panel, pl, "Light", Vector3(0, 1.0, 0.6))
 	_hazard(panel, 0)
 	# Тир 0: погрузчик F1 катается поперёк зоны погрузки
-	var f1 := _forklift(hz, "Forklift1", PackedVector3Array([Vector3(20.0, 0.0, 9.5), Vector3(20.0, 0.0, -13.0)]), 2.2)
+	var f1 := _forklift(hz, "Forklift1", PackedVector3Array([Vector3(24.5, 0.0, 10.0), Vector3(24.5, 0.0, -13.0)]), 2.2)
 	_hazard(f1, 0)
 	# Тир 1: падающие ящики с торца стеллажа у подножия пандуса R3
 	var dz := HazardDropper.new()
