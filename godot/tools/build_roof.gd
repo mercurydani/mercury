@@ -42,6 +42,7 @@ func _init() -> void:
 	root_node.set_script(load("res://scripts/location/location.gd"))
 	U.environment(root_node, Color(0.42, 0.55, 0.78), Color(0.98, 0.72, 0.45), Color(1.0, 0.78, 0.48), Vector3(-22, -58, 0), 0.004, 0.36)
 	_surroundings()
+	_far_city()
 	_roof_a()
 	_roof_b()
 	_roof_c()
@@ -89,11 +90,12 @@ func _tree(parent: Node, pos: Vector3, kind: int, seed_value: int, h: float) -> 
 # ---------- окружение: двор внизу, соседние дома, облака ----------
 
 func _surroundings() -> void:
+	U.rounded = false
 	var _k := U.kind
 	U.kind = "paint"
 	var s := Node3D.new()
 	U.add(root_node, s, "Surroundings")
-	U.box(s, "Ground", Vector3(320, 1.0, 320), Color(0.42, 0.45, 0.4), Vector3(0, GROUND - 0.5, 0))
+	U.box(s, "Ground", Vector3(1400, 1.0, 1400), Color(0.42, 0.45, 0.4), Vector3(0, GROUND - 0.5, 0))
 	# Асфальтовые дорожки и газон двора
 	U.box(s, "LawnSouth", Vector3(60, 0.06, 14), Color(0.4, 0.58, 0.32), Vector3(10, GROUND + 0.03, 15))
 	U.box(s, "LawnNorth", Vector3(60, 0.06, 14), Color(0.4, 0.58, 0.32), Vector3(10, GROUND + 0.03, -15))
@@ -1131,3 +1133,178 @@ func _bucket(parent: Node, pos: Vector3, col: Color) -> void:
 	U.cyl(b, "Tar", 0.2, 0.2, 0.01, Color(0.06, 0.06, 0.07), Vector3(0, 0.3, 0), 24, 0.3)
 	var handle := U.rod(b, "Handle", Vector3(-0.22, 0.33, 0), Vector3(0.0, 0.5, 0), 0.015, Color(0.7, 0.7, 0.72), 0.4, 0.6)
 	U.rod(b, "Handle2", Vector3(0.0, 0.5, 0), Vector3(0.22, 0.33, 0), 0.015, Color(0.7, 0.7, 0.72), 0.4, 0.6)
+
+
+# ---------- дальний город: кварталы до горизонта ----------
+
+const FAR_COLORS := [Color(0.9, 0.86, 0.76), Color(0.85, 0.8, 0.7), Color(0.82, 0.84, 0.86), Color(0.9, 0.82, 0.68), Color(0.78, 0.8, 0.74), Color(0.88, 0.78, 0.72), Color(0.8, 0.75, 0.8)]
+
+var _win_tex: ImageTexture
+var _far_mats := {}
+
+
+## Текстура фасада: 4 окна × 4 этажа (12 × 11.2 м), швы панелей, балконы, где-то горит свет.
+func _facade_texture() -> ImageTexture:
+	if _win_tex:
+		return _win_tex
+	var img := Image.create(256, 256, true, Image.FORMAT_RGBA8)
+	img.fill(Color(0.95, 0.94, 0.92))
+	var cell := 64
+	for fy in 4:
+		for fx in 4:
+			var x0 := fx * cell
+			var y0 := fy * cell
+			var lit := rng.randf() < 0.14
+			var glass := Color(1.0, 0.85, 0.5) if lit else Color(0.28, 0.34, 0.44).lerp(Color(0.5, 0.52, 0.58), rng.randf() * 0.6)
+			if not lit and rng.randf() < 0.3:
+				glass = Color.from_hsv(rng.randf(), 0.3, 0.75)  # шторы
+			img.fill_rect(Rect2i(x0 + 15, y0 + 14, 34, 36), Color(0.97, 0.97, 0.95))
+			img.fill_rect(Rect2i(x0 + 18, y0 + 17, 28, 30), glass)
+			img.fill_rect(Rect2i(x0 + 31, y0 + 17, 2, 30), Color(0.97, 0.97, 0.95))
+			if fx % 2 == 0:
+				img.fill_rect(Rect2i(x0 + 8, y0 + 50, 48, 10), Color(0.55, 0.62, 0.7).lerp(Color(0.8, 0.5, 0.35), rng.randf() * 0.7))
+	for i in 5:
+		img.fill_rect(Rect2i(0, i * cell - 1 if i > 0 else 0, 256, 2), Color(0.6, 0.58, 0.55))
+		img.fill_rect(Rect2i(i * cell - 1 if i > 0 else 0, 0, 2, 256), Color(0.7, 0.68, 0.65))
+	img.generate_mipmaps()
+	_win_tex = ImageTexture.create_from_image(img)
+	return _win_tex
+
+
+func _far_mat(col: Color) -> StandardMaterial3D:
+	var key := col.to_html()
+	if _far_mats.has(key):
+		return _far_mats[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	m.albedo_texture = _facade_texture()
+	m.uv1_triplanar = true
+	m.uv1_scale = Vector3(1.0 / 12.0, -1.0 / 11.2, 1.0 / 12.0)
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.roughness = 0.9
+	_far_mats[key] = m
+	return m
+
+
+func _lod_building(parent: Node, nm: String, cx: float, cz: float, rot_y: float, length: float, floors: int, col: Color) -> void:
+	var depth := 11.0
+	var h := 0.7 + floors * 2.8
+	var b := Node3D.new()
+	U.add(parent, b, nm, Vector3(cx, GROUND, cz))
+	b.rotation_degrees.y = rot_y
+	var bm := BoxMesh.new()
+	bm.size = Vector3(length, h, depth)
+	var mi := MeshInstance3D.new()
+	mi.mesh = bm
+	mi.material_override = _far_mat(col)
+	U.add(b, mi, "Body", Vector3(0, h * 0.5, 0))
+	U.box(b, "Plinth", Vector3(length + 0.2, 0.7, depth + 0.2), Color(0.45, 0.42, 0.4), Vector3(0, 0.35, 0))
+	U.box(b, "Roof", Vector3(length + 0.4, 0.3, depth + 0.4), Color(0.3, 0.3, 0.33), Vector3(0, h + 0.1, 0))
+	U.box(b, "ParapetF", Vector3(length + 0.4, 0.5, 0.2), col.darkened(0.25), Vector3(0, h + 0.4, depth * 0.5 + 0.1))
+	U.box(b, "ParapetB", Vector3(length + 0.4, 0.5, 0.2), col.darkened(0.25), Vector3(0, h + 0.4, -depth * 0.5 - 0.1))
+	for i in int(length / 12.0):
+		var x := -length * 0.5 + 6.0 + i * 12.0
+		U.box(b, "Vent%d" % i, Vector3(1.0, 1.0, 1.0), col.darkened(0.3), Vector3(x, h + 0.8, rng.randf_range(-2, 2)))
+		if rng.randf() < 0.6:
+			U.rod(b, "Ant%d" % i, Vector3(x + 2.0, h + 0.3, 1.0), Vector3(x + 2.0, h + 3.2, 1.0), 0.05, Color(0.3, 0.3, 0.3))
+			U.rod(b, "AntBar%d" % i, Vector3(x + 1.4, h + 2.6, 1.0), Vector3(x + 2.6, h + 2.6, 1.0), 0.04, Color(0.3, 0.3, 0.3))
+
+
+func _far_tree(parent: Node, pos: Vector3, h: float, col: Color) -> void:
+	var t := Node3D.new()
+	U.add(parent, t, "FTree", pos)
+	U.cyl(t, "Trunk", 0.2, 0.28, h * 0.5, Color(0.4, 0.3, 0.22), Vector3(0, h * 0.25, 0), 6)
+	for i in 3:
+		U.sphere(t, "Crown%d" % i, h * (0.3 - i * 0.04), col.lerp(Color(0.5, 0.65, 0.3), rng.randf() * 0.4), Vector3(rng.randf_range(-0.5, 0.5), h * (0.55 + i * 0.16), rng.randf_range(-0.5, 0.5)), 1.1)
+
+
+func _far_city() -> void:
+	var old := U.kind
+	U.rounded = false
+	U.kind = "paint"
+	var f := Node3D.new()
+	U.add(root_node, f, "FarCity")
+	var asphalt := Color(0.27, 0.27, 0.3)
+	var ci := 0
+	for ix in range(-7, 8):
+		for iz in range(-7, 8):
+			var cx := ix * 56.0 + rng.randf_range(-5, 5)
+			var cz := iz * 56.0 + rng.randf_range(-5, 5)
+			# Рядом уже стоят дома со двором: оставляем центр
+			if cx > -80 and cx < 120 and cz > -55 and cz < 60:
+				continue
+			var tall := rng.randf() < 0.28
+			var floors: int = [9, 12, 16][rng.randi() % 3] if tall else 5
+			var col: Color = FAR_COLORS[rng.randi() % FAR_COLORS.size()]
+			var length: float = rng.randf_range(24, 48)
+			_lod_building(f, "B%d" % ci, cx, cz - 13, 0.0, length, floors, col)
+			if rng.randf() < 0.75:
+				_lod_building(f, "B%d" % (ci + 1), cx + rng.randf_range(-10, 10), cz + 13, 180.0, rng.randf_range(24, 48), 5 if rng.randf() < 0.7 else 9, FAR_COLORS[rng.randi() % FAR_COLORS.size()])
+			ci += 2
+			# Дорога вдоль квартала, разметка и машины
+			U.box(f, "Road%d_%d" % [ix, iz], Vector3(56.0, 0.08, 7.0), asphalt, Vector3(cx, GROUND + 0.04, cz + 28.0))
+			U.box(f, "RoadX%d_%d" % [ix, iz], Vector3(7.0, 0.08, 56.0), asphalt, Vector3(cx + 28.0, GROUND + 0.045, cz))
+			for k in 3:
+				U.box(f, "Mark", Vector3(2.2, 0.02, 0.16), Color(0.95, 0.95, 0.9), Vector3(cx - 18 + k * 18, GROUND + 0.09, cz + 28.0))
+			if rng.randf() < 0.55 and absf(cx) < 260 and absf(cz) < 260:
+				_car(f, "FCar%d" % ci, Vector3(cx + rng.randf_range(-22, 22), GROUND, cz + 28.0 + (-1.7 if rng.randf() < 0.5 else 1.7)), 0.0 if rng.randf() < 0.5 else 180.0, Color.from_hsv(rng.randf(), 0.5, 0.7))
+			# Дворы: газон, деревья, гаражи, площадка
+			U.box(f, "Lawn%d_%d" % [ix, iz], Vector3(46.0, 0.05, 11.0), Color(0.42, 0.56, 0.34), Vector3(cx, GROUND + 0.03, cz))
+			for t in 5:
+				_far_tree(f, Vector3(cx + rng.randf_range(-26, 26), GROUND, cz + rng.randf_range(-6, 6)), rng.randf_range(6.0, 11.0), Color(0.35, 0.55, 0.28))
+			if rng.randf() < 0.35:
+				for g in 4:
+					U.box(f, "G%d" % g, Vector3(3.0, 2.3, 5.5), Color.from_hsv(0.08 + g * 0.07, 0.25, 0.55), Vector3(cx + 20 + g * 3.3, GROUND + 1.15, cz - 3))
+	# Рощи и лесополоса по краю города
+	var edge := Node3D.new()
+	U.add(root_node, edge, "Forest")
+	for i in 240:
+		var a := rng.randf() * TAU
+		var r := rng.randf_range(430.0, 520.0)
+		_far_tree(edge, Vector3(cos(a) * r, GROUND, sin(a) * r), rng.randf_range(10.0, 18.0), Color(0.25, 0.42, 0.22))
+	# ТЭЦ: трубы в красно-белую полоску, градирни, пар
+	var pw := Node3D.new()
+	U.add(root_node, pw, "PowerPlant", Vector3(-230, GROUND, -250))
+	for i in 2:
+		var x := i * 28.0
+		for seg in 8:
+			U.cyl(pw, "Stack%d_%d" % [i, seg], 5.5 - seg * 0.28, 5.5 - (seg + 1) * 0.28, 14.0, Color(0.9, 0.2, 0.15) if seg % 2 == 0 else Color(0.95, 0.95, 0.95), Vector3(x, 7.0 + seg * 14.0, 0), 20)
+		for k in 6:
+			U.sphere(pw, "Steam%d_%d" % [i, k], 9.0 + k * 3.0, Color(0.95, 0.95, 0.97, 0.75), Vector3(x + 8 + k * 11, 125.0 + k * 9.0, 4), 0.7)
+	for i in 3:
+		U.cyl(pw, "Cooling%d" % i, 22.0, 15.0, 55.0, Color(0.78, 0.76, 0.72), Vector3(-60 + i * 50, 27.5, 60), 32)
+		U.sphere(pw, "CoolSteam%d" % i, 18.0, Color(0.95, 0.95, 0.97, 0.7), Vector3(-60 + i * 50, 70.0, 60), 0.6)
+	U.box(pw, "Hall", Vector3(110, 28, 36), Color(0.6, 0.6, 0.62), Vector3(10, 14, -50))
+	# Телебашня и стрела башенного крана на стройке
+	var tv := Node3D.new()
+	U.add(root_node, tv, "TVTower", Vector3(260, GROUND, -230))
+	for leg in 4:
+		var ang := leg * PI * 0.5 + PI * 0.25
+		U.rod(tv, "Leg%d" % leg, Vector3(cos(ang) * 14, 0, sin(ang) * 14), Vector3(0, 150, 0), 1.2, Color(0.9, 0.9, 0.92), 0.6, 0.2)
+	U.cyl(tv, "Mast", 1.0, 0.3, 80.0, Color(0.9, 0.2, 0.15), Vector3(0, 190, 0), 12)
+	U.cyl(tv, "Deck", 8.0, 8.0, 5.0, Color(0.85, 0.85, 0.88), Vector3(0, 120, 0), 20)
+	var cr := Node3D.new()
+	U.add(root_node, cr, "Crane", Vector3(-150, GROUND, 120))
+	U.rod(cr, "Mast", Vector3(0, 0, 0), Vector3(0, 55, 0), 1.6, Color(0.95, 0.75, 0.1), 0.6, 0.2)
+	U.rod(cr, "Jib", Vector3(-30, 55, 0), Vector3(38, 55, 0), 1.2, Color(0.95, 0.75, 0.1), 0.6, 0.2)
+	U.rod(cr, "Cable", Vector3(26, 55, 0), Vector3(26, 20, 0), 0.1, Color(0.2, 0.2, 0.2))
+	U.box(cr, "Weight", Vector3(4, 3, 3), Color(0.5, 0.5, 0.5), Vector3(-26, 52, 0))
+	# ЛЭП: решётчатые опоры с проводами через город
+	var prev := Vector3.ZERO
+	for i in 8:
+		var pylon := Node3D.new()
+		var pos := Vector3(-300 + i * 90, GROUND, 150)
+		U.add(root_node, pylon, "Pylon%d" % i, pos)
+		for leg in [-1.0, 1.0]:
+			U.rod(pylon, "Leg", Vector3(leg * 4, 0, 0), Vector3(leg * 1.0, 38, 0), 0.5, Color(0.55, 0.57, 0.6), 0.6, 0.4)
+		for y in [14.0, 24.0, 33.0]:
+			U.rod(pylon, "Arm", Vector3(-9, y, 0), Vector3(9, y, 0), 0.35, Color(0.55, 0.57, 0.6), 0.6, 0.4)
+			U.rod(pylon, "Brace", Vector3(-1.5, y - 8, 0), Vector3(1.5, y, 0), 0.2, Color(0.55, 0.57, 0.6), 0.6, 0.4)
+		if i > 0:
+			for dx in [-9.0, 0.0, 9.0]:
+				var mid := (pos + prev) * 0.5 + Vector3(dx, 29.0, 0)
+				U.rod(root_node, "Wire", prev + Vector3(dx, 33.0, 0), mid, 0.06, Color(0.1, 0.1, 0.1))
+				U.rod(root_node, "Wire2", mid, pos + Vector3(dx, 33.0, 0), 0.06, Color(0.1, 0.1, 0.1))
+		prev = pos
+	U.kind = old
+	U.rounded = true

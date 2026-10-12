@@ -5,6 +5,7 @@ extends RefCounted
 
 static var _mats := {}
 static var kind: String = "paint"   # вид поверхности для новых материалов: paint, concrete, bitumen, wood, metal, brick, plaster
+static var rounded: bool = true   # false для дальних объектов: плоские коробки, меньше памяти
 static var _tex := {}
 static var _rbox := {}
 
@@ -142,7 +143,7 @@ static func box(parent: Node, nm: String, size: Vector3, c: Color, pos: Vector3,
 	add(parent, holder, nm, pos)
 	var md := minf(size.x, minf(size.y, size.z))
 	var m: Mesh
-	if md >= 0.12:
+	if rounded and md >= 0.12:
 		m = rounded_box(size, clampf(md * 0.14, 0.02, 0.07))
 	else:
 		var bm := BoxMesh.new()
@@ -310,7 +311,7 @@ static func player(parent: Node, pos: Vector3, nm := "Player1") -> RigidBody3D:
 	var cam := Camera3D.new()
 	cam.top_level = true
 	cam.fov = 65
-	cam.far = 400.0
+	cam.far = 900.0
 	add(p, cam, "Camera", pos + Vector3(0, 6.5, 9))
 	return p
 
