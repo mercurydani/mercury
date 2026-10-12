@@ -86,12 +86,16 @@ func _rebuild() -> void:
 				var y := PLINTH + f * FLOOR_H + FLOOR_H * 0.5
 				var tint := panel_color.darkened(_rng.randf_range(-0.04, 0.08))
 				tint = tint.lerp(Color(0.42, 0.38, 0.32), clampf(0.35 - f * 0.12, 0.0, 0.35) + _rng.randf_range(0.0, 0.06))
-				Geo.cbox(st, Vector3(x, y, zf + side * 0.06), Vector3(COL_W - 0.07, FLOOR_H - 0.07, 0.12), tint, 0.025)
+				var psize := Vector3(COL_W - 0.07, FLOOR_H - 0.07, 0.12)
+				var pc := Vector3(x, y, zf + side * 0.06)
 				if entrance and f == 0:
+					Geo.cbox(st, pc, psize, tint, 0.025)
 					continue
 				if entrance:
+					_panel_with_hole(st, pc, psize, Vector2(x, y - 0.75), Vector2(1.08, 0.88), tint)
 					_window(Vector3(x, y - 0.75, zf + side * 0.12), side, Vector2(1.0, 0.8), st, false)
 				else:
+					_panel_with_hole(st, pc, psize, Vector2(x, y + 0.1), Vector2(1.53, 1.43), tint)
 					_window(Vector3(x, y + 0.1, zf + side * 0.12), side, Vector2(1.45, 1.35), st, true)
 					if front and f > 0 and c % 2 == 0 and _rng.randf() < 0.75:
 						_balcony(st, Vector3(x, PLINTH + f * FLOOR_H, zf + 0.12))
@@ -152,6 +156,28 @@ func _rebuild() -> void:
 	add_child(cs)
 
 
+## Панель фасада с проёмом под окно (4 куска вокруг отверстия).
+func _panel_with_hole(st: SurfaceTool, c: Vector3, sz: Vector3, hc: Vector2, hsz: Vector2, tint: Color) -> void:
+	var x0 := c.x - sz.x * 0.5
+	var x1 := c.x + sz.x * 0.5
+	var y0 := c.y - sz.y * 0.5
+	var y1 := c.y + sz.y * 0.5
+	var hx0 := hc.x - hsz.x * 0.5
+	var hx1 := hc.x + hsz.x * 0.5
+	var hy0 := hc.y - hsz.y * 0.5
+	var hy1 := hc.y + hsz.y * 0.5
+	var parts := [
+		[x0, x1, hy1, y1], [x0, x1, y0, hy0],
+		[x0, hx0, hy0, hy1], [hx1, x1, hy0, hy1],
+	]
+	for pr in parts:
+		var w: float = pr[1] - pr[0]
+		var h: float = pr[3] - pr[2]
+		if w < 0.01 or h < 0.01:
+			continue
+		Geo.cbox(st, Vector3((pr[0] + pr[1]) * 0.5, (pr[2] + pr[3]) * 0.5, c.z), Vector3(w, h, sz.z), tint, minf(0.025, minf(w, h) * 0.3))
+
+
 func _window(at: Vector3, side: float, size: Vector2, st: SurfaceTool, can_light: bool) -> void:
 	var plastic := _rng.randf() < 0.35
 	var fst := _plain if plastic else _wood
@@ -159,7 +185,12 @@ func _window(at: Vector3, side: float, size: Vector2, st: SurfaceTool, can_light
 	var z := at.z
 	var fw := 0.09
 	# Откосы (глубина проёма) и рама с переплётом и форточкой
-	Geo.box(st, Vector3(at.x, at.y, z - side * 0.07), Vector3(size.x + 0.16, size.y + 0.16, 0.02), panel_color.darkened(0.45))
+	var rev := panel_color.darkened(0.3)
+	var hs := size * 0.5 + Vector2(0.04, 0.04)
+	for sx in [-1.0, 1.0]:
+		Geo.box(st, Vector3(at.x + sx * (hs.x - 0.01), at.y, z - side * 0.06), Vector3(0.02, hs.y * 2.0, 0.12), rev)
+	for sy in [-1.0, 1.0]:
+		Geo.box(st, Vector3(at.x, at.y + sy * (hs.y - 0.01), z - side * 0.06), Vector3(hs.x * 2.0, 0.02, 0.12), rev)
 	Geo.cbox(fst, Vector3(at.x, at.y + size.y * 0.5, z), Vector3(size.x + fw, fw, 0.1), frame, 0.015)
 	Geo.cbox(fst, Vector3(at.x, at.y - size.y * 0.5, z), Vector3(size.x + fw, fw, 0.1), frame, 0.015)
 	Geo.cbox(fst, Vector3(at.x - size.x * 0.5, at.y, z), Vector3(fw, size.y, 0.1), frame, 0.015)
@@ -168,19 +199,11 @@ func _window(at: Vector3, side: float, size: Vector2, st: SurfaceTool, can_light
 	Geo.cbox(fst, Vector3(at.x + size.x * 0.2, at.y + size.y * 0.22, z), Vector3(size.x * 0.6, 0.05, 0.08), frame, 0.01)
 	# Отлив под окном
 	Geo.cbox(_metal, Vector3(at.x, at.y - size.y * 0.5 - 0.06, z + side * 0.08), Vector3(size.x + 0.2, 0.04, 0.24), Color(0.6, 0.61, 0.63), 0.01)
+	# Стекло с «квартирой» за ним (шейдер interior): зерно, свет, оттенок штор в цвете вершины
 	var gz := z - side * 0.03
-	var r := _rng.randf()
-	if can_light and r < 0.22:
-		Geo.box(_lit, Vector3(at.x, at.y, gz - side * 0.02), Vector3(size.x, size.y, 0.02), Color(1.0, 0.78, 0.45))
-	elif can_light and r < 0.5:
-		var curtain := Color.from_hsv(_rng.randf(), _rng.randf_range(0.25, 0.5), _rng.randf_range(0.5, 0.8))
-		# Шторы складками за стеклом
-		for k in 6:
-			Geo.box(_fabric, Vector3(at.x - size.x * 0.5 + (k + 0.5) * size.x / 6.0, at.y, gz - side * (0.05 + 0.02 * (k % 2))), Vector3(size.x / 6.0, size.y, 0.02), curtain.darkened(0.12 * (k % 2)))
-		Geo.box(_glass, Vector3(at.x, at.y, gz), Vector3(size.x, size.y, 0.015), Color(0.55, 0.62, 0.7))
-	else:
-		Geo.box(_plain, Vector3(at.x, at.y, gz - side * 0.06), Vector3(size.x, size.y, 0.02), Color(0.08, 0.09, 0.11))
-		Geo.box(_glass, Vector3(at.x, at.y, gz), Vector3(size.x, size.y, 0.015), Color(0.45, 0.55, 0.65))
+	var lit := 1.0 if can_light and _rng.randf() < 0.4 else 0.0
+	var col := Color(_rng.randf(), lit, _rng.randf())
+	Geo.card(_g.s("interior"), Vector3(at.x, at.y, gz), Basis(Vector3(side * size.x, 0, 0), Vector3(0, size.y, 0), Vector3(0, 0, side)), col)
 
 
 func _balcony(st: SurfaceTool, base: Vector3) -> void:

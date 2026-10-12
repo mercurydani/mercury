@@ -23,6 +23,11 @@ static var _cache := {}
 static func get_mat(key: String) -> Material:
 	if _cache.has(key):
 		return _cache[key]
+	if key == "interior":
+		var sm := ShaderMaterial.new()
+		sm.shader = load("res://shaders/interior.gdshader")
+		_cache[key] = sm
+		return sm
 	var m := StandardMaterial3D.new()
 	m.vertex_color_use_as_albedo = true
 	if TEXTURED.has(key):
@@ -64,5 +69,15 @@ static func get_mat(key: String) -> Material:
 			m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		"foliage":
 			m.roughness = 0.95
+		"skin":
+			m.roughness = 0.55
+			m.rim_enabled = true
+			m.rim = 0.35
+			m.rim_tint = 0.6
+		"lens":
+			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			m.albedo_color = Color(1, 1, 1, 0.18)
+			m.roughness = 0.05
+			m.metallic_specular = 1.0
 	_cache[key] = m
 	return m
