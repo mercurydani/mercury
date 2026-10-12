@@ -74,6 +74,25 @@ static func get_mat(key: String) -> Material:
 			m.rim_enabled = true
 			m.rim = 0.35
 			m.rim_tint = 0.6
+		"gold":
+			m.metallic = 0.75
+			m.roughness = 0.28
+			m.metallic_specular = 0.8
+			m.rim_enabled = true
+			m.rim = 0.25
+		"chrome":
+			m.metallic = 0.85
+			m.roughness = 0.18
+		"paint":
+			m.roughness = 0.35
+			m.metallic_specular = 0.7
+			m.clearcoat_enabled = true
+			m.clearcoat = 0.6
+		"lit_red", "lit_blue", "lit_white":
+			m.emission_enabled = true
+			m.emission = {"lit_red": Color(1, 0.12, 0.1), "lit_blue": Color(0.15, 0.35, 1), "lit_white": Color(1, 0.95, 0.8)}[key]
+			m.emission_energy_multiplier = 1.6
+			m.roughness = 0.2
 		"lens":
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			m.albedo_color = Color(1, 1, 1, 0.18)

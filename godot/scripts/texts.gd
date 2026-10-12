@@ -6,6 +6,7 @@ extends RefCounted
 const DATA := {
 	"ru": {
 		"PROMPT_SIT": "Сесть в фургон",
+		"VAN_LABEL": "МЯУ-СПАСАТЕЛИ",
 		"PROMPT_STAND": "Встать с места",
 		"PROMPT_SEARCH": "Поиск вызовов",
 		"PROMPT_SHOP": "Ларёк баб Нюры",
@@ -26,6 +27,7 @@ const DATA := {
 	},
 	"en": {
 		"PROMPT_SIT": "Sit in the van",
+		"VAN_LABEL": "MEOW RESCUE",
 		"PROMPT_STAND": "Leave the seat",
 		"PROMPT_SEARCH": "Search for calls",
 		"PROMPT_SHOP": "Granny Nyura's stall",

@@ -14,6 +14,7 @@ var _toast_t: float = 0.0
 
 func _ready() -> void:
 	Texts.register()
+	propagate_notification(NOTIFICATION_TRANSLATION_CHANGED)
 	_setup_input()
 	player.prompt_changed.connect(func(t: String) -> void: hint.text = t)
 	van.message.connect(_show)

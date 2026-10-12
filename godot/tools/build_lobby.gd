@@ -297,8 +297,8 @@ func _city() -> void:
 	_add(c, b, "Buildings")
 	# Хрущёвки вокруг двора, фасадом с подъездами во двор
 	_khrushchevka(b, "North", Vector3(0, 0, -19.5), 0.0, 4, 11, Color(0.8, 0.78, 0.72))
-	_khrushchevka(b, "West", Vector3(-24.5, 0, 0), 90.0, 3, 12, Color(0.82, 0.74, 0.66))
-	_khrushchevka(b, "East", Vector3(24.5, 0, 0), -90.0, 3, 13, Color(0.74, 0.76, 0.78))
+	_khrushchevka(b, "West", Vector3(-24.5, 0, -1.0), 90.0, 2, 12, Color(0.82, 0.74, 0.66))
+	_khrushchevka(b, "East", Vector3(24.5, 0, -1.0), -90.0, 2, 13, Color(0.74, 0.76, 0.78))
 	_khrushchevka(b, "South", Vector3(0, 0, 31), 180.0, 5, 14, Color(0.8, 0.75, 0.62))
 	# Улица на юге: дорога с фонарями, тротуар и дома напротив
 	var road := Node3D.new()
@@ -517,14 +517,21 @@ func _van() -> void:
 	var v := Node3D.new()
 	v.set_script(load("res://scripts/van.gd"))
 	_add(lobby_root, v, "Van", Vector3(-3, 0, 1))
-	_model(v, "Body", RACE + "vehicle-truck-red.glb", Vector3.ZERO, 2.2, 180.0, true)
-	# Мигалка и табличка с котом на крыше
-	_box(v, "LightRed", Vector3(0.6, 0.25, 0.35), Color(1, 0.15, 0.15), Vector3(-0.4, 2.95, -0.6), false)
-	_box(v, "LightBlue", Vector3(0.6, 0.25, 0.35), Color(0.2, 0.4, 1), Vector3(0.4, 2.95, -0.6), false)
-	var sm := SphereMesh.new()
-	sm.radius = 0.45
-	sm.height = 0.9
-	_mesh(v, "CatSign", sm, Color(1.0, 0.85, 0.3), Vector3(0, 3.3, -0.6))
+	# Кузов «буханка» (scripts/van_mesh.gd) со своей коллизией
+	var body := StaticBody3D.new()
+	_add(v, body, "Body")
+	_proc(body, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void: VanMesh.build(gm))
+	_box_shape(body, Vector3(2.3, 2.0, 5.2), Vector3(0, 1.45, 0.1))
+	for sx in [-1.0, 1.0]:
+		var lb := Label3D.new()
+		lb.text = "VAN_LABEL"
+		lb.font_size = 72
+		lb.pixel_size = 0.0022
+		lb.outline_size = 10
+		lb.modulate = Color(1, 1, 1)
+		lb.outline_modulate = Color(0.45, 0.05, 0.05)
+		_add(v, lb, "Label%s" % ("R" if sx > 0 else "L"), Vector3(sx * 1.13, 1.18, 0.0) if sx < 0 else Vector3(1.19, 1.18, 1.8))
+		lb.rotation_degrees.y = 90.0 * sx
 	# Места (игрок «внутри», модель скрыта)
 	var seats := Node3D.new()
 	_add(v, seats, "Seats")
@@ -537,17 +544,8 @@ func _van() -> void:
 	_trigger(v, "Dashboard", "PROMPT_SEARCH", Vector3(-2.2, 1.0, -1.6), 1.4)
 	# Задние двери: сесть
 	_trigger(v, "SeatTrigger", "PROMPT_SIT", Vector3(0, 1.0, 3.6), 1.6)
-	# Стена инструментов: открытый шкаф на боку фургона
-	_box(v, "ToolWallBoard", Vector3(0.12, 1.4, 2.4), Color(0.5, 0.35, 0.2), Vector3(1.75, 1.3, 0.8), false)
-	for i in 5:
-		var hm := CylinderMesh.new()
-		hm.top_radius = 0.05
-		hm.bottom_radius = 0.05
-		hm.height = 0.25
-		var h := _mesh(v, "Hook%d" % i, hm, Color(0.8, 0.8, 0.85), Vector3(1.85, 1.6, -0.2 + i * 0.5), 0.8)
-		h.rotation_degrees = Vector3(0, 0, 90)
-	_box(v, "MissionCrate", Vector3(0.8, 0.5, 0.6), Color(0.7, 0.55, 0.25), Vector3(2.4, 0.25, 2.2))
-	_trigger(v, "ToolWall", "PROMPT_TOOLS", Vector3(2.6, 1.0, 0.8), 1.4)
+	# Стена инструментов — в открытой боковой двери (часть меша кузова)
+	_trigger(v, "ToolWall", "PROMPT_TOOLS", Vector3(2.2, 1.0, 0.2), 1.4)
 
 
 func _stall() -> void:
@@ -648,37 +646,15 @@ func _mascot() -> void:
 	m.set_script(load("res://scripts/mascot.gd"))
 	_add(lobby_root, m, "Mascot", Vector3(0, 0, 9.5))
 	m.rotation_degrees.y = 180.0
-	var gold := Color(1.0, 0.8, 0.2)
-	var pm := CylinderMesh.new()
-	pm.top_radius = 0.9
-	pm.bottom_radius = 1.0
-	pm.height = 0.8
-	_mesh(m, "Pedestal", pm, Color(0.55, 0.55, 0.6), Vector3(0, 0.4, 0))
-	var body := SphereMesh.new()
-	body.radius = 0.75
-	body.height = 1.5
-	_mesh(m, "Body", body, gold, Vector3(0, 1.5, 0), 0.9)
-	var head := SphereMesh.new()
-	head.radius = 0.55
-	head.height = 1.1
-	_mesh(m, "Head", head, gold, Vector3(0, 2.5, 0.1), 0.9)
-	for sx in [-1.0, 1.0]:
-		var ear := CylinderMesh.new()
-		ear.top_radius = 0.0
-		ear.bottom_radius = 0.2
-		ear.height = 0.4
-		_mesh(m, "Ear%s" % ("L" if sx < 0 else "R"), ear, gold, Vector3(sx * 0.35, 3.1, 0.1), 0.9)
-	var bell := SphereMesh.new()
-	bell.radius = 0.15
-	bell.height = 0.3
-	_mesh(m, "Bell", bell, Color(0.9, 0.2, 0.2), Vector3(0, 2.05, 0.6))
+	# Манэки-нэко на постаменте (scripts/mascot_mesh.gd); лапа — отдельный узел Paw
+	var mb := StaticBody3D.new()
+	_add(m, mb, "Statue")
+	_proc(mb, "Mesh", Vector3.ZERO, func(gm: GeoMesh) -> void: MascotMesh.build_body(gm))
+	_box_shape(mb, Vector3(1.9, 1.1, 1.9), Vector3(0, 0.55, 0))
+	_box_shape(mb, Vector3(1.2, 2.1, 1.1), Vector3(0, 2.1, 0))
 	var paw := Node3D.new()
-	_add(m, paw, "Paw", Vector3(0.6, 1.9, 0.3))
-	var arm := CapsuleMesh.new()
-	arm.radius = 0.16
-	arm.height = 0.9
-	var am := _mesh(paw, "Arm", arm, gold, Vector3(0.05, 0.4, 0), 0.9)
-	am.rotation_degrees = Vector3(0, 0, -10)
+	_add(m, paw, "Paw", Vector3(0.42, MascotMesh.SEAT_Y + 1.0, 0.12))
+	_proc(paw, "Arm", Vector3.ZERO, func(gm: GeoMesh) -> void: MascotMesh.build_paw(gm))
 	_trigger(m, "Trigger", "PROMPT_PET", Vector3(0, 1.0, 1.4), 2.2)
 
 
