@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/brocleaning/index.html"
+        ],
+        "createdAt": "2026-10-13T19:54:17.532Z",
+        "reason": "Claude triage: .composer/.how/.contact pad via CSS vars/clamp (28-56px, 16-32px gutters); 1440/768/390 browser screenshots show the inset, static detector can't resolve var()"
+      }
+    ]
+  }
+}
