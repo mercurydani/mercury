@@ -41,9 +41,10 @@
     }
     lines.forEach(function (l) {
       var row = document.createElement("div"); row.className = "r-line";
-      var a = document.createElement("span"); a.textContent = l[0];
-      var b = document.createElement("span"); b.textContent = l[1];
-      row.appendChild(a); row.appendChild(b); box.appendChild(row);
+      var a = document.createElement("span"); a.className = "r-name"; a.textContent = l[0];
+      var dots = document.createElement("i"); dots.className = "r-dots";
+      var b = document.createElement("span"); b.className = "r-price"; b.textContent = l[1];
+      row.appendChild(a); row.appendChild(dots); row.appendChild(b); box.appendChild(row);
     });
     var tail = agree ? (sum ? " + " : "") + d.t3_price : "";
     var total = sum ? money(sum) + tail : agree ? d.t3_price : "—";
@@ -142,6 +143,12 @@
 
   var dt = $("r-date");
   if (dt) { var n = new Date(); dt.textContent = String(n.getDate()).padStart(2, "0") + "." + String(n.getMonth() + 1).padStart(2, "0") + "." + n.getFullYear(); }
+
+  var receiptVisible = false;
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { receiptVisible = es[0].isIntersecting; $("mbar").classList.toggle("away", receiptVisible); })
+      .observe(document.querySelector(".receipt"));
+  }
 
   // re-render when the language switch changes <html lang>
   new MutationObserver(function () { $("r-toast").textContent = ""; render(); })

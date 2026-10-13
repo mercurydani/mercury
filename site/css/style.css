@@ -8,7 +8,7 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 400 16.5px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 460 16.5px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-underline-offset: .2em; text-decoration-thickness: 1px; }
 ul, ol { list-style: none; margin: 0; padding: 0; }
@@ -76,10 +76,6 @@ h1, h2, h3, h4, p, figure { margin: 0; }
 .r-top b { font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
 .r-lines { padding: 12px 0; min-height: 120px; }
 .r-line { display: flex; gap: 8px; padding: 5px 0; animation: pop .25s ease both; }
-.r-line span:first-child { flex: 1; }
-.r-line span:first-child::after { content: " ................................................................"; display: inline; color: #c9c6bc; white-space: nowrap; }
-.r-line { overflow: hidden; white-space: nowrap; }
-.r-line span:first-child { overflow: hidden; text-overflow: clip; white-space: nowrap; }
 .r-empty { color: var(--mute); padding: 20px 0; text-align: center; font-size: 13px; }
 @keyframes pop { from { opacity: 0; transform: translateY(-4px); } }
 .r-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed #c9c6bc; padding-top: 14px; gap: 12px; }
@@ -174,7 +170,6 @@ html:not(.js) .reveal { opacity: 1; transform: none; }
   .flow li::after { display: none; }
   .receipt { padding: 22px 18px 30px; }
 }
-.r-line span:first-child { min-width: 0; }
 .calc > *, .opts, .receipt-wrap { min-width: 0; }
 @media (max-width: 900px) { body { padding-bottom: 84px; } }
 
@@ -210,3 +205,45 @@ html:not(.js) .reveal { opacity: 1; transform: none; }
 .r-thanks { text-align: center; font-size: 11px; color: var(--mute); margin-top: 8px; letter-spacing: .04em; }
 
 @media (prefers-reduced-motion: reduce) { .receipt.feed, .opt-more, .opt-case { animation: none; } .box::after { transition: none; } }
+
+/* ===== weight, receipt lines, faq, mobile fixes ===== */
+.intro h1, .page-intro h1 { font-weight: 600; letter-spacing: -.035em; }
+.opt-name, .work h3, .flow h3, .also li a { font-weight: 650; }
+.calc-head h2, .sec-top h2 { font-weight: 650; }
+.end h2 { font-weight: 600; }
+.receipt { font-weight: 470; }
+.r-top b { font-weight: 700; }
+.r-total b { font-weight: 700; }
+.opt-price { font-weight: 600; }
+.r-line { display: flex; align-items: flex-end; gap: 0; }
+.r-name { flex: 0 1 auto; min-width: 0; }
+.r-dots { flex: 1 0 14px; border-bottom: 2px dotted #c9c6bc; margin: 0 6px; transform: translateY(-6px); }
+.r-price { flex: none; white-space: nowrap; }
+.r-top { flex-wrap: wrap; } .r-top > * { white-space: nowrap; }
+
+.faq { border-top: 1px solid var(--rule); max-width: 860px; }
+.faq details { border-bottom: 1px solid var(--rule); }
+.faq summary { list-style: none; cursor: pointer; padding: 18px 44px 18px 0; font-weight: 600; font-size: 17px; position: relative; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: ""; position: absolute; right: 6px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+  background: linear-gradient(currentColor, currentColor) center / 14px 2px no-repeat, linear-gradient(currentColor, currentColor) center / 2px 14px no-repeat; transition: transform .25s ease; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq summary:hover { color: var(--accent); }
+.faq details p { color: var(--mute); padding: 0 44px 20px 0; max-width: 46em; animation: unfold .3s ease both; }
+
+.bar .wrap { flex-wrap: nowrap; }
+.logo { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lang { flex: none; }
+.bar a { white-space: nowrap; }
+.end li a { flex-wrap: wrap; }
+.mbar.away { transform: translateY(150%); }
+
+@media (max-width: 560px) {
+  .bar .wrap { gap: 14px; }
+  .logo .city { display: none; }
+  .r-actions { grid-template-columns: 1fr; }
+  .r-top { gap: 2px 12px; }
+  .receipt { font-size: 13.5px; }
+  .picks button { padding: 7px 12px; }
+  .faq summary { font-size: 16px; }
+}
