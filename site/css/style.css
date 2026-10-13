@@ -177,3 +177,36 @@ html:not(.js) .reveal { opacity: 1; transform: none; }
 .r-line span:first-child { min-width: 0; }
 .calc > *, .opts, .receipt-wrap { min-width: 0; }
 @media (max-width: 900px) { body { padding-bottom: 84px; } }
+
+/* ===== finishing touches ===== */
+.picks { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--mute); margin-top: -4px; }
+.picks button { font: 500 14px var(--sans); color: var(--text); background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 14px; cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.picks button:hover { border-color: var(--text); }
+.picks button[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: #fff; }
+
+/* checkbox: tick pops in */
+.box::after { opacity: 1; transform: rotate(-45deg) translate(1px, -1px) scale(0); transition: transform .28s cubic-bezier(.3,1.6,.5,1); }
+.opt:has(input:checked) .box::after { transform: rotate(-45deg) translate(1px, -1px) scale(1); }
+.opt { transition: border-color .15s, box-shadow .15s, transform .15s; }
+.opt:active { transform: scale(.995); }
+.opt-more, .opt-case { animation: unfold .3s ease both; }
+@keyframes unfold { from { opacity: 0; transform: translateY(-4px); } }
+
+/* receipt details */
+.receipt { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.receipt.feed { animation: feed .45s cubic-bezier(.2,.8,.2,1); }
+@keyframes feed { from { translate: 0 -6px; } to { translate: 0 0; } }
+.receipt::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(17,19,24,.018) 0 1px, transparent 1px 3px); }
+.r-sub { display: flex; justify-content: space-between; align-items: center; color: var(--mute); font-size: 12px; padding: 8px 0 0; }
+.r-clear { background: none; border: 0; font: 400 12px var(--mono); color: var(--mute); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 0; }
+.r-clear:hover { color: var(--text); }
+.r-empty { display: grid; gap: 10px; padding: 14px 0; text-align: left; }
+.r-empty i { display: block; height: 8px; border-radius: 2px; background: repeating-linear-gradient(90deg, #efede7 0 5px, transparent 5px 9px); height: 6px; }
+.r-empty i:nth-child(2) { width: 72%; } .r-empty i:nth-child(3) { width: 48%; }
+.r-empty span { font-size: 13px; color: var(--mute); margin-top: 4px; text-align: center; }
+.r-total b { font-variant-numeric: tabular-nums; }
+.r-code { height: 44px; margin-top: 24px; display: flex; align-items: stretch; justify-content: space-between; opacity: .85; overflow: hidden; }
+.r-code i { display: block; background: var(--text); }
+.r-thanks { text-align: center; font-size: 11px; color: var(--mute); margin-top: 8px; letter-spacing: .04em; }
+
+@media (prefers-reduced-motion: reduce) { .receipt.feed, .opt-more, .opt-case { animation: none; } .box::after { transition: none; } }
