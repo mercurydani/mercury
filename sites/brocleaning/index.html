@@ -34,6 +34,8 @@
   --axis:42vw;
   --section:clamp(96px,12vw,200px);
   --ease:cubic-bezier(.2,.7,.1,1);
+  --r:24px;
+  --r-s:14px;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
@@ -49,7 +51,7 @@ button{font:inherit;color:inherit}
 .skip:focus{left:var(--m);top:var(--m);z-index:50;background:var(--ink);color:#fff;padding:12px 16px}
 
 /* ---------- buttons: one shape, square ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6em;min-height:56px;padding:0 24px;border:0;border-radius:0;background:var(--red);color:var(--red-ink);font-weight:700;font-size:var(--step-body);text-decoration:none;cursor:pointer;transition:transform .18s var(--ease),background-color .18s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6em;min-height:56px;padding:0 24px;border:0;border-radius:999px;background:var(--red);color:var(--red-ink);font-weight:700;font-size:var(--step-body);text-decoration:none;cursor:pointer;transition:transform .18s var(--ease),background-color .18s}
 .btn:hover{background:#b8141a}
 .btn:active{transform:scale(.97)}
 .btn--ink{background:var(--ink);color:#fff}
@@ -61,27 +63,29 @@ button{font:inherit;color:inherit}
 
 /* ---------- axis heading: the red bar of the logo ---------- */
 .axis-head{position:relative;margin-left:var(--axis);padding-left:28px;font-size:var(--step-head);font-weight:800;line-height:1;letter-spacing:-.03em;max-width:15ch}
-.axis-head::before{content:"";position:absolute;left:0;top:.08em;bottom:.04em;width:10px;background:var(--red);transform-origin:top;transition:transform .9s var(--ease)}
+.axis-head::before{content:"";position:absolute;left:0;top:.08em;bottom:.04em;width:10px;border-radius:5px;background:var(--red);transform-origin:top;transition:transform .9s var(--ease)}
 .axis-head .soft{color:var(--muted)}
 
 /* =============== HERO BOARD =============== */
-.board{display:grid;gap:var(--gap);padding:var(--gap);height:100svh;min-height:640px;max-height:1000px;grid-template-rows:64px 1fr 1fr;grid-template-columns:1fr 1fr}
+.board{display:grid;gap:var(--gap);padding:var(--gap);min-height:100svh;grid-template-rows:64px auto minmax(280px,1fr);grid-template-columns:1fr 1fr}
 .bar{grid-column:1/-1;display:grid;grid-template-columns:64px 1fr auto;gap:var(--gap)}
-.tile{position:relative;overflow:hidden;background:var(--tone-1)}
+.tile{position:relative;overflow:hidden;background:var(--tone-1);border-radius:var(--r)}
 .tile--ink{background:var(--ink);color:var(--on-ink)}
 .tile--red{background:var(--red);color:#fff}
 .logo-tile{display:grid;place-items:center;background:var(--paper);outline:0}
-.logo-tile svg{width:46px;height:auto}
-.nav{display:flex;align-items:center;gap:clamp(16px,2.4vw,40px);padding:0 24px 0 calc(50vw - 64px - 2*var(--gap) + clamp(20px,2.4vw,36px))}
+.logo-tile svg{width:46px;height:auto;max-height:52px}
+.nav{display:flex;align-items:center;justify-content:flex-end;gap:clamp(16px,2.2vw,36px);padding:0 28px}
 .nav a{white-space:nowrap;font-weight:500;text-decoration:none;font-size:var(--step-small);position:relative;padding:6px 0}
 .nav a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .25s var(--ease)}
 .nav a:hover::after{transform:scaleX(1)}
-.bar .btn{min-height:64px}
-.name-tile{display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(20px,2.4vw,36px);background:var(--paper);gap:20px}
-.name-tile h1{font-size:var(--step-display);font-weight:800;line-height:.9;letter-spacing:-.045em}
+.bar .btn{min-height:64px;padding:0 28px}
+.bar .tile{border-radius:999px}
+.logo-tile{border-radius:var(--r-s)!important}
+.name-tile{display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(28px,3vw,48px) clamp(20px,2.4vw,36px);background:var(--paper);gap:20px;overflow:visible;min-height:min(44svh,460px)}
+.name-tile h1{font-size:min(var(--step-display),14svh);font-weight:800;line-height:.9;letter-spacing:-.045em}
 .name-tile p{font-size:var(--step-lead);line-height:1.3;max-width:30ch;color:var(--ink-2)}
 .pic{width:100%;height:100%}
-.pic svg{width:100%;height:100%}
+.pic svg{position:absolute;inset:0;width:100%;height:100%}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
 .split .tile{padding:clamp(20px,2.2vw,32px);display:flex;flex-direction:column;justify-content:space-between;gap:16px}
 .split .tile p{font-size:var(--step-lead);line-height:1.25;font-weight:500;max-width:18ch}
@@ -105,7 +109,7 @@ button{font:inherit;color:inherit}
 .services-intro{margin:28px 0 0 calc(var(--axis) - var(--m) + 28px);max-width:44ch;color:var(--ink-2)}
 .services-body{display:grid;grid-template-columns:200px 1fr;gap:40px;margin-top:56px}
 .tabs{display:flex;flex-direction:column;gap:6px;position:sticky;top:16px;align-self:start}
-.tab{display:flex;flex-direction:column;justify-content:center;min-height:64px;padding:10px 16px;background:var(--tone-1);text-decoration:none;border:0;text-align:left;cursor:pointer;transition:background-color .18s,transform .18s var(--ease)}
+.tab{border-radius:var(--r-s);display:flex;flex-direction:column;justify-content:center;min-height:64px;padding:10px 16px;background:var(--tone-1);text-decoration:none;border:0;text-align:left;cursor:pointer;transition:background-color .18s,transform .18s var(--ease)}
 .tab:hover{background:var(--tone-2)}
 .tab:active{transform:scale(.98)}
 .tab b{font-size:var(--step-small);font-weight:700;line-height:1.2}
@@ -120,11 +124,11 @@ button{font:inherit;color:inherit}
 .panel-title{font-size:var(--step-lead);font-weight:700;margin:0 0 12px;line-height:1.2}
 .js .panel-title{position:absolute;left:-9999px}
 .js .panel[hidden]{display:none}
-.band{display:grid;grid-template-columns:minmax(150px,26%) 1fr auto;align-items:center;gap:24px;min-height:84px;padding:16px 16px 16px 24px;background:var(--tone-1);transition:background-color .2s}
+.band{border-radius:var(--r-s);display:grid;grid-template-columns:minmax(150px,26%) 1fr auto;align-items:center;gap:24px;min-height:84px;padding:16px 16px 16px 24px;background:var(--tone-1);transition:background-color .2s}
 .band:nth-child(even of .band){background:var(--tone-2)}
 .band h4{margin:0;font-size:var(--step-body);font-weight:700;line-height:1.25}
 .band p{font-size:var(--step-body);line-height:1.45;color:var(--ink-2);max-width:56ch}
-.pick{display:inline-flex;align-items:center;justify-content:center;min-height:48px;min-width:150px;padding:0 18px;border:0;background:var(--paper);font-weight:700;font-size:var(--step-small);cursor:pointer;transition:background-color .18s,color .18s,transform .15s var(--ease)}
+.pick{border-radius:999px;display:inline-flex;align-items:center;justify-content:center;min-height:48px;min-width:150px;padding:0 18px;border:0;background:var(--paper);font-weight:700;font-size:var(--step-small);cursor:pointer;transition:background-color .18s,color .18s,transform .15s var(--ease)}
 .pick:hover{background:var(--ink);color:#fff}
 .pick:active{transform:scale(.96)}
 .band.is-picked{background:var(--ink);color:#fff}
@@ -134,11 +138,11 @@ button{font:inherit;color:inherit}
 .js .nojs-hide{display:inline-flex}
 
 /* request composer (the live thing) */
-.composer{margin-top:var(--gap);display:grid;grid-template-columns:200px 1fr;gap:40px;background:var(--ink);color:#fff;padding:clamp(28px,3.4vw,56px) clamp(20px,3vw,48px)}
+.composer{border-radius:var(--r);margin-top:var(--gap);display:grid;grid-template-columns:200px 1fr;gap:40px;background:var(--ink);color:#fff;padding:clamp(28px,3.4vw,56px) clamp(20px,3vw,48px)}
 .composer h3{font-size:var(--step-lead);font-weight:800;line-height:1.3;letter-spacing:-.01em}
 .composer-main{display:grid;grid-template-columns:1fr minmax(260px,340px);gap:32px;align-items:start}
 .composer label{display:block;font-size:var(--step-small);color:var(--on-ink-muted);margin-bottom:8px}
-.composer textarea{width:100%;min-height:200px;resize:vertical;background:var(--ink-2);color:#fff;border:0;padding:16px;font:inherit;font-size:var(--step-body);line-height:1.5}
+.composer textarea{border-radius:var(--r-s);width:100%;min-height:200px;resize:vertical;background:var(--ink-2);color:#fff;border:0;padding:16px;font:inherit;font-size:var(--step-body);line-height:1.5}
 .composer textarea:focus-visible{outline:3px solid var(--red);outline-offset:0}
 .send{display:flex;flex-direction:column;gap:var(--gap)}
 .send .btn{justify-content:space-between;width:100%}
@@ -148,19 +152,19 @@ button{font:inherit;color:inherit}
 .count{font-variant-numeric:tabular-nums}
 
 /* sticky mini bar */
-.minibar{position:fixed;left:var(--gap);right:var(--gap);bottom:var(--gap);z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);color:#fff;padding:10px 10px 10px 20px;transform:translateY(140%);transition:transform .35s var(--ease);box-shadow:0 10px 30px rgba(0,0,0,.25)} /* taste-skill-ignore: sticky bar floats */
+.minibar{border-radius:999px;position:fixed;left:var(--gap);right:var(--gap);bottom:var(--gap);z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);color:#fff;padding:10px 10px 10px 20px;transform:translateY(140%);transition:transform .35s var(--ease);box-shadow:0 10px 30px rgba(0,0,0,.25)} /* taste-skill-ignore: sticky bar floats */
 .minibar.show{transform:none}
 .minibar span{font-size:var(--step-small);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .minibar .btn{min-height:48px;flex:none}
 
 /* =============== SHOWCASE: drone =============== */
-.drone{margin-top:var(--section);display:grid;grid-template-columns:1fr 1fr;min-height:88svh;background:var(--tone-1)}
+.drone{border-radius:var(--r);margin:var(--section) var(--gap) 0;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;min-height:88svh;background:var(--tone-1)}
 .drone-pic{padding:40px;display:grid;place-items:center}
-.drone-pic .sq{width:100%;aspect-ratio:1;max-height:calc(88svh - 80px);max-width:calc(88svh - 80px)}
+.drone-pic .sq{border-radius:var(--r);overflow:hidden;width:100%;aspect-ratio:1;max-height:calc(88svh - 80px);max-width:calc(88svh - 80px)}
 .drone-text{display:flex;flex-direction:column;justify-content:space-between;gap:40px;padding:40px var(--m) 40px 0}
 .drone-tabs{display:flex;gap:28px;flex-wrap:wrap}
 .drone-tabs button{background:none;border:0;padding:6px 0;font-size:var(--step-body);font-weight:500;color:var(--muted);cursor:pointer;position:relative}
-.drone-tabs button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .25s var(--ease)}
+.drone-tabs button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .25s var(--ease)}
 .drone-tabs button[aria-pressed="true"]{color:var(--ink);font-weight:700}
 .drone-tabs button[aria-pressed="true"]::after{transform:scaleX(1)}
 .drone-tabs button:hover{color:var(--ink)}
@@ -169,7 +173,7 @@ button{font:inherit;color:inherit}
 .drone-copy p + p{margin-top:16px}
 .drone-note{color:var(--muted);font-size:var(--step-small)}
 .cells{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-.cell{display:flex;align-items:center;justify-content:space-between;min-height:72px;padding:0 22px;text-decoration:none;font-weight:700;background:var(--ink);color:#fff;transition:background-color .18s,transform .15s var(--ease)}
+.cell{border-radius:999px;display:flex;align-items:center;justify-content:space-between;min-height:72px;padding:0 22px;text-decoration:none;font-weight:700;background:var(--ink);color:#fff;transition:background-color .18s,transform .15s var(--ease)}
 .cell:active{transform:scale(.98)}
 .cell:hover{background:#000}
 .cell--tone{background:var(--tone-3);color:var(--ink)}
@@ -188,7 +192,7 @@ button{font:inherit;color:inherit}
 .about-text strong{font-weight:800}
 
 /* =============== HOW: many into one =============== */
-.how{background:var(--ink);color:#fff;padding:var(--section) var(--m)}
+.how{border-radius:var(--r);margin:0 var(--gap);background:var(--ink);color:#fff;padding:var(--section) var(--m)}
 .how-top{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
 .how-top h2{grid-column:1/6;font-size:var(--step-head);font-weight:800;line-height:1;letter-spacing:-.03em}
 .how-top p{grid-column:6/11;align-self:end;color:var(--on-ink-muted);font-size:var(--step-body);max-width:44ch}
@@ -209,9 +213,9 @@ button{font:inherit;color:inherit}
 .qa p{grid-column:8/13;font-size:var(--step-body);line-height:1.55;max-width:42ch;padding-top:.3em}
 
 /* =============== CONTACT =============== */
-.contact{padding:var(--section) var(--m) 120px;display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:start;background:var(--tone-1)}
+.contact{border-radius:var(--r);margin:var(--gap);padding:var(--section) var(--m) 120px;display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:start;background:var(--tone-1)}
 .contact-say{grid-column:1/7;font-size:var(--step-say);line-height:1.3;font-weight:500;letter-spacing:-.015em}
-.contact-pic{grid-column:8/10;width:100%;max-width:170px;aspect-ratio:1;background:var(--paper)}
+.contact-pic{border-radius:var(--r-s);overflow:hidden;grid-column:8/10;width:100%;max-width:170px;aspect-ratio:1;background:var(--paper)}
 .contact-pic svg{width:100%;height:100%}
 .contact-links{grid-column:10/13}
 .contact-links h3{font-size:var(--step-body);font-weight:700;margin-bottom:20px}
@@ -220,7 +224,7 @@ button{font:inherit;color:inherit}
 .contact-links small{display:block;margin-top:14px;font-size:var(--step-small);color:var(--muted);line-height:1.45}
 
 /* =============== FOOTER =============== */
-.foot{background:var(--red);color:#fff;min-height:90svh;padding:40px var(--m) 28px;display:flex;flex-direction:column;justify-content:space-between;gap:48px}
+.foot{border-radius:var(--r);margin:0 var(--gap) var(--gap);background:var(--red);color:#fff;min-height:70svh;padding:40px var(--m) 28px;display:flex;flex-direction:column;justify-content:space-between;gap:48px}
 .foot-top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
 .foot-notes{display:flex;gap:40px;flex-wrap:wrap;font-size:var(--step-small);line-height:1.45}
 .foot-notes b{display:block}
@@ -271,7 +275,7 @@ button{font:inherit;color:inherit}
   .facts{grid-column:1/13;flex-direction:row;flex-wrap:wrap;order:2}
   .qa p{grid-column:7/13}
   .contact-say{grid-column:1/8}
-  .contact-pic{grid-column:1/3;grid-row:2}
+  .contact-pic{border-radius:var(--r-s);overflow:hidden;grid-column:1/3;grid-row:2}
   .contact-links{grid-column:3/9;grid-row:2}
 }
 
@@ -283,15 +287,17 @@ button{font:inherit;color:inherit}
   .nav{display:none}
   .bar .btn{display:none}
   .menu-btn{display:flex;align-items:center;justify-content:center;background:var(--ink);color:#fff;border:0;font-weight:700;font-size:var(--step-small);cursor:pointer;width:100%}
-  .bar .call-mini{display:flex;align-items:center;padding-left:16px;font-weight:700;text-decoration:none;background:var(--tone-1);font-size:var(--step-body)}
-  .nav.open{display:flex;position:fixed;inset:68px 6px auto 6px;z-index:60;flex-direction:column;align-items:stretch;gap:0;padding:8px;background:var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.3)} /* taste-skill-ignore: open menu floats */
+  .bar .call-mini{display:flex;align-items:center;padding-left:16px;font-weight:700;text-decoration:none;background:var(--tone-1);font-size:var(--step-body);border-radius:var(--r-s)}
+  .nav.open{border-radius:var(--r);display:flex;position:fixed;inset:68px 6px auto 6px;z-index:60;flex-direction:column;align-items:stretch;gap:0;padding:8px;background:var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.3)} /* taste-skill-ignore: open menu floats */
   .nav.open a{color:#fff;padding:16px 12px;font-size:18px}
   .name-tile{min-height:0;padding-top:56px}
+  .bar .tile{border-radius:var(--r-s)}
+  .menu-btn{border-radius:var(--r-s)}
   .name-tile h1{font-size:clamp(2.75rem,13.4vw,4.5rem)}
   .board .pic{aspect-ratio:4/3}
   .board > .pic-b{order:6}
   .split{grid-template-columns:1fr 1fr}
-  .split .tile{aspect-ratio:1;padding:16px}
+  .split .tile{min-height:min(46vw,220px);padding:18px}
   .split .tile p{font-size:var(--step-body)}
   .split .tile a{font-size:var(--step-small)}
   .axis-head{padding-left:22px;max-width:none}
@@ -305,10 +311,10 @@ button{font:inherit;color:inherit}
   .tab--new{grid-column:1/-1}
   .band{grid-template-columns:1fr;grid-template-areas:"t" "p" "b";gap:8px;padding:16px}
   .pick{width:100%;margin-top:6px}
-  .composer{grid-template-columns:1fr;margin-inline:calc(-1 * var(--m))}
+  .composer{grid-template-columns:1fr;margin-inline:calc(var(--gap) - var(--m))}
   .drone{grid-template-columns:1fr;min-height:0}
   .drone-pic{padding:16px}
-  .drone-pic .sq{max-width:none;max-height:none}
+  .drone-pic .sq{border-radius:var(--r);overflow:hidden;max-width:none;max-height:none}
   .drone-text{padding:8px 16px 16px}
   .drone-tabs{gap:20px}
   .drone-tabs button{font-size:var(--step-body)}
@@ -332,7 +338,7 @@ button{font:inherit;color:inherit}
   .qa p{margin-top:12px}
   .contact{display:grid;grid-template-columns:96px 1fr;gap:16px}
   .contact-say{grid-column:1/-1;font-size:var(--step-lead)}
-  .contact-pic{grid-column:1;grid-row:2;width:96px}
+  .contact-pic{border-radius:var(--r-s);overflow:hidden;grid-column:1;grid-row:2;width:96px}
   .contact-links{grid-column:2;grid-row:2}
   .foot{min-height:80svh}
   .foot-top{flex-direction:column}
@@ -349,7 +355,7 @@ button{font:inherit;color:inherit}
 <!-- ========= drawings: one flat language, brand colours, a cleaning pass on each ========= -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <clipPath id="sofa-left"><rect x="110" y="190" width="290" height="190"/><rect x="60" y="250" width="340" height="200"/></clipPath>
+    <clipPath id="sofa-left"><rect x="110" y="190" width="290" height="190" rx="36"/><rect x="60" y="250" width="340" height="200" rx="40"/></clipPath>
     <pattern id="grime" width="14" height="14" patternUnits="userSpaceOnUse">
       <rect width="14" height="14" fill="#b9b6ad"/>
       <rect x="2" y="3" width="3" height="3" fill="#9d998e"/>
@@ -383,12 +389,12 @@ button{font:inherit;color:inherit}
     <rect x="-400" y="-400" width="1600" height="1400" fill="#e5e5e2"/>
     <rect x="-400" y="470" width="1600" height="400" fill="#d6d6d2"/>
     <g>
-      <rect x="110" y="190" width="580" height="190" fill="#141414"/>
-      <rect x="70" y="300" width="660" height="150" fill="#141414"/>
-      <rect x="60" y="250" width="110" height="200" fill="#2a2a2a"/>
-      <rect x="630" y="250" width="110" height="200" fill="#2a2a2a"/>
-      <rect x="170" y="320" width="230" height="70" fill="#2a2a2a"/>
-      <rect x="400" y="320" width="230" height="70" fill="#2a2a2a"/>
+      <rect x="110" y="190" width="580" height="190" rx="36" fill="#141414"/>
+      <rect x="70" y="300" width="660" height="150" rx="28" fill="#141414"/>
+      <rect x="60" y="250" width="110" height="200" rx="40" fill="#2a2a2a"/>
+      <rect x="630" y="250" width="110" height="200" rx="40" fill="#2a2a2a"/>
+      <rect x="170" y="320" width="230" height="70" rx="22" fill="#2a2a2a"/>
+      <rect x="400" y="320" width="230" height="70" rx="22" fill="#2a2a2a"/>
       <rect x="100" y="450" width="24" height="40" fill="#141414"/><rect x="676" y="450" width="24" height="40" fill="#141414"/>
     </g>
     <!-- grime on the left half -->
@@ -396,9 +402,9 @@ button{font:inherit;color:inherit}
       <g clip-path="url(#sofa-left)"><rect x="60" y="190" width="340" height="260" fill="url(#grime)"/></g>
     </g>
     <!-- the pass -->
-    <rect x="392" y="150" width="16" height="330" fill="#d71920"/>
+    <rect x="392" y="150" width="16" height="330" rx="8" fill="#d71920"/>
     <g class="nozzle">
-      <rect x="380" y="118" width="40" height="40" fill="#d71920"/>
+      <rect x="380" y="118" width="40" height="40" rx="12" fill="#d71920"/>
       <rect x="396" y="40" width="8" height="80" fill="#141414"/>
     </g>
   </symbol>
@@ -406,31 +412,32 @@ button{font:inherit;color:inherit}
   <!-- Pirot kilim: half dirty, half clean -->
   <symbol id="kilim-pic" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
     <rect width="800" height="600" fill="#e5e5e2"/>
-    <rect x="30" y="30" width="740" height="540" fill="url(#kilim)"/>
+    <clipPath id="rug"><rect x="30" y="30" width="740" height="540" rx="22"/></clipPath>
+    <g clip-path="url(#rug)"><rect x="30" y="30" width="740" height="540" fill="url(#kilim)"/>
     <rect x="30" y="30" width="370" height="540" fill="url(#kilim-dirty)"/>
-    <rect x="30" y="30" width="740" height="24" fill="#141414"/><rect x="30" y="546" width="740" height="24" fill="#141414"/>
+    <rect x="30" y="30" width="740" height="24" fill="#141414"/><rect x="30" y="546" width="740" height="24" fill="#141414"/></g>
     <rect x="392" y="40" width="16" height="520" fill="#ffffff"/>
   </symbol>
 
   <!-- a Novi Beograd block, a drone washing it -->
   <symbol id="facade" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice">
     <rect width="600" height="600" fill="#e5e5e2"/>
-    <rect x="80" y="70" width="440" height="530" fill="#d6d6d2"/>
+    <rect x="80" y="70" width="440" height="560" rx="18" fill="#d6d6d2"/>
     <rect x="80" y="70" width="220" height="530" fill="url(#grime)"/>
     <g fill="#141414">
-      <rect x="110" y="100" width="70" height="44"/><rect x="210" y="100" width="70" height="44"/><rect x="320" y="100" width="70" height="44"/><rect x="420" y="100" width="70" height="44"/>
-      <rect x="110" y="180" width="70" height="44"/><rect x="210" y="180" width="70" height="44"/><rect x="320" y="180" width="70" height="44"/><rect x="420" y="180" width="70" height="44"/>
-      <rect x="110" y="260" width="70" height="44"/><rect x="210" y="260" width="70" height="44"/><rect x="320" y="260" width="70" height="44"/><rect x="420" y="260" width="70" height="44"/>
-      <rect x="110" y="340" width="70" height="44"/><rect x="210" y="340" width="70" height="44"/><rect x="320" y="340" width="70" height="44"/><rect x="420" y="340" width="70" height="44"/>
-      <rect x="110" y="420" width="70" height="44"/><rect x="210" y="420" width="70" height="44"/><rect x="320" y="420" width="70" height="44"/><rect x="420" y="420" width="70" height="44"/>
-      <rect x="110" y="500" width="70" height="44"/><rect x="210" y="500" width="70" height="44"/><rect x="320" y="500" width="70" height="44"/><rect x="420" y="500" width="70" height="44"/>
+      <rect x="110" y="100" width="70" height="44" rx="6"/><rect x="210" y="100" width="70" height="44" rx="6"/><rect x="320" y="100" width="70" height="44" rx="6"/><rect x="420" y="100" width="70" height="44" rx="6"/>
+      <rect x="110" y="180" width="70" height="44" rx="6"/><rect x="210" y="180" width="70" height="44" rx="6"/><rect x="320" y="180" width="70" height="44" rx="6"/><rect x="420" y="180" width="70" height="44" rx="6"/>
+      <rect x="110" y="260" width="70" height="44" rx="6"/><rect x="210" y="260" width="70" height="44" rx="6"/><rect x="320" y="260" width="70" height="44" rx="6"/><rect x="420" y="260" width="70" height="44" rx="6"/>
+      <rect x="110" y="340" width="70" height="44" rx="6"/><rect x="210" y="340" width="70" height="44" rx="6"/><rect x="320" y="340" width="70" height="44" rx="6"/><rect x="420" y="340" width="70" height="44" rx="6"/>
+      <rect x="110" y="420" width="70" height="44" rx="6"/><rect x="210" y="420" width="70" height="44" rx="6"/><rect x="320" y="420" width="70" height="44" rx="6"/><rect x="420" y="420" width="70" height="44" rx="6"/>
+      <rect x="110" y="500" width="70" height="44" rx="6"/><rect x="210" y="500" width="70" height="44" rx="6"/><rect x="320" y="500" width="70" height="44" rx="6"/><rect x="420" y="500" width="70" height="44" rx="6"/>
     </g>
     <g fill="#ffffff" opacity=".9">
       <rect x="300" y="70" width="220" height="10"/>
     </g>
     <g class="hovering">
       <polygon class="spray" points="250,150 300,150 300,330 250,330" fill="#ffffff" opacity=".6"/>
-      <rect x="222" y="118" width="56" height="26" fill="#d71920"/>
+      <rect x="222" y="118" width="56" height="26" rx="10" fill="#d71920"/>
       <rect x="196" y="110" width="20" height="6" fill="#141414"/><rect x="284" y="110" width="20" height="6" fill="#141414"/>
       <rect class="prop" x="180" y="102" width="52" height="5" fill="#141414"/>
       <rect class="prop" x="268" y="102" width="52" height="5" fill="#141414"/>
@@ -441,8 +448,8 @@ button{font:inherit;color:inherit}
   <!-- split AC unit, opened -->
   <symbol id="ac" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
     <rect width="400" height="400" fill="#ffffff"/>
-    <rect x="40" y="120" width="320" height="110" fill="#e5e5e2"/>
-    <rect x="40" y="210" width="320" height="20" fill="#141414"/>
+    <rect x="40" y="120" width="320" height="110" rx="22" fill="#e5e5e2"/>
+    <rect x="40" y="210" width="320" height="20" rx="10" fill="#141414"/>
     <g fill="#141414"><rect x="70" y="140" width="6" height="56"/><rect x="90" y="140" width="6" height="56"/><rect x="110" y="140" width="6" height="56"/><rect x="130" y="140" width="6" height="56"/><rect x="150" y="140" width="6" height="56"/><rect x="170" y="140" width="6" height="56"/></g>
     <rect x="60" y="134" width="140" height="68" fill="url(#grime)" opacity=".85"/>
     <g fill="#d71920"><rect x="220" y="140" width="6" height="56"/><rect x="240" y="140" width="6" height="56"/><rect x="260" y="140" width="6" height="56"/><rect x="280" y="140" width="6" height="56"/><rect x="300" y="140" width="6" height="56"/><rect x="320" y="140" width="6" height="56"/></g>
