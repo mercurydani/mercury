@@ -68,7 +68,14 @@ button{font:inherit;color:inherit}
 
 /* =============== HERO BOARD =============== */
 .board{display:grid;gap:var(--gap);padding:var(--gap);min-height:100svh;grid-template-rows:64px auto minmax(280px,1fr);grid-template-columns:1fr 1fr}
-.bar{grid-column:1/-1;display:grid;grid-template-columns:64px 1fr auto;gap:var(--gap)}
+.bar{grid-column:1/-1;display:grid;grid-template-columns:64px 1fr auto auto;gap:var(--gap)}
+/* language switch */
+.lang{position:relative;display:flex;align-items:center;padding:6px;background:var(--tone-1);border-radius:999px}
+.lang button{position:relative;z-index:1;width:52px;height:52px;border:0;border-radius:999px;background:none;font-weight:700;font-size:var(--step-small);color:var(--ink);cursor:pointer;transition:color .25s,background-color .25s,transform .15s}
+.lang button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.lang button:active{transform:scale(.94)}
+.i18n-swap{animation:swap .35s var(--ease)}
+@keyframes swap{from{opacity:.25}to{opacity:1}}
 .tile{position:relative;overflow:hidden;background:var(--tone-1);border-radius:var(--r)}
 .tile--ink{background:var(--ink);color:var(--on-ink)}
 .tile--red{background:var(--red);color:#fff}
@@ -104,9 +111,10 @@ button{font:inherit;color:inherit}
 
 /* =============== SERVICES =============== */
 .services{padding:var(--section) var(--m) 0}
-.services-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-.services-head .axis-head{margin-left:0}
-.services-intro{margin:28px 0 0 calc(var(--axis) - var(--m) + 28px);max-width:44ch;color:var(--ink-2)}
+.services-head{display:grid;grid-template-columns:200px 1fr;column-gap:40px;align-items:end}
+.services-head .axis-head{grid-column:1/-1;margin-left:0;max-width:none}
+.services-intro{grid-column:2;margin-top:28px;padding-left:0;max-width:52ch;color:var(--ink-2)}
+@media (min-width:1101px){.services-head .axis-head{grid-column:1/2;grid-row:1;white-space:nowrap}.services-intro{grid-column:2;grid-row:1;justify-self:end;margin:0}}
 .services-body{display:grid;grid-template-columns:200px 1fr;gap:40px;margin-top:56px}
 .tabs{display:flex;flex-direction:column;gap:6px;position:sticky;top:16px;align-self:start}
 .tab{border-radius:var(--r-s);display:flex;flex-direction:column;justify-content:center;min-height:64px;padding:10px 16px;background:var(--tone-1);text-decoration:none;border:0;text-align:left;cursor:pointer;transition:background-color .18s,transform .18s var(--ease)}
@@ -116,7 +124,7 @@ button{font:inherit;color:inherit}
 .tab span{font-size:var(--step-small);color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--ink);color:#fff}
 .tab[aria-selected="true"] span{color:var(--on-ink-muted)}
-.tab--new b::after{content:" · новое";color:var(--red);font-weight:700}
+.tab--new b::after{content:" · " attr(data-new);color:var(--red);font-weight:700}
 .tab[aria-selected="true"].tab--new b::after{color:#ff6b6f}
 .panel{display:flex;flex-direction:column;gap:4px}
 .panel + .panel{margin-top:32px}
@@ -131,7 +139,7 @@ button{font:inherit;color:inherit}
 .pick{border-radius:999px;display:inline-flex;align-items:center;justify-content:center;min-height:48px;min-width:150px;padding:0 18px;border:0;background:var(--paper);font-weight:700;font-size:var(--step-small);cursor:pointer;transition:background-color .18s,color .18s,transform .15s var(--ease)}
 .pick:hover{background:var(--ink);color:#fff}
 .pick:active{transform:scale(.96)}
-.band.is-picked{background:var(--ink);color:#fff}
+.band.is-picked,.band.is-picked:nth-child(n){background:var(--ink);color:#fff}
 .band.is-picked p{color:var(--on-ink-muted)}
 .band.is-picked .pick{background:var(--red);color:#fff}
 .nojs-hide{display:none}
@@ -160,7 +168,9 @@ button{font:inherit;color:inherit}
 /* =============== SHOWCASE: drone =============== */
 .drone{border-radius:var(--r);margin:var(--section) var(--gap) 0;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;min-height:88svh;background:var(--tone-1)}
 .drone-pic{padding:40px;display:grid;place-items:center}
-.drone-pic .sq{border-radius:var(--r);overflow:hidden;width:100%;aspect-ratio:1;max-height:calc(88svh - 80px);max-width:calc(88svh - 80px)}
+.drone-pic .sq{position:relative;border-radius:var(--r);overflow:hidden;width:100%;aspect-ratio:1;max-height:calc(88svh - 80px);max-width:calc(88svh - 80px)}
+.scene{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .5s var(--ease)}
+.scene.is-on{opacity:1}
 .drone-text{display:flex;flex-direction:column;justify-content:space-between;gap:40px;padding:40px var(--m) 40px 0}
 .drone-tabs{display:flex;gap:28px;flex-wrap:wrap}
 .drone-tabs button{background:none;border:0;padding:6px 0;font-size:var(--step-body);font-weight:500;color:var(--muted);cursor:pointer;position:relative}
@@ -265,7 +275,7 @@ button{font:inherit;color:inherit}
 /* =============== TABLET =============== */
 @media (max-width:1100px){
   .nav{padding-left:24px}
-  .nav a:last-child{display:none}
+  .nav a:last-child,.nav a:nth-child(3){display:none}
   .services-body,.composer{grid-template-columns:170px 1fr;gap:24px}
   .composer-main{grid-template-columns:1fr}
   .band{grid-template-columns:1fr auto;grid-template-areas:"t b" "p b"}
@@ -283,7 +293,9 @@ button{font:inherit;color:inherit}
 @media (max-width:760px){
   :root{--axis:0px;--gap:6px}
   .board{height:auto;max-height:none;min-height:0;grid-template-columns:1fr;grid-template-rows:auto}
-  .bar{grid-template-columns:56px 1fr 56px;height:56px}
+  .bar{grid-template-columns:56px 1fr auto 56px;height:56px}
+  .lang{padding:4px}
+      .lang button{width:42px;height:48px}
   .nav{display:none}
   .bar .btn{display:none}
   .menu-btn{display:flex;align-items:center;justify-content:center;background:var(--ink);color:#fff;border:0;font-weight:700;font-size:var(--step-small);cursor:pointer;width:100%}
@@ -293,6 +305,9 @@ button{font:inherit;color:inherit}
   .name-tile{min-height:0;padding-top:56px}
   .bar .tile{border-radius:var(--r-s)}
   .menu-btn{border-radius:var(--r-s)}
+  .call-mini{white-space:nowrap}
+  .call-word{display:none}
+  @media (max-width:430px){.call-num{display:none}.call-word{display:inline}}
   .name-tile h1{font-size:clamp(2.75rem,13.4vw,4.5rem)}
   .board .pic{aspect-ratio:4/3}
   .board > .pic-b{order:6}
@@ -303,7 +318,8 @@ button{font:inherit;color:inherit}
   .axis-head{padding-left:22px;max-width:none}
   .axis-head::before{width:8px}
   .services-head .btn{width:100%}
-  .services-intro{margin-left:22px}
+  .services-head{display:block}
+  .services-intro{margin-left:0}
   .services-body{grid-template-columns:1fr;gap:16px;margin-top:32px}
   .tabs{position:static;display:grid;grid-template-columns:1fr 1fr}
   .tabs::-webkit-scrollbar{display:none}
@@ -375,6 +391,18 @@ button{font:inherit;color:inherit}
       <path d="M40 20 L60 40 L40 60 L20 40Z" fill="#b9b2a3"/>
       <path d="M40 31 L49 40 L40 49 L31 40Z" fill="#8c5b55"/>
     </pattern>
+
+  <!-- the drone, centred on its nozzle -->
+  <g id="drone-unit">
+    <rect x="-54" y="-21" width="20" height="6" fill="#141414"/><rect x="34" y="-21" width="20" height="6" fill="#141414"/>
+    <rect class="prop" x="-70" y="-29" width="52" height="5" rx="2.5" fill="#141414"/>
+    <rect class="prop" x="18" y="-29" width="52" height="5" rx="2.5" fill="#141414"/>
+    <rect x="-30" y="-14" width="60" height="28" rx="11" fill="#d71920"/>
+    <rect x="-7" y="12" width="14" height="12" rx="3" fill="#141414"/>
+  </g>
+  <pattern id="tiles" width="40" height="24" patternUnits="userSpaceOnUse"><rect width="40" height="24" fill="#d71920"/><rect y="19" width="40" height="5" fill="#a5131a"/><rect x="19" width="3" height="19" fill="#a5131a"/></pattern>
+  <pattern id="moss" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#7f8268"/><rect x="2" y="3" width="4" height="4" rx="2" fill="#62664f"/><rect x="10" y="9" width="3" height="3" rx="1.5" fill="#9a9d80"/></pattern>
+  <pattern id="planks" width="120" height="34" patternUnits="userSpaceOnUse"><rect width="120" height="34" fill="#cbc6bb"/><rect y="30" width="120" height="4" fill="#a8a296"/><rect x="70" width="4" height="30" fill="#a8a296"/></pattern>
   </defs>
 
   <!-- the logo: red bar, vertical wordmark, the B without its stem -->
@@ -436,12 +464,68 @@ button{font:inherit;color:inherit}
       <rect x="300" y="70" width="220" height="10"/>
     </g>
     <g class="hovering">
-      <polygon class="spray" points="250,150 300,150 300,330 250,330" fill="#ffffff" opacity=".6"/>
-      <rect x="222" y="118" width="56" height="26" rx="10" fill="#d71920"/>
-      <rect x="196" y="110" width="20" height="6" fill="#141414"/><rect x="284" y="110" width="20" height="6" fill="#141414"/>
-      <rect class="prop" x="180" y="102" width="52" height="5" fill="#141414"/>
-      <rect class="prop" x="268" y="102" width="52" height="5" fill="#141414"/>
-      <rect x="274" y="140" width="26" height="8" fill="#141414"/>
+      <polygon class="spray" points="294,154 306,154 336,340 264,340" fill="#ffffff" opacity=".6"/>
+      <use href="#drone-unit" x="300" y="130"/>
+    </g>
+  </symbol>
+
+
+  <!-- a red-tiled roof, the drone washing the moss off -->
+  <symbol id="roof" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice">
+    <rect width="600" height="600" fill="#e5e5e2"/>
+    <rect x="392" y="190" width="38" height="110" rx="4" fill="#2a2a2a"/>
+    <rect x="130" y="330" width="340" height="300" rx="14" fill="#d6d6d2"/>
+    <rect x="172" y="392" width="84" height="72" rx="8" fill="#141414"/><rect x="344" y="392" width="84" height="72" rx="8" fill="#141414"/>
+    <rect x="266" y="478" width="68" height="140" rx="8" fill="#2a2a2a"/>
+    <clipPath id="roof-clip"><path d="M84 350 L300 172 L516 350 Z"/></clipPath>
+    <g clip-path="url(#roof-clip)">
+      <rect x="80" y="160" width="440" height="200" fill="url(#tiles)"/>
+      <rect x="80" y="160" width="220" height="200" fill="url(#moss)"/>
+    </g>
+    <rect x="70" y="342" width="460" height="14" rx="7" fill="#141414"/>
+    <g class="hovering">
+      <polygon class="spray" points="294,122 306,122 336,300 264,300" fill="#ffffff" opacity=".6"/>
+      <use href="#drone-unit" x="300" y="98"/>
+    </g>
+  </symbol>
+
+  <!-- a terrace deck, half still green with grime -->
+  <symbol id="terrace" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice">
+    <rect width="600" height="600" fill="#e5e5e2"/>
+    <rect x="0" y="0" width="600" height="330" fill="#d6d6d2"/>
+    <rect x="48" y="96" width="180" height="234" rx="10" fill="#141414"/>
+    <rect x="135" y="96" width="6" height="234" fill="#2a2a2a"/>
+    <rect x="0" y="330" width="600" height="270" fill="url(#planks)"/>
+    <rect x="0" y="330" width="300" height="270" fill="url(#moss)" opacity=".9"/>
+    <rect x="458" y="250" width="72" height="80" rx="14" fill="#d71920"/>
+    <rect x="482" y="196" width="24" height="60" rx="12" fill="#2a2a2a"/>
+    <rect x="0" y="470" width="600" height="12" rx="6" fill="#141414"/>
+    <g fill="#141414"><rect x="40" y="482" width="10" height="130"/><rect x="160" y="482" width="10" height="130"/><rect x="280" y="482" width="10" height="130"/><rect x="400" y="482" width="10" height="130"/><rect x="520" y="482" width="10" height="130"/></g>
+    <g class="hovering">
+      <polygon class="spray" points="294,142 306,142 350,440 250,440" fill="#ffffff" opacity=".6"/>
+      <use href="#drone-unit" x="300" y="118"/>
+    </g>
+  </symbol>
+
+  <!-- a pool, half the water still murky -->
+  <symbol id="pool" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice">
+    <rect width="600" height="600" fill="#d6d6d2"/>
+    <rect x="40" y="70" width="150" height="60" rx="18" fill="#141414"/>
+    <rect x="410" y="70" width="150" height="60" rx="18" fill="#2a2a2a"/>
+    <rect x="66" y="196" width="468" height="350" rx="52" fill="#ffffff"/>
+    <clipPath id="pool-clip"><rect x="90" y="220" width="420" height="302" rx="36"/></clipPath>
+    <g clip-path="url(#pool-clip)">
+      <rect x="90" y="220" width="420" height="302" fill="#8fc3d6"/>
+      <rect x="90" y="220" width="210" height="302" fill="#7b8a63"/>
+      <rect x="110" y="260" width="40" height="40" rx="20" fill="#62704c"/><rect x="190" y="400" width="56" height="56" rx="28" fill="#62704c"/>
+      <rect x="336" y="282" width="110" height="9" rx="4.5" fill="#ffffff" opacity=".75"/>
+      <rect x="372" y="370" width="90" height="9" rx="4.5" fill="#ffffff" opacity=".75"/>
+      <rect x="326" y="452" width="120" height="9" rx="4.5" fill="#ffffff" opacity=".75"/>
+    </g>
+    <g fill="#141414"><rect x="470" y="196" width="8" height="70" rx="4"/><rect x="494" y="196" width="8" height="70" rx="4"/></g>
+    <g class="hovering">
+      <polygon class="spray" points="294,172 306,172 340,330 260,330" fill="#ffffff" opacity=".6"/>
+      <use href="#drone-unit" x="300" y="148"/>
     </g>
   </symbol>
 
@@ -468,7 +552,8 @@ button{font:inherit;color:inherit}
       <a href="#faq">Вопросы</a>
       <a href="#contact">Контакты</a>
     </nav>
-    <a class="call-mini" href="tel:+381629749603" hidden>+381 62 974 9603</a>
+    <a class="call-mini" href="tel:+381629749603" hidden><span class="call-num">+381 62 974 9603</span><span class="call-word">Позвонить</span></a>
+    <div class="lang" role="group" aria-label="Язык" data-lang="ru"><button type="button" data-lang="ru" aria-pressed="true" lang="ru">RU</button><button type="button" data-lang="sr" aria-pressed="false" lang="sr">SR</button></div>
     <a class="btn" href="https://t.me/brocleaning_srb" target="_blank" rel="noopener">Написать в Telegram <span class="arrow" aria-hidden="true">→</span></a>
     <button class="menu-btn" type="button" aria-controls="nav" aria-expanded="false">Меню</button>
   </div>
@@ -495,9 +580,9 @@ button{font:inherit;color:inherit}
 <!-- =============== SERVICES + REQUEST BUILDER =============== -->
 <section class="services" id="services" aria-labelledby="services-h">
   <div class="services-head">
-    <h2 class="axis-head rise" id="services-h" style="margin-left:calc(var(--axis) - var(--m))">Что чистим.<br><span class="soft">Отметьте нужное.</span></h2>
-  </div>
+    <h2 class="axis-head rise" id="services-h">Что чистим.<br><span class="soft">Отметьте нужное.</span></h2>
   <p class="services-intro rise">Нажмите «В заявку» у всего, что нужно почистить. Внизу соберётся готовое сообщение: останется приложить фото и отправить.</p>
+  </div>
 
   <div class="services-body">
     <div class="tabs" role="tablist" aria-label="Категории услуг">
@@ -507,7 +592,7 @@ button{font:inherit;color:inherit}
       <a class="tab" role="tab" href="#p-windows" id="t-windows" aria-controls="p-windows" aria-selected="false"><b>Окна</b><span>стёкла, рамы, балконы</span></a>
       <a class="tab" role="tab" href="#p-ozone" id="t-ozone" aria-controls="p-ozone" aria-selected="false"><b>Запахи</b><span>озон, сухой туман</span></a>
       <a class="tab" role="tab" href="#p-car" id="t-car" aria-controls="p-car" aria-selected="false"><b>Салон авто</b><span>чистка и дезинфекция</span></a>
-      <a class="tab tab--new" role="tab" href="#p-facade" id="t-facade" aria-controls="p-facade" aria-selected="false"><b>Фасады</b><span>дрон и высокое давление</span></a>
+      <a class="tab tab--new" role="tab" href="#p-facade" id="t-facade" aria-controls="p-facade" aria-selected="false"><b data-new="новое">Фасады</b><span>дрон и высокое давление</span></a>
     </div>
 
     <div class="panels">
@@ -555,7 +640,7 @@ button{font:inherit;color:inherit}
 
   <!-- the live thing: the request writes itself -->
   <div class="composer" id="request">
-    <h3>Ваша заявка<br><span class="count" id="count">пока пусто</span></h3>
+    <h3><span>Ваша заявка</span><br><span class="count" id="count">пока пусто</span></h3>
     <div class="composer-main">
       <div>
         <label for="msg">Сообщение. Можно дописать район и удобное время</label>
@@ -576,14 +661,14 @@ button{font:inherit;color:inherit}
 <!-- =============== NEW: DRONE =============== -->
 <section class="drone" id="drone" aria-labelledby="drone-h">
   <div class="drone-pic">
-    <div class="sq shutter" role="img" aria-label="Рисунок: дрон моет фасад многоэтажного дома, вымытая половина светлее"><svg viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice"><use href="#facade"/></svg></div>
+    <div class="sq shutter" id="scenes" role="img" aria-label="Рисунок: дрон моет фасад многоэтажного дома, вымытая половина светлее"><svg class="scene is-on" data-scene="facade" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice"><use href="#facade"/></svg><svg class="scene" data-scene="roof" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice"><use href="#roof"/></svg><svg class="scene" data-scene="terrace" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice"><use href="#terrace"/></svg><svg class="scene" data-scene="pool" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice"><use href="#pool"/></svg></div>
   </div>
   <div class="drone-text">
     <div class="drone-tabs" role="group" aria-label="Что моем">
-      <button type="button" aria-pressed="true" data-t="Фасад многоэтажного дома, офиса или частного дома. Дрон подаёт моющий раствор и воду под давлением туда, куда раньше поднимали альпинистов.">Фасады</button>
-      <button type="button" aria-pressed="false" data-t="Черепица, металл и плоские кровли: мох, налёт и грязь после зимы. Без хождения по крыше.">Крыши</button>
-      <button type="button" aria-pressed="false" data-t="Плитка, дерево и камень террас: высокое давление снимает въевшуюся грязь и зелёный налёт.">Террасы</button>
-      <button type="button" aria-pressed="false" data-t="Стационарные бассейны: чаша, бортики и площадка вокруг, перед сезоном или после него.">Бассейны</button>
+      <button type="button" data-scene="facade" data-h="Фасады моем с дрона" data-label="Рисунок: дрон моет фасад многоэтажного дома, вымытая половина светлее" aria-pressed="true" data-t="Фасад многоэтажного дома, офиса или частного дома. Дрон подаёт моющий раствор и воду под давлением туда, куда раньше поднимали альпинистов.">Фасады</button>
+      <button type="button" data-scene="roof" data-h="Крыши моем с дрона" data-label="Рисунок: дрон моет черепичную крышу, половина ещё во мху" aria-pressed="false" data-t="Черепица, металл и плоские кровли: мох, налёт и грязь после зимы. Без хождения по крыше.">Крыши</button>
+      <button type="button" data-scene="terrace" data-h="Террасы моем с дрона" data-label="Рисунок: дрон моет террасу, половина настила ещё грязная" aria-pressed="false" data-t="Плитка, дерево и камень террас: высокое давление снимает въевшуюся грязь и зелёный налёт.">Террасы</button>
+      <button type="button" data-scene="pool" data-h="Бассейны чистим с дрона" data-label="Рисунок: дрон над бассейном, половина воды ещё мутная" aria-pressed="false" data-t="Стационарные бассейны: чаша, бортики и площадка вокруг, перед сезоном или после него.">Бассейны</button>
     </div>
     <div>
       <h2 class="rise" id="drone-h">Фасады моем с дрона</h2>
@@ -607,7 +692,7 @@ button{font:inherit;color:inherit}
     <div><b>Гарантия</b>на результат</div>
   </div>
   <div class="about-text">
-    <p class="rise"><span class="dropcap" aria-hidden="true"><svg viewBox="0 0 150 200"><use href="#logo"/></svg></span><strong>BroCleaning</strong> больше трёх лет чистит дома и машины Белграда. Средства у нас экологичные и сертифицированные, а на результат мы даём гарантию.</p>
+    <p class="rise"><span class="dropcap" aria-hidden="true"><svg viewBox="0 0 150 200"><use href="#logo"/></svg></span><span><strong>BroCleaning</strong> больше трёх лет чистит дома и машины Белграда. Средства у нас экологичные и сертифицированные, а на результат мы даём гарантию.</span></p>
     <p class="rise">Наши средства безопасны для детей, животных и аллергиков. Возвращаем дому свежесть без пыли, пятен и неприятных запахов. Цену называем до выезда, по фото: вы заранее знаете, сколько заплатите, а мы знаем, что взять с собой.</p>
   </div>
 </section>
@@ -685,10 +770,38 @@ button{font:inherit;color:inherit}
   window.addEventListener('load',function(){requestAnimationFrame(function(){root.classList.add('loaded')})});
   setTimeout(function(){root.classList.add('loaded')},1200);
 
+  /* ---------- language: ru / sr (latin) ---------- */
+  var SR={"BroCleaning — химчистка и клининг в Белграде": "BroCleaning — dubinsko pranje i čišćenje u Beogradu", "BroCleaning, наверх": "BroCleaning, na vrh", "Разделы": "Odeljci", "Язык": "Jezik", "Услуги": "Usluge", "Фасады": "Fasade", "Как работаем": "Kako radimo", "Вопросы": "Pitanja", "Контакты": "Kontakt", "Написать в Telegram <span class=\"arrow\" aria-hidden=\"true\">→</span>": "Pišite na Telegram <span class=\"arrow\" aria-hidden=\"true\">→</span>", "К услугам": "Na usluge", "Химчистка<br>с выездом": "Čistimo<br>kod vas", "Мебель, ковры, кондиционеры, окна, салоны авто и фасады по всему Белграду. Пришлите фото, назовём точную цену.": "Nameštaj, tepisi, klime, prozori, enterijer automobila i fasade, u celom Beogradu. Pošaljite fotografiju, a mi kažemo tačnu cenu.", "Рисунок: диван, левая половина ещё в пыли, правая уже чистая": "Ilustracija: kauč, leva polovina još prašnjava, desna već čista", "Рисунок: пиротский ковёр-килим, наполовину вычищенный": "Ilustracija: pirotski ćilim, napola očišćen", "Отправьте фото, и мы посчитаем точную стоимость.": "Pošaljite fotografiju i izračunaćemo tačnu cenu.", "Собрать заявку": "Napravite upit", "Больше трёх лет работы и гарантия качества.": "Više od tri godine rada i garancija kvaliteta.", "Почему нам доверяют": "Zašto nam veruju", "Что чистим.<br><span class=\"soft\">Отметьте нужное.</span>": "Šta čistimo.<br><span class=\"soft\">Označite šta treba.</span>", "Нажмите «В заявку» у всего, что нужно почистить. Внизу соберётся готовое сообщение: останется приложить фото и отправить.": "Kliknite „U upit“ pored svega što treba očistiti. Ispod će se složiti gotova poruka: ostaje samo da dodate fotografiju i pošaljete.", "Категории услуг": "Kategorije usluga", "Мебель и текстиль": "Nameštaj i tekstil", "диваны, матрасы, шторы": "kauči, dušeci, zavese", "Ковры": "Tepisi", "ковры и ковролин": "tepisi i itisoni", "Кондиционеры": "Klima uređaji", "сплит-системы": "split sistemi", "Окна": "Prozori", "стёкла, рамы, балконы": "stakla, okviri, terase", "Запахи": "Mirisi", "озон, сухой туман": "ozon, suva magla", "Салон авто": "Enterijer auta", "чистка и дезинфекция": "čišćenje i dezinfekcija", "дрон и высокое давление": "dron i visok pritisak", "Диваны и кресла": "Kauči i fotelje", "Химчистка обивки из ткани, велюра и микрофибры: пятна, разводы, пыль и запахи.": "Dubinsko pranje štofa, velura i mikrofibera: fleke, mrlje, prašina i mirisi.", "Матрасы": "Dušeci", "Глубокая чистка с двух сторон: пятна, пыль, пылевые клещи, запах.": "Dubinsko čišćenje s obe strane: fleke, prašina, grinje, miris.", "Шторы и портьеры": "Zavese i draperije", "Бережная чистка штор и портьер без лишней нагрузки на ткань.": "Pažljivo čišćenje zavesa i draperija, bez nepotrebnog opterećenja tkanine.", "Стулья и изголовья": "Stolice i uzglavlja", "Мягкие стулья, пуфы, изголовья кроватей и детская мебель.": "Tapacirane stolice, tabure, uzglavlja kreveta i dečiji nameštaj.", "Глубокая чистка ворса: от пиротского килима до современного ковра с длинным ворсом.": "Dubinsko pranje vlakana: od pirotskog ćilima do modernog čupavog tepiha.", "Ковролин": "Itison", "Квартиры, офисы и лестничные клетки: пятна, протоптанные дорожки, запах животных.": "Stanovi, kancelarije i stepeništa: fleke, utabane staze, miris ljubimaca.", "Сплит-системы": "Split sistemi", "Чистка фильтров, теплообменника и вентилятора, дезинфекция. Перед жарой, чтобы не дышать пылью прошлого лета.": "Čišćenje filtera, izmenjivača i ventilatora, dezinfekcija. Pre vrućina, da ne udišete prašinu od prošlog leta.", "Несколько блоков": "Više jedinica", "Квартира или офис с несколькими кондиционерами, всё за один выезд.": "Stan ili kancelarija sa više klima uređaja, sve u jednom dolasku.", "Стёкла с двух сторон, рамы, подоконники и отливы после зимы, ремонта или кошавы с пылью.": "Stakla s obe strane, okviri, prozorske daske i limovi posle zime, renoviranja ili košave s prašinom.", "Балконы и лоджии": "Terase i lođe", "Остекление, перила, пол и всё, что скопилось за сезон.": "Staklo, ograde, pod i sve što se nakupilo tokom sezone.", "Витрины": "Izlozi", "Стеклянные фасады магазинов, кафе и офисов.": "Staklene fasade prodavnica, kafića i kancelarija.", "Озонирование": "Ozoniranje", "Убирает запахи табака, животных, сырости, ремонта и «старого воздуха». Дезинфицирует помещение после болезни.": "Uklanja mirise duvana, ljubimaca, vlage, renoviranja i „ustajalog vazduha“. Dezinfikuje prostor posle bolesti.", "Сухой туман": "Suva magla", "Проникает в текстиль и щели, куда не достать тряпкой, и нейтрализует запах там, где он живёт.": "Prodire u tekstil i pukotine do kojih krpa ne dopire i neutrališe miris tamo gde nastaje.", "Салон целиком": "Ceo enterijer", "Глубокая очистка и дезинфекция: сиденья, потолок, ковры, багажник.": "Dubinsko čišćenje i dezinfekcija: sedišta, plafon, patosnice, prtljažnik.", "Озон для авто": "Ozon za auto", "Запах сигарет, собаки или пролитого кофе уходит из салона вместе с бактериями.": "Miris cigareta, psa ili prosute kafe nestaje iz kabine zajedno s bakterijama.", "Мойка фасадов дроном и аппаратом высокого давления, без лесов и альпинистов.": "Pranje fasada dronom i mašinom pod visokim pritiskom, bez skela i alpinista.", "Крыши и террасы": "Krovovi i terase", "Мох, налёт, пыль и следы зимы на высоте и на открытых площадках.": "Mahovina, naslage, prašina i tragovi zime, na visini i na otvorenim površinama.", "Бассейны": "Bazeni", "Стационарные бассейны: чаша, бортики и площадка вокруг.": "Ukopani bazeni: školjka, ivice i površina oko bazena.", "Ваша заявка": "Vaš upit", "Сообщение. Можно дописать район и удобное время": "Poruka. Možete dopisati deo grada i vreme koje vam odgovara", "Для Telegram и Viber текст скопируется: вставьте его в чат и приложите фото.": "Za Telegram i Viber tekst će se kopirati: nalepite ga u čat i dodajte fotografiju.", "Текст скопирован. Вставьте его в чат и приложите фото.": "Tekst je kopiran. Nalepite ga u čat i dodajte fotografiju.", "К заявке <span class=\"arrow\" aria-hidden=\"true\">→</span>": "Na upit <span class=\"arrow\" aria-hidden=\"true\">→</span>", "В заявку": "U upit", "Убрать": "Ukloni", "пока пусто": "još prazno", "Меню": "Meni", "Закрыть": "Zatvori", "Здравствуйте! Хочу рассчитать чистку. Прикладываю фото.": "Zdravo! Želim procenu čišćenja. Šaljem fotografiju.", "Что почистить:": "Šta treba očistiti:", "Район:": "Deo grada:", "Удобное время:": "Termin:", "В заявке: ": "U upitu: ", "Диван / кресла": "Kauč / fotelje", "Матрас": "Dušek", "Шторы": "Zavese", "Стулья / изголовье": "Stolice / uzglavlje", "Ковёр": "Tepih", "Несколько кондиционеров": "Više klima uređaja", "Кондиционер": "Klima uređaj", "Балкон": "Terasa", "Озон салона": "Ozon kabine", "Фасад": "Fasada", "Крыша / терраса": "Krov / terasa", "Бассейн": "Bazen", "Что моем": "Šta peremo", "Крыши": "Krovovi", "Террасы": "Terase", "Фасады моем с дрона": "Fasade peremo dronom", "Фасад многоэтажного дома, офиса или частного дома. Дрон подаёт моющий раствор и воду под давлением туда, куда раньше поднимали альпинистов.": "Fasada zgrade, poslovnog objekta ili kuće. Dron nanosi sredstvo i vodu pod pritiskom tamo gde su ranije morali alpinisti.", "Черепица, металл и плоские кровли: мох, налёт и грязь после зимы. Без хождения по крыше.": "Crep, lim i ravni krovovi: mahovina, naslage i prljavština posle zime. Bez hodanja po krovu.", "Плитка, дерево и камень террас: высокое давление снимает въевшуюся грязь и зелёный налёт.": "Pločice, drvo i kamen na terasama: visok pritisak skida ukorenjenu prljavštinu i zelene naslage.", "Стационарные бассейны: чаша, бортики и площадка вокруг, перед сезоном или после него.": "Ukopani bazeni: školjka, ivice i površina oko bazena, pre ili posle sezone.", "Новая услуга. Пришлите фото здания и адрес — оценим площадь и цену.": "Nova usluga. Pošaljite fotografiju objekta i adresu, a mi procenjujemo površinu i cenu.", "Фото в Telegram <span class=\"arrow\" aria-hidden=\"true\">→</span>": "Fotografija na Telegram <span class=\"arrow\" aria-hidden=\"true\">→</span>", "Позвонить <span class=\"arrow\" aria-hidden=\"true\">→</span>": "Pozovite <span class=\"arrow\" aria-hidden=\"true\">→</span>", "Рисунок: дрон моет фасад многоэтажного дома, вымытая половина светлее": "Ilustracija: dron pere fasadu zgrade, oprana polovina je svetlija", "Рисунок: дрон моет черепичную крышу, половина ещё во мху": "Ilustracija: dron pere krov od crepa, polovina je još pod mahovinom", "Рисунок: дрон моет террасу, половина настила ещё грязная": "Ilustracija: dron pere terasu, polovina poda je još prljava", "Рисунок: дрон над бассейном, половина воды ещё мутная": "Ilustracija: dron iznad bazena, polovina vode je još mutna", "О нас": "O nama", "<b>Белград</b>и пригороды": "<b>Beograd</b>i okolina", "<b>3+ года</b>работаем": "<b>3+ godine</b>radimo", "<b>Гарантия</b>на результат": "<b>Garancija</b>na rezultat", "<strong>BroCleaning</strong> больше трёх лет чистит дома и машины Белграда. Средства у нас экологичные и сертифицированные, а на результат мы даём гарантию.": "<strong>BroCleaning</strong> više od tri godine čisti domove i automobile u Beogradu. Sredstva su nam ekološka i sertifikovana, a na rezultat dajemo garanciju.", "Наши средства безопасны для детей, животных и аллергиков. Возвращаем дому свежесть без пыли, пятен и неприятных запахов. Цену называем до выезда, по фото: вы заранее знаете, сколько заплатите, а мы знаем, что взять с собой.": "Naša sredstva su bezbedna za decu, ljubimce i alergičare. Vraćamo domu svežinu bez prašine, fleka i neprijatnih mirisa. Cenu kažemo pre dolaska, na osnovu fotografije: unapred znate koliko ćete platiti, a mi znamo šta da ponesemo.", "От фото<br>до чистоты": "Od fotografije<br>do čistoće", "Пятна, пыль и запахи: хаос, который сложно оценить на словах. Поэтому всё начинается с фотографии.": "Fleke, prašina i mirisi: haos koji je teško opisati rečima. Zato sve počinje fotografijom.", "Рисунок: разбросанные квадраты сжимаются в ленту и выстраиваются в ровные красные ряды": "Ilustracija: razbacani kvadrati se skupljaju u traku i slažu u uredne crvene redove", "Фото": "Fotografija", "Снимите, что нужно почистить, и отправьте в Telegram, Viber или WhatsApp.": "Fotografišite šta treba očistiti i pošaljite na Telegram, Viber ili WhatsApp.", "Расчёт": "Procena", "Называем точную стоимость и время до выезда, без «посмотрим на месте».": "Kažemo tačnu cenu i vreme pre dolaska, bez „videćemo na licu mesta“.", "Чистота": "Čistoća", "Приезжаем со своим оборудованием и средствами. На результат даём гарантию.": "Dolazimo sa svojom opremom i sredstvima. Na rezultat dajemo garanciju.", "Частые вопросы": "Česta pitanja", "Сколько стоит чистка?": "Koliko košta čišćenje?", "Зависит от размера, ткани и загрязнения. Пришлите фото, и мы назовём точную цену до выезда, и она не вырастет на месте.": "Zavisi od veličine, tkanine i stepena prljavštine. Pošaljite fotografiju i reći ćemo tačnu cenu pre dolaska, koja se na licu mesta neće povećati.", "Это безопасно для детей и животных?": "Da li je bezbedno za decu i ljubimce?", "Да. Мы используем экологичные сертифицированные средства, безопасные для детей, животных и аллергиков.": "Da. Koristimo ekološka sertifikovana sredstva, bezbedna za decu, ljubimce i alergičare.", "Сколько сохнет диван после химчистки?": "Koliko se suši kauč posle pranja?", "Обычно несколько часов, зависит от ткани и проветривания. Точнее скажем, когда увидим фото.": "Obično nekoliko sati, zavisi od tkanine i provetravanja. Tačnije ćemo reći kada vidimo fotografiju.", "Можно ли быть дома во время озонирования?": "Da li možete biti kod kuće tokom ozoniranja?", "Нет: на время обработки людям и животным нужно выйти. После проветриваем, и в помещение можно возвращаться.": "Ne: tokom tretmana ljudi i ljubimci treba da izađu. Posle provetravamo i u prostor se možete vratiti.", "Что даёт гарантия?": "Šta pokriva garancija?", "Если результат вас не устроил, сообщите нам: приедем и исправим.": "Ako niste zadovoljni rezultatom, javite nam: doći ćemo i ispraviti.", "Куда вы выезжаете?": "Gde dolazite?", "По Белграду и пригородам. Адрес и удобное время напишите в сообщении вместе с фото.": "Po Beogradu i okolini. Adresu i termin napišite u poruci zajedno sa fotografijom.", "Диван после кота или ковёр после гостей? Пришлите фото, ответим с ценой.": "Kauč posle mačke ili tepih posle gostiju? Pošaljite fotografiju, odgovaramo sa cenom.", "Рисунок: открытый кондиционер, половина решётки вычищена": "Ilustracija: otvoren klima uređaj, polovina rešetke očišćena", "Куда писать?": "Gde da pišete?", "Белград. Пишите в любое время, ответим в течение дня.": "Beograd. Pišite bilo kada, odgovaramo u toku dana.", "<b>BroCleaning</b>Химчистка и клининг в Белграде": "<b>BroCleaning</b>Dubinsko pranje i čišćenje u Beogradu", "<b>Выезд</b>Белград и пригороды": "<b>Dolazak</b>Beograd i okolina", "<b>Расчёт</b>по фото, до выезда": "<b>Procena</b>po fotografiji, pre dolaska", "Наверх": "Na vrh", "Химчистка, клининг, озон, фасады": "Pranje nameštaja, čišćenje, ozon, fasade", "Химчистка обивки, ковров и матрасов, чистка кондиционеров, мытьё окон, озонирование, химчистка салона авто и мойка фасадов с дрона в Белграде. Пришлите фото — посчитаем точную стоимость.": "Dubinsko pranje nameštaja, tepiha i dušeka, čišćenje klima uređaja, pranje prozora, ozoniranje, čišćenje enterijera automobila i pranje fasada dronom u Beogradu. Pošaljite fotografiju i izračunaćemo tačnu cenu.", "новое": "novo", "Београд · 2026": "Beograd · 2026", "Крыши моем с дрона": "Krovove peremo dronom", "Террасы моем с дрона": "Terase peremo dronom", "Бассейны чистим с дрона": "Bazene čistimo dronom", "Позвонить": "Pozovite"};
+  var lang='ru';
+  function t(ru){return lang==='sr'&&SR[ru]?SR[ru]:ru}
+  function norm(x){return x.replace(/\s+/g,' ').trim()}
+  var texts=[],attrs=[],SKIP='script,style,svg,textarea,.pick,#count,#minibar-text,#drone-t,#drone-h,.menu-btn,.lang';
+  (function walk(el){[].forEach.call(el.children,function(c){
+    if(c.matches(SKIP))return;
+    var k=norm(c.innerHTML);
+    if(SR[k]){texts.push([c,c.innerHTML,SR[k]]);return}
+    walk(c);
+  })})(document.body);
+  document.querySelectorAll('[aria-label],[data-t],[data-label],[data-h],[data-new]').forEach(function(el){['aria-label','data-t','data-label','data-h','data-new'].forEach(function(a){var v=el.getAttribute(a);if(v&&SR[norm(v)])attrs.push([el,a,v,SR[norm(v)]])})});
+  var meta=document.querySelector('meta[name=description]'),metaRu=meta.content,titleRu=document.title;
+  var META_SR="Dubinsko pranje nameštaja, tepiha i dušeka, čišćenje klima uređaja, pranje prozora, ozoniranje, čišćenje enterijera automobila i pranje fasada dronom u Beogradu. Pošaljite fotografiju i izračunaćemo tačnu cenu.";
+  var langBox=document.querySelector('.lang');
+  function setLang(l,animate){
+    lang=l;root.lang=l==='sr'?'sr-Latn':'ru';
+    texts.forEach(function(x){x[0].innerHTML=l==='sr'?x[2]:x[1];if(animate&&!reduce){x[0].classList.remove('i18n-swap');void x[0].offsetWidth;x[0].classList.add('i18n-swap')}});
+    attrs.forEach(function(x){x[0].setAttribute(x[1],l==='sr'?x[3]:x[2])});
+    document.title=l==='sr'?SR[titleRu]||titleRu:titleRu;meta.content=l==='sr'?META_SR:metaRu;
+    langBox.dataset.lang=l;langBox.setAttribute('aria-label',t('Язык'));
+    [].forEach.call(langBox.querySelectorAll('button'),function(b){b.setAttribute('aria-pressed',b.dataset.lang===l)});
+    try{localStorage.setItem('bc-lang',l)}catch(e){}
+    if(window.onLang)window.onLang();
+  }
+  [].forEach.call(langBox.querySelectorAll('button'),function(b){b.addEventListener('click',function(){if(b.dataset.lang!==lang)setLang(b.dataset.lang,true)})});
+
   /* mobile menu */
   var menuBtn=document.querySelector('.menu-btn'),nav=document.getElementById('nav');
-  menuBtn.addEventListener('click',function(){var o=nav.classList.toggle('open');menuBtn.setAttribute('aria-expanded',o);menuBtn.textContent=o?'Закрыть':'Меню'});
-  nav.addEventListener('click',function(e){if(e.target.tagName==='A'){nav.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');menuBtn.textContent='Меню'}});
+  menuBtn.addEventListener('click',function(){var o=nav.classList.toggle('open');menuBtn.setAttribute('aria-expanded',o);menuBtn.textContent=o?t('Закрыть'):t('Меню')});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A'){nav.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');menuBtn.textContent=t('Меню')}});
 
   /* tabs */
   var tabs=[].slice.call(document.querySelectorAll('.tab')),panels=[].slice.call(document.querySelectorAll('.panel'));
@@ -706,17 +819,17 @@ button{font:inherit;color:inherit}
   var picked=[],msg=document.getElementById('msg'),count=document.getElementById('count'),bar=document.getElementById('minibar'),barText=document.getElementById('minibar-text'),edited=false;
   var phone='381629749603';
   msg.addEventListener('input',function(){edited=true});
-  function plural(n){var a=n%10,b=n%100;if(a===1&&b!==11)return'позиция';if(a>=2&&a<=4&&(b<12||b>14))return'позиции';return'позиций'}
+  function plural(n){var a=n%10,b=n%100,one=a===1&&b!==11,few=a>=2&&a<=4&&(b<12||b>14);if(lang==='sr')return one?'stavka':few?'stavke':'stavki';return one?'позиция':few?'позиции':'позиций'}
   function compose(){
-    var lines=['Здравствуйте! Хочу рассчитать чистку. Прикладываю фото.'];
-    if(picked.length){lines.push('');lines.push('Что почистить:');picked.forEach(function(p){lines.push('— '+p)})}
-    lines.push('');lines.push('Район:');lines.push('Удобное время:');
+    var lines=[t('Здравствуйте! Хочу рассчитать чистку. Прикладываю фото.')];
+    if(picked.length){lines.push('');lines.push(t('Что почистить:'));picked.forEach(function(p){lines.push('— '+t(p))})}
+    lines.push('');lines.push(t('Район:'));lines.push(t('Удобное время:'));
     return lines.join('\n');
   }
   function refresh(){
     if(!edited)msg.value=compose();
-    count.textContent=picked.length?picked.length+' '+plural(picked.length):'пока пусто';
-    barText.textContent=picked.length?'В заявке: '+picked.join(', '):'';
+    count.textContent=picked.length?picked.length+' '+plural(picked.length):t('пока пусто');
+    barText.textContent=picked.length?t('В заявке: ')+picked.map(t).join(', '):'';
     var r=document.getElementById('request').getBoundingClientRect();
     bar.classList.toggle('show',picked.length>0&&r.top>innerHeight);
     document.getElementById('send-wa').href='https://wa.me/'+phone+'?text='+encodeURIComponent(msg.value);
@@ -724,8 +837,8 @@ button{font:inherit;color:inherit}
   document.querySelectorAll('.pick').forEach(function(b){
     b.addEventListener('click',function(){
       var item=b.dataset.item,i=picked.indexOf(item),band=b.closest('.band');
-      if(i<0){picked.push(item);b.textContent='Убрать';b.setAttribute('aria-pressed','true');band.classList.add('is-picked')}
-      else{picked.splice(i,1);b.textContent='В заявку';b.setAttribute('aria-pressed','false');band.classList.remove('is-picked')}
+      if(i<0){picked.push(item);b.textContent=t('Убрать');b.setAttribute('aria-pressed','true');band.classList.add('is-picked')}
+      else{picked.splice(i,1);b.textContent=t('В заявку');b.setAttribute('aria-pressed','false');band.classList.remove('is-picked')}
       edited=false;refresh();
     });
   });
@@ -733,7 +846,7 @@ button{font:inherit;color:inherit}
   window.addEventListener('scroll',function(){if(picked.length)refresh()},{passive:true});
   function copyThen(e){
     var hint=document.getElementById('send-hint');
-    if(navigator.clipboard){navigator.clipboard.writeText(msg.value).then(function(){hint.textContent='Текст скопирован. Вставьте его в чат и приложите фото.'},function(){})}
+    if(navigator.clipboard){navigator.clipboard.writeText(msg.value).then(function(){hint.textContent=t('Текст скопирован. Вставьте его в чат и приложите фото.')},function(){})}
   }
   document.getElementById('send-tg').addEventListener('click',copyThen);
   document.getElementById('send-viber').addEventListener('click',copyThen);
@@ -742,8 +855,21 @@ button{font:inherit;color:inherit}
   /* drone tabs */
   var dt=document.getElementById('drone-t');
   document.querySelectorAll('.drone-tabs button').forEach(function(b,_,all){
-    b.addEventListener('click',function(){all.forEach(function(x){x.setAttribute('aria-pressed',x===b)});dt.textContent=b.dataset.t;if(!reduce)dt.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:350,easing:'ease-out'})});
+    b.addEventListener('click',function(){all.forEach(function(x){x.setAttribute('aria-pressed',x===b)});dt.textContent=b.dataset.t;document.getElementById('drone-h').textContent=b.dataset.h;
+      [].forEach.call(document.querySelectorAll('.scene'),function(sv){sv.classList.toggle('is-on',sv.dataset.scene===b.dataset.scene)});
+      document.getElementById('scenes').setAttribute('aria-label',b.dataset.label);if(!reduce)dt.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:350,easing:'ease-out'})});
   });
+
+  window.onLang=function(){
+    edited=false;
+    document.querySelectorAll('.pick').forEach(function(b){b.textContent=t(b.getAttribute('aria-pressed')==='true'?'Убрать':'В заявку')});
+    menuBtn.textContent=t(nav.classList.contains('open')?'Закрыть':'Меню');
+    var on=document.querySelector('.drone-tabs [aria-pressed="true"]');if(on){dt.textContent=on.dataset.t;document.getElementById('drone-h').textContent=on.dataset.h;document.getElementById('scenes').setAttribute('aria-label',on.dataset.label)}
+    document.getElementById('send-hint').textContent=t('Для Telegram и Viber текст скопируется: вставьте его в чат и приложите фото.');
+    refresh();
+  };
+  var saved=null;try{saved=localStorage.getItem('bc-lang')}catch(e){}
+  setLang(saved||((navigator.language||'').toLowerCase().indexOf('sr')===0?'sr':'ru'),false);
 
   /* many into one: scatter -> ribbon -> rows */
   function rnd(s){return function(){s=(s*9301+49297)%233280;return s/233280}}
