@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechReborn — ремонт и продажа ноутбуков в Сербии</title>
+<meta name="description" content="Андрей чинит, продаёт, выкупает и сдаёт в аренду ноутбуки и ПК в Сербии. Выкуп через бота: модель, состояние, фото — и Андрей отвечает с ценой.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#141619;
+  --raise:#1c1f23;
+  --raise-2:#262a2f;
+  --ink:#e8e8e4;
+  --muted:#a2a6ab;
+  --accent:#b4c4a4;
+  --field:#e4e3de;
+  --field-ink:#16181b;
+  --field-soft:#d6d5cf;
+  --on-accent:#141619;
+  --step-small:0.9375rem;
+  --step-body:clamp(1.0625rem,1rem + 0.2vw,1.125rem);
+  --step-lead:clamp(1.25rem,1.1rem + 0.6vw,1.5rem);
+  --step-head:clamp(2.125rem,1.3rem + 3vw,3.75rem);
+  --step-display:clamp(2.25rem,0.6rem + 5.2vw,5.75rem);
+  --m:clamp(16px,2.4vw,40px);
+  --r:20px;
+  --section:clamp(96px,11vw,180px);
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Golos Text",system-ui,sans-serif;font-size:var(--step-body);line-height:1.5}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.num{font-variant-numeric:tabular-nums}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6em;min-height:56px;padding:0 26px;border:0;border-radius:999px;background:var(--accent);color:var(--on-accent);font-weight:700;text-decoration:none;cursor:pointer;transition:transform .15s var(--ease),background-color .2s}
+.btn:hover{background:#c3d1b4}
+.btn:active{transform:scale(.97)}
+.btn--ghost{background:var(--raise-2);color:var(--ink)}
+.btn--ghost:hover{background:#2b3038}
+.arrow{transition:transform .2s var(--ease)}
+.btn:hover .arrow{transform:translateX(4px)}
+
+/* bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px var(--m)}
+.mark{display:flex;align-items:baseline;gap:10px;text-decoration:none}
+.mark b{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.mark span{font-size:var(--step-small);color:var(--muted)}
+.mark i{font-style:normal;color:var(--accent)}
+.links{display:flex;gap:32px;align-items:center}
+.links a{text-decoration:none;font-weight:500;font-size:var(--step-small);color:var(--muted);transition:color .2s}
+.links a:hover{color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--m);align-items:end;padding:clamp(40px,7vw,110px) var(--m) 0}
+.hero h1{font-size:var(--step-display);font-weight:800;line-height:.95;letter-spacing:-.045em}
+.hero h1 em{font-style:normal}
+.hero p{margin-top:28px;font-size:var(--step-lead);line-height:1.35;max-width:30ch;color:var(--ink)}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:36px}
+
+/* the real listing, as the product shows it */
+.listing{background:var(--raise);border-radius:var(--r);padding:28px;display:grid;gap:18px}
+.listing .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tag{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:var(--step-small)}
+.listing small{color:var(--muted);font-size:var(--step-small)}
+.listing .lt{margin:0;font-size:var(--step-lead);font-weight:700;line-height:1.2}
+.specs{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:var(--step-small);margin:0}
+.specs dt{color:var(--muted)}
+.specs dd{margin:0}
+.price{display:flex;align-items:baseline;gap:14px}
+.price b{font-size:clamp(2rem,1.4rem + 2vw,3rem);font-weight:800;letter-spacing:-.03em}
+.price s{color:var(--muted);font-size:var(--step-lead)}
+.listing .btn{width:100%;justify-content:space-between}
+
+/* what he does: four big rows */
+.do{padding:var(--section) var(--m) 0}
+.do h2,.sec-h{font-size:var(--step-head);font-weight:800;line-height:1;letter-spacing:-.03em}
+.rows{margin-top:48px;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:minmax(220px,1fr) 1.4fr auto;gap:32px;align-items:center;padding:28px 32px;background:var(--raise);border-radius:var(--r);text-decoration:none;transition:background-color .2s}
+.row:hover{background:var(--raise-2)}
+.row b{font-size:var(--step-lead);font-size:clamp(1.5rem,1.1rem + 1.2vw,2.25rem);font-weight:800;letter-spacing:-.02em;line-height:1}
+.row p{color:var(--muted);max-width:52ch}
+.row span{font-weight:700;color:var(--accent);white-space:nowrap}
+
+/* bot */
+.bot{margin-top:var(--section);padding:var(--section) var(--m);background:var(--field);color:var(--field-ink);display:grid;grid-template-columns:1fr minmax(320px,420px);gap:clamp(32px,6vw,96px);align-items:center}
+.bot h2{font-size:var(--step-head);font-weight:800;line-height:1;letter-spacing:-.03em}
+.bot p{margin-top:24px;font-size:var(--step-lead);line-height:1.35;max-width:32ch}
+.bot ol{margin:32px 0 0;padding-left:1.2em;display:grid;gap:10px;max-width:40ch}
+.modes{display:flex;gap:6px;margin-top:36px;flex-wrap:wrap}
+.modes button{min-height:48px;padding:0 20px;border:0;border-radius:999px;background:var(--field-soft);font-weight:700;cursor:pointer;transition:background-color .2s,color .2s}
+.modes button[aria-pressed="true"]{background:var(--ground);color:var(--ink)}
+.chat{background:var(--ground);color:var(--ink);border-radius:32px;padding:14px;box-shadow:0 24px 48px rgba(0,0,0,.18)} /* taste-skill-ignore: phone floats over the field */
+.chat-head{display:flex;align-items:center;gap:12px;padding:8px 10px 14px}
+.ava{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:800}
+.chat-head b{display:block;font-size:16px}
+.chat-head small{color:var(--muted);font-size:14px}
+.log{height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--raise);border-radius:22px;scroll-behavior:smooth}
+.msg{max-width:84%;padding:10px 14px;border-radius:18px;font-size:16px;line-height:1.4;animation:pop .3s var(--ease)}
+.msg.bot-m{background:var(--raise-2);border-bottom-left-radius:6px}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:6px}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.answers{display:flex;flex-wrap:wrap;gap:6px;padding:12px 4px 4px;min-height:64px}
+.answers button{min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--raise-2);font-weight:600;font-size:15px;cursor:pointer;transition:background-color .2s,transform .15s}
+.answers button:hover{background:#2f343d}
+.answers button:active{transform:scale(.96)}
+.answers button.go{background:var(--accent);color:var(--on-accent)}
+.answers input{flex:1;min-width:0;min-height:44px;border:0;border-radius:999px;background:var(--raise-2);color:var(--ink);padding:0 16px;font:inherit;font-size:15px}
+.answers a{text-decoration:none}
+
+/* stock */
+.stock{padding:var(--section) var(--m) 0}
+.stock-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.stock-head a{font-weight:700;color:var(--accent)}
+.items{margin-top:48px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+.item{background:var(--raise);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:14px;min-height:280px}
+.item small{color:var(--muted);font-size:var(--step-small)}
+.item h3{font-size:var(--step-lead);font-weight:700;line-height:1.2}
+.item p{color:var(--muted);font-size:var(--step-small)}
+.item .end{margin-top:auto;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.item .end b{font-size:1.75rem;font-weight:800;letter-spacing:-.02em}
+.item .end span{color:var(--muted);font-size:var(--step-small)}
+
+/* repair list */
+.fix{padding:var(--section) var(--m) 0;display:grid;grid-template-columns:1fr 1.4fr;gap:var(--m)}
+.fix p.lead{margin-top:24px;color:var(--muted);max-width:36ch}
+.fix ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fix li{background:var(--raise);border-radius:16px;padding:20px 22px}
+.fix li b{display:block;font-size:var(--step-body)}
+.fix li span{color:var(--muted);font-size:var(--step-small)}
+
+/* review */
+.quote{padding:var(--section) var(--m) 0}
+.quote blockquote{margin:0;font-size:clamp(1.5rem,1rem + 1.6vw,2.25rem);line-height:1.3;font-weight:500;max-width:28ch;letter-spacing:-.01em}
+.quote cite{display:block;margin-top:20px;font-style:normal;color:var(--muted)}
+.quote a{color:var(--accent);font-weight:700}
+
+/* footer */
+.foot{margin-top:var(--section);padding:48px var(--m) 32px;background:var(--raise);border-radius:var(--r) var(--r) 0 0}
+.foot-top{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;color:var(--muted);font-size:var(--step-small)}
+.foot-big{display:block;margin-top:clamp(64px,10vw,160px);font-size:clamp(2.5rem,1rem + 8.4vw,10rem);font-weight:800;letter-spacing:-.045em;line-height:.9;text-decoration:none;white-space:nowrap}
+.foot-big:hover{color:var(--accent)}
+.foot-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;color:var(--muted);font-size:var(--step-small)}
+
+/* entrances */
+.js .rise{opacity:0;transform:translateY(22px)}
+.js .rise.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .8s var(--ease)}
+@media (prefers-reduced-motion:reduce){.js .rise{opacity:1;transform:none}.msg{animation:none}}
+
+@media (max-width:980px){
+  .hero,.bot,.fix{grid-template-columns:1fr}
+  .items{grid-template-columns:1fr 1fr}
+  .items .item:first-child{grid-column:1/-1}
+  .row{grid-template-columns:1fr auto;grid-template-areas:"b s" "p p";gap:12px 20px}
+  .row b{grid-area:b}.row p{grid-area:p}.row span{grid-area:s}
+}
+@media (max-width:640px){
+  .links{display:none}
+  .bar{gap:12px}
+  .bar .btn{min-height:48px;padding:0 16px}
+  .mark b{font-size:20px}
+  .hero{padding-top:32px}
+  .hero .acts .btn{flex:1}
+  .listing{padding:22px}
+  .row{padding:22px}
+  .items{grid-template-columns:1fr}
+  .fix ul{grid-template-columns:1fr}
+  .log{height:360px}
+  .foot-big{font-size:10.4vw}
+  .hero .acts .btn{white-space:nowrap;padding:0 18px}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a class="mark" href="#top" id="top"><b>Tech<i>Reborn</i></b><span>AndreyFix</span></a>
+  <nav class="links" aria-label="Разделы">
+    <a href="#do">Услуги</a><a href="#bot">Выкуп</a><a href="#stock">В наличии</a><a href="#fix">Ремонт</a>
+  </nav>
+  <a class="btn" href="https://t.me/blackmeteorite" target="_blank" rel="noopener">Написать <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<main>
+<section class="hero" aria-labelledby="h1">
+  <div>
+    <h1 id="h1" class="rise">Ремонт и продажа<br>ноутбуков</h1>
+    <p class="rise">Чиню, продаю, выкупаю и сдаю в аренду ноутбуки и ПК в Сербии. Всё делает один мастер — Андрей.</p>
+    <div class="acts rise">
+      <a class="btn" href="#bot">Продать ноутбук <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--ghost" href="#stock">Что в наличии</a>
+    </div>
+  </div>
+  <article class="listing rise" data-ui aria-label="Ноутбук в наличии">
+    <div class="top"><span class="tag">В наличии</span><small>2025 г., не вскрывался</small></div>
+    <h2 class="lt">Acer Nitro V 16 AI<br>ANV16-42-R1T1</h2>
+    <dl class="specs num">
+      <dt>Процессор</dt><dd>AMD Ryzen AI 7 260, 8 ядер</dd>
+      <dt>Видеокарта</dt><dd>RTX 5070 8 ГБ, 95 Вт</dd>
+      <dt>Память</dt><dd>16 ГБ DDR5 · SSD 1 ТБ</dd>
+      <dt>Экран</dt><dd>16″ IPS, 180 Гц, 100% sRGB</dd>
+      <dt>Гарантия</dt><dd>до сентября 2027</dd>
+    </dl>
+    <div class="price num"><b>1249 €</b><s>1399 €</s></div>
+    <a class="btn" href="https://t.me/blackmeteorite" target="_blank" rel="noopener">Забронировать <span class="arrow" aria-hidden="true">→</span></a>
+  </article>
+</section>
+
+<section class="do" id="do" aria-labelledby="do-h">
+  <h2 id="do-h" class="rise">Четыре дела —<br>один мастер</h2>
+  <div class="rows">
+    <a class="row rise" href="#fix"><b>Ремонт</b><p>Чистка, замена термопасты, экраны, клавиатуры, батареи, апгрейд. Посторонний звук в ноутбуке — повод показать его сейчас, а не после поломки.</p><span>Что чиню →</span></a>
+    <a class="row rise" href="#stock"><b>Продажа</b><p>Новая и проверенная б/у техника с документами. Доставка или самовывоз.</p><span>В наличии →</span></a>
+    <a class="row rise" href="#bot"><b>Выкуп</b><p>Ноутбуки, ПК, мониторы, iMac и комплектующие. Оценка по фото, деньги сразу.</p><span>Оценить →</span></a>
+    <a class="row rise" href="#bot" data-mode="rent"><b>Аренда</b><p>Ноутбук на нужный срок: на работу, учёбу или пока ваш в ремонте.</p><span>Взять →</span></a>
+  </div>
+</section>
+
+<!-- the live thing: the bot, working on the page -->
+<section class="bot" id="bot" aria-labelledby="bot-h">
+  <div>
+    <h2 id="bot-h" class="rise">Заявка за минуту,<br>без переписки</h2>
+    <p class="rise">Бот задаёт три вопроса и передаёт Андрею готовую заявку. Попробуйте прямо здесь.</p>
+    <div class="modes rise" role="group" aria-label="Что нужно">
+      <button type="button" data-mode="buy" aria-pressed="true">Продать</button>
+      <button type="button" data-mode="rent" aria-pressed="false">Арендовать</button>
+      <button type="button" data-mode="fix" aria-pressed="false">Починить</button>
+    </div>
+  </div>
+  <div class="chat rise" data-ui>
+    <div class="chat-head"><span class="ava" aria-hidden="true">TR</span><div><b>TechReborn бот</b><small>отвечает сразу</small></div></div>
+    <div class="log" id="log" aria-live="polite">
+      <div class="msg bot-m">Привет! Чтобы начать, откройте бота в Telegram.</div>
+    </div>
+    <div class="answers" id="answers"><a class="btn" href="https://t.me/blackmeteorite" target="_blank" rel="noopener">Открыть Telegram</a></div>
+  </div>
+</section>
+
+<section class="stock" id="stock" aria-labelledby="stock-h">
+  <div class="stock-head">
+    <h2 id="stock-h" class="sec-h rise">Сейчас в наличии</h2>
+    <a class="rise" href="https://t.me/LaptopServis_Serbia" target="_blank" rel="noopener">Весь список в канале →</a>
+  </div>
+  <div class="items">
+    <article class="item rise"><small>Ноутбук · новый</small><h3>Acer Nitro V 16 AI</h3><p>Ryzen AI 7 260 · RTX 5070 · 16 ГБ · 1 ТБ · 180 Гц</p><div class="end num"><b>1249 €</b><span>гарантия до 2027</span></div></article>
+    <article class="item rise"><small>Ноутбук · б/у</small><h3>Lenovo Legion 5 Pro 16ACH6H</h3><p>Игровой, 16″. Состояние и фото — в канале.</p><div class="end"><b>—</b><span>цена в канале</span></div></article>
+    <article class="item rise"><small>Комплектующие</small><h3>Samsung SO-DIMM</h3><p>Оперативная память для ноутбуков.</p><div class="end"><b>—</b><span>цена в канале</span></div></article>
+  </div>
+</section>
+
+<section class="fix" id="fix" aria-labelledby="fix-h">
+  <div>
+    <h2 id="fix-h" class="sec-h rise">Что чиню</h2>
+    <p class="lead rise">Цену называю после диагностики, до начала работ.</p>
+  </div>
+  <ul>
+    <li class="rise"><b>Шум и перегрев</b><span>чистка, термопаста, вентиляторы</span></li>
+    <li class="rise"><b>Экран</b><span>замена матрицы и шлейфа</span></li>
+    <li class="rise"><b>Клавиатура</b><span>залитая, западающие кнопки</span></li>
+    <li class="rise"><b>Батарея и зарядка</b><span>не держит заряд, не заряжается</span></li>
+    <li class="rise"><b>Апгрейд</b><span>SSD, оперативная память</span></li>
+    <li class="rise"><b>Windows и программы</b><span>установка, перенос данных</span></li>
+  </ul>
+</section>
+
+<section class="quote" aria-label="Отзыв">
+  <blockquote class="rise">«Купил ноутбук, ровно то, что мне нужен. Андрей привёз…»</blockquote>
+  <cite class="rise">Михаил, из отзывов в канале · <a href="https://t.me/LaptopServis_Serbia" target="_blank" rel="noopener">все отзывы</a></cite>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="foot-top"><span>TechReborn · AndreyFix</span><span>Ремонт, продажа, выкуп и аренда техники в Сербии</span><a href="#top">Наверх</a></div>
+  <a class="foot-big" href="https://t.me/blackmeteorite" target="_blank" rel="noopener">@blackmeteorite</a>
+  <div class="foot-meta"><a href="https://t.me/LaptopServis_Serbia" target="_blank" rel="noopener">Канал TechReborn</a><span>Сербия · 2026</span></div>
+</footer>
+
+<script>
+(function(){
+  document.documentElement.classList.add('js');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var el=e.target,sib=[].slice.call(el.parentNode.children).filter(function(x){return x.classList.contains('rise')});setTimeout(function(){el.classList.add('in')},Math.max(0,sib.indexOf(el))*80);io.unobserve(el)}})},{rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.rise').forEach(function(el){io.observe(el)});
+
+  /* bot demo */
+  var FLOWS={
+    buy:{hi:'Привет! Это выкуп техники TechReborn. Что продаёте?',steps:[
+      {q:null,opts:['Ноутбук','ПК','Монитор','iMac','Комплектующие']},
+      {q:'Какая модель? Можно примерно.',input:'например, Lenovo Legion 5 Pro'},
+      {q:'В каком состоянии?',opts:['Как новый','Есть следы','Не включается']}],
+      end:'Готово! Пришлите 2–3 фото — Андрей оценит и ответит с ценой.',title:'Выкуп'},
+    rent:{hi:'Привет! Аренда ноутбуков TechReborn. Для чего нужен?',steps:[
+      {q:null,opts:['Работа','Учёба','Игры','Пока мой в ремонте']},
+      {q:'На какой срок?',opts:['Несколько дней','Неделя','Месяц','Дольше']},
+      {q:'Как удобнее получить?',opts:['Доставка','Самовывоз']}],
+      end:'Готово! Андрей подберёт ноутбук и напишет, что есть свободного.',title:'Аренда'},
+    fix:{hi:'Привет! Ремонт TechReborn. Что за устройство?',steps:[
+      {q:null,opts:['Ноутбук','ПК','Монитор']},
+      {q:'Что случилось?',opts:['Шумит / греется','Не включается','Экран','Клавиатура','Другое']},
+      {q:'Модель, если знаете',input:'например, ASUS ROG Strix'}],
+      end:'Готово! Андрей посмотрит и скажет, что можно сделать и сколько это стоит.',title:'Ремонт'}
+  };
+  var log=document.getElementById('log'),ans=document.getElementById('answers'),mode='buy',step=0,picked=[];
+  function say(t,me){var d=document.createElement('div');d.className='msg '+(me?'me':'bot-m');d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+  function later(fn){setTimeout(fn,reduce?0:420)}
+  function start(m){
+    mode=m;step=0;picked=[];log.innerHTML='';ans.innerHTML='';
+    document.querySelectorAll('.modes button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.mode===m)});
+    say(FLOWS[m].hi);ask();
+  }
+  function ask(){
+    var f=FLOWS[mode],s=f.steps[step];ans.innerHTML='';
+    if(!s){finish();return}
+    if(s.q)say(s.q);
+    if(s.opts){s.opts.forEach(function(o){var b=document.createElement('button');b.type='button';b.textContent=o;b.onclick=function(){answer(o)};ans.appendChild(b)})}
+    else{var i=document.createElement('input');i.placeholder=s.input;i.setAttribute('aria-label',s.q);var g=document.createElement('button');g.type='button';g.className='go';g.textContent='Дальше';
+      var send=function(){var v=i.value.trim();if(v)answer(v);else i.focus()};g.onclick=send;i.onkeydown=function(e){if(e.key==='Enter')send()};ans.appendChild(i);ans.appendChild(g)}
+  }
+  function answer(t){picked.push(t);say(t,true);ans.innerHTML='';step++;later(ask)}
+  function finish(){
+    var f=FLOWS[mode];say(f.end);
+    var text=f.title+': '+picked.join(', ');
+    var a=document.createElement('a');a.className='btn';a.href='https://t.me/blackmeteorite';a.target='_blank';a.rel='noopener';a.textContent='Отправить Андрею';
+    a.onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(text).catch(function(){})};
+    var r=document.createElement('button');r.type='button';r.textContent='Заново';r.onclick=function(){start(mode)};
+    ans.appendChild(a);ans.appendChild(r);
+  }
+  document.querySelectorAll('.modes button').forEach(function(b){b.addEventListener('click',function(){start(b.dataset.mode)})});
+  document.querySelectorAll('.row[data-mode]').forEach(function(a){a.addEventListener('click',function(){start(a.dataset.mode)})});
+  start('buy');
+})();
+</script>
+</body>
+</html>
