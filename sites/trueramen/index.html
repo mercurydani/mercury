@@ -145,11 +145,16 @@ button{font:inherit;color:inherit}
 .visit .acts{display:flex;flex-direction:column;gap:10px}
 .visit .acts .btn{justify-content:space-between}
 
-.foot{padding:var(--section) var(--m) 28px}
-.word{font:800 clamp(2.5rem,10.6vw,13rem)/.85 var(--display);letter-spacing:-.05em;white-space:nowrap}
-.word span{color:var(--red)}
-.foot-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;color:var(--dim);font-size:var(--step-small)}
-.foot-meta a{color:var(--white)}
+.foot{margin-top:var(--section);padding:56px var(--m) 28px;background:var(--night-2)}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--m)}
+.foot-brand img{width:120px;height:auto;border-radius:10px}
+.foot-brand p{margin-top:16px;color:var(--dim);max-width:24ch}
+.foot h3{font:600 var(--step-small)/1.3 var(--text);color:var(--dim);margin-bottom:10px}
+.foot ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.foot a{color:var(--white);text-decoration:none;transition:color .2s}
+.foot a:hover{color:var(--red)}
+.foot-status{margin-top:6px;color:var(--dim);font-size:var(--step-small)}
+.foot-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:48px;padding-top:20px;color:var(--dim);font-size:var(--step-small)}
 
 .js .rise{opacity:0;transform:translateY(22px)}
 .js .rise.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .8s var(--ease)}
@@ -176,7 +181,7 @@ button{font:inherit;color:inherit}
   .grid .g2{aspect-ratio:16/10}
   .why{grid-template-columns:1fr}
   .bowl{padding:22px}
-  .word{font-size:10.6vw}
+  .foot-grid{grid-template-columns:1fr;gap:32px}
   .hero .acts .btn{flex:1;justify-content:center;white-space:nowrap;padding:0 16px}
   .strip-wrap{padding-top:72px}
 }
@@ -272,8 +277,12 @@ button{font:inherit;color:inherit}
 </main>
 
 <footer class="foot">
-  <div class="word" aria-hidden="true">True<span>·</span>Ramen</div>
-  <div class="foot-meta"><span data-i="foot">Рамен в Белграде · каждый день 12:00–23:00</span><a href="https://www.instagram.com/trueramen.belgrade/" target="_blank" rel="noopener">@trueramen.belgrade</a></div>
+  <div class="foot-grid">
+    <div class="foot-brand"><img src="img/logo.jpg" alt="True Ramen" width="151" height="93" loading="lazy"><p data-i="foot_tag">Рамен в Старом Граде, Белград</p></div>
+    <div><h3 data-i="v_hours">Часы</h3><p class="num" data-i="v_hours_v">Каждый день, 12:00–23:00</p><p class="foot-status" id="foot-status"></p></div>
+    <div><h3 data-i="foot_find">Мы в сети</h3><ul><li><a href="https://www.instagram.com/trueramen.belgrade/" target="_blank" rel="noopener">Instagram</a></li><li><a href="https://www.threads.net/@trueramen.belgrade" target="_blank" rel="noopener">Threads</a></li><li><a href="https://www.google.com/maps/search/?api=1&query=True+Ramen+Belgrade" target="_blank" rel="noopener" data-i="foot_map">Google Карты</a></li></ul></div>
+  </div>
+  <div class="foot-meta"><span>© 2026 True Ramen</span><a href="#top" data-i="foot_top">Наверх</a></div>
 </footer>
 
 <script>
@@ -283,12 +292,12 @@ button{font:inherit;color:inherit}
     sr:{nav_day:"Dan supe",nav_menu:"Meni",nav_visit:"Kako do nas",h1:"Supa se kuva<br>dok grad spava",sub:"Pošten ramen na Starom gradu. Svakog dana od 12 do 23 h.",cta_menu:"Pogledajte meni",cta_visit:"Kako do nas",
       day_h:"Dan jedne činije",b1_t:"Noć",b1:"Supa se satima krčka dok grad spava.",b2_t:"Jutro",b2:"Rezanci, marinirana jaja, sveže začinsko bilje.",b3:"Otvaramo vrata. Prve činije stižu pravo sa šporeta.",b4:"Poslednja činija za danas. Sutra sve iz početka.",
       menu_h:"Meni",menu_p:"Pet činija koje pravimo svakog dana.",hot:"ljuto",m1_t:"Ljuti sa plodovima mora",m1:"Škampi, lignje, limun, susam i spanać u začinjenoj supi.",m2_t:"Tonkotsu",m2:"Gusta svinjska supa, čašu, jaje, nori.",m3_t:"Šoju",m3:"Supa od soje, piletina, mladi luk, bambus.",m4_t:"Miso",m4:"Miso pasta, kukuruz, puter, klice.",m5_t:"Povrtni",m5:"Supa od pečuraka, tofu, povrće. Bez mesa.",menu_note:"Cene i ceo meni —",
-      look_h:"Pogledajte izbliza",why_p:"Ne pravimo ramen brzo. Pravimo ga pravim — onako kako se jede u Japanu.",visit_h:"Svratite na činiju",v_hours:"Radno vreme",v_hours_v:"Svakog dana, 12:00–23:00",v_where:"Gde",v_where_v:"Stari grad, Beograd",v_map:"Otvorite mapu",v_dm:"Pišite na Instagramu",foot:"Ramen u Beogradu · svakog dana 12:00–23:00",
+      look_h:"Pogledajte izbliza",why_p:"Ne pravimo ramen brzo. Pravimo ga pravim — onako kako se jede u Japanu.",visit_h:"Svratite na činiju",v_hours:"Radno vreme",v_hours_v:"Svakog dana, 12:00–23:00",v_where:"Gde",v_where_v:"Stari grad, Beograd",v_map:"Otvorite mapu",v_dm:"Pišite na Instagramu",foot_tag:"Ramen na Starom gradu, Beograd",foot_find:"Na mrežama",foot_map:"Google mape",foot_top:"Na vrh",
       open:"Otvoreno · zatvaramo za ",closed:"Zatvoreno · otvaramo u 12:00, za ",h:" h ",min:" min",now:"sada ",title:"True Ramen — ramen u Beogradu"},
     en:{nav_day:"A day of broth",nav_menu:"Menu",nav_visit:"Find us",h1:"Broth cooked<br>while you sleep",sub:"Honest ramen in Stari Grad, Belgrade. Every day, 12:00–23:00.",cta_menu:"See the menu",cta_visit:"How to get here",
       day_h:"A day of one bowl",b1_t:"Night",b1:"The broth simmers for hours while the city sleeps.",b2_t:"Morning",b2:"Noodles, marinated eggs, fresh greens.",b3:"Doors open. The first bowls come straight off the stove.",b4:"Last bowl of the day. Tomorrow, all over again.",
       menu_h:"Menu",menu_p:"Five bowls we cook every day.",hot:"spicy",m1_t:"Spicy seafood",m1:"Shrimp, squid, lemon, sesame and spinach in a spiced broth.",m2_t:"Tonkotsu",m2:"Rich pork broth, chashu, egg, nori.",m3_t:"Shoyu",m3:"Soy broth, chicken, spring onion, bamboo.",m4_t:"Miso",m4:"Miso paste, corn, butter, sprouts.",m5_t:"Vegetable",m5:"Mushroom broth, tofu, vegetables. No meat.",menu_note:"Prices and the full menu —",
-      look_h:"Take a closer look",why_p:"We don't make ramen fast. We make it real — the way it's eaten in Japan.",visit_h:"Come in for a bowl",v_hours:"Hours",v_hours_v:"Every day, 12:00–23:00",v_where:"Where",v_where_v:"Stari Grad, Belgrade",v_map:"Open the map",v_dm:"Message on Instagram",foot:"Ramen in Belgrade · every day 12:00–23:00",
+      look_h:"Take a closer look",why_p:"We don't make ramen fast. We make it real — the way it's eaten in Japan.",visit_h:"Come in for a bowl",v_hours:"Hours",v_hours_v:"Every day, 12:00–23:00",v_where:"Where",v_where_v:"Stari Grad, Belgrade",v_map:"Open the map",v_dm:"Message on Instagram",foot_tag:"Ramen in Stari Grad, Belgrade",foot_find:"Find us online",foot_map:"Google Maps",foot_top:"Back to top",
       open:"Open now · closes in ",closed:"Closed · opens at 12:00, in ",h:" h ",min:" min",now:"now ",title:"True Ramen — ramen in Belgrade"},
     ru:{open:"Открыто · закроемся через ",closed:"Закрыто · откроемся в 12:00, через ",h:" ч ",min:" мин",now:"сейчас ",title:"True Ramen — рамен в Белграде"}
   };
@@ -315,7 +324,9 @@ button{font:inherit;color:inherit}
   function tick(){
     var now=belgrade(),open=now>=720&&now<1380,s=document.getElementById('status');
     s.classList.toggle('open',open);
+    var fs=document.getElementById('foot-status');
     document.getElementById('status-t').textContent=open?t('open')+dur(1380-now):t('closed')+dur(((720-now)+1440)%1440);
+    if(fs)fs.textContent=document.getElementById('status-t').textContent;
     var hh=String(Math.floor(now/60)).padStart(2,'0'),mm=String(now%60).padStart(2,'0');
     document.getElementById('now').style.left=(now/1440*100)+'%';
     document.getElementById('now-t').textContent=t('now')+hh+':'+mm;
