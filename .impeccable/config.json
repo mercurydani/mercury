@@ -20,6 +20,24 @@
         ],
         "createdAt": "2026-10-13T21:30:23.620Z",
         "reason": "Claude triage: hidden imgs are the inactive drone-tab photos, crossfaded in on tab click (verified in browser)"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/trueramen/index.html"
+        ],
+        "createdAt": "2026-10-15T10:37:30.349Z",
+        "reason": "Claude triage: sections pad via CSS vars (16-48px gutters, 96-180px blocks); browser screenshots show the inset"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/trueramen/index.html"
+        ],
+        "createdAt": "2026-10-15T10:37:30.367Z",
+        "reason": "Claude triage: sizes are clamp()/var tokens the static scan reads as 16px; rendered h1 75px, h2 60px, body 18px"
       }
     ]
   }

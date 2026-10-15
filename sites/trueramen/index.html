@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>True Ramen — рамен в Белграде</title>
+<meta name="description" content="True Ramen, Стари Град, Белград. Бульон варится, пока город спит. Каждый день 12:00–23:00.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0e0e0f;
+  --night-2:#18181a;
+  --night-3:#232326;
+  --rice:#eeeeec;
+  --rice-2:#e1e1de;
+  --ink:#141414;
+  --white:#f3f3f1;
+  --dim:#a9a49c;
+  --dim-ink:#5b5650;
+  --red:#cf2e2f;
+  --display:"Unbounded",system-ui,sans-serif;
+  --text:"Onest",system-ui,sans-serif;
+  --step-small:0.9375rem;
+  --step-body:clamp(1.0625rem,1rem + .2vw,1.1875rem);
+  --step-lead:clamp(1.25rem,1.1rem + .6vw,1.5rem);
+  --step-head:clamp(2rem,1.2rem + 3vw,3.75rem);
+  --step-display:clamp(2rem,0.6rem + 4vw,4.75rem);
+  --m:clamp(16px,3vw,48px);
+  --r:22px;
+  --section:clamp(96px,11vw,180px);
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--night);color:var(--white);font:400 var(--step-body)/1.55 var(--text)}
+h1,h2,h3,p{margin:0}
+img{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+.num{font-variant-numeric:tabular-nums}
+
+.btn{display:inline-flex;align-items:center;gap:.6em;min-height:56px;padding:0 26px;border:0;border-radius:999px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;cursor:pointer;transition:transform .15s var(--ease),background-color .2s}
+.btn:hover{background:#b82728}
+.btn:active{transform:scale(.97)}
+.btn--ghost{background:var(--night-3);color:var(--white)}
+.btn--ghost:hover{background:#2e2e32}
+.btn--ink{background:var(--ink);color:var(--white)}
+.btn--ink:hover{background:#000}
+.arrow{transition:transform .2s var(--ease)}
+.btn:hover .arrow{transform:translateX(4px)}
+
+/* bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px var(--m)}
+.mark{display:flex;align-items:center;gap:12px;text-decoration:none}
+.mark img{height:40px;width:auto;border-radius:8px}
+.links{display:flex;gap:28px}
+.links a{text-decoration:none;color:var(--dim);font-weight:500;font-size:var(--step-small);transition:color .2s}
+.links a:hover{color:var(--white)}
+.lang{display:flex;background:var(--night-2);border-radius:999px;padding:4px}
+.lang button{border:0;background:none;min-width:44px;height:40px;border-radius:999px;font-weight:600;font-size:14px;color:var(--dim);cursor:pointer;transition:background-color .2s,color .2s}
+.lang button[aria-pressed="true"]{background:var(--white);color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.3fr .7fr;gap:var(--m);align-items:center;padding:clamp(32px,6vw,90px) var(--m) 0;min-height:min(88svh,900px)}
+.hero h1{font:800 var(--step-display)/.98 var(--display);letter-spacing:-.035em}
+.hero .sub{margin-top:28px;font-size:var(--step-lead);line-height:1.35;max-width:28ch}
+.status{display:inline-flex;align-items:center;gap:12px;margin-top:32px;padding:12px 18px;border-radius:999px;background:var(--night-2);font-weight:500}
+.status i{width:10px;height:10px;border-radius:50%;background:var(--dim);flex:none}
+.status i{position:relative}
+.status.open i{background:#3fbf6a}
+.status.open i::after{content:"";position:absolute;inset:0;border-radius:50%;background:#3fbf6a;animation:ping 2.2s ease-out infinite}
+@keyframes ping{from{transform:scale(1);opacity:.6}to{transform:scale(2.8);opacity:0}}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.stack{position:relative;height:min(70svh,640px)}
+.stack .p1,.stack .p2{position:absolute;object-fit:cover;border-radius:var(--r)}
+.stack .p1{right:0;top:0;width:62%;height:82%}
+.stack .p2{left:0;bottom:0;width:48%;height:58%;outline:8px solid var(--night)}
+.stack .seal{position:absolute;right:8%;bottom:4%;width:clamp(84px,9vw,120px);height:auto;border-radius:50%;outline:6px solid var(--night)}
+.hero-pic{animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+
+/* the day of a bowl: 24h strip with "now" */
+.day{padding:var(--section) var(--m) 0}
+.day h2{font:700 var(--step-head)/1 var(--display);letter-spacing:-.03em;max-width:16ch}
+.strip{position:relative;height:84px;border-radius:999px;overflow:hidden;display:grid;grid-template-columns:12fr 11fr 1fr}
+.strip .n{background:var(--night-3)}
+.strip .o{background:var(--red)}
+.strip .c{background:var(--night-3)}
+.now{position:absolute;top:-10px;bottom:-10px;width:4px;margin-left:-2px;background:var(--white);border-radius:2px;transition:left 1s var(--ease)}
+.now span{position:absolute;top:-34px;left:50%;transform:translateX(-50%);white-space:nowrap;font-weight:600;font-size:var(--step-small);background:var(--white);color:var(--ink);padding:4px 10px;border-radius:999px}
+.strip-wrap{position:relative;margin-top:40px;padding-top:56px}
+.hours{display:flex;justify-content:space-between;margin-top:12px;color:var(--dim);font-size:var(--step-small)}
+.beats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--m);margin-top:56px;list-style:none;padding:0}
+.beats b{display:block;font:700 var(--step-lead)/1.1 var(--display);letter-spacing:-.01em}
+.beats p{margin-top:10px;color:var(--dim);max-width:30ch}
+
+/* menu on rice paper */
+.menu{margin-top:var(--section);background:var(--rice);color:var(--ink);padding:var(--section) var(--m);border-radius:var(--r) var(--r) 0 0}
+.menu-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.menu h2{font:800 var(--step-head)/1 var(--display);letter-spacing:-.03em}
+.menu-head p{color:var(--dim-ink);max-width:36ch}
+.bowls{margin-top:56px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bowl{display:grid;grid-template-columns:1fr auto;gap:6px 20px;padding:26px 28px;background:var(--rice-2);border-radius:18px;transition:background-color .2s}
+.bowl:hover{background:#d7d7d3}
+.bowl h3{font:700 clamp(1.25rem,1rem + .8vw,1.625rem)/1.15 var(--display);letter-spacing:-.01em}
+.bowl p{grid-column:1/-1;color:var(--dim-ink);max-width:44ch}
+.hot{align-self:start;font-weight:600;font-size:14px;color:#fff;background:var(--red);border-radius:999px;padding:4px 12px}
+.bowl--big{grid-column:1/-1;grid-template-columns:minmax(0,1fr) minmax(0,340px);align-items:center;background:var(--ink);color:var(--white)}
+.bowl--big:hover{background:#000}
+.bowl--big p{grid-column:1;color:var(--dim)}
+.big-t{display:grid;gap:14px;justify-items:start}
+.big-h{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.big-t h3{font-size:clamp(1.5rem,1rem + 1.6vw,2.5rem)}
+.big-t p{color:var(--dim);max-width:40ch}
+.bowl--big img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:14px}
+.menu-note{margin-top:28px;color:var(--dim-ink)}
+.menu-note a{color:var(--ink);font-weight:600}
+
+/* gallery */
+.look{background:var(--rice);color:var(--ink);padding:0 var(--m) var(--section);margin-top:-2px}
+.look h2{font:700 var(--step-lead)/1.2 var(--display);margin-bottom:24px}
+.grid{display:grid;grid-template-columns:3fr 4fr;gap:10px;align-items:end;max-width:1100px}
+.grid img{width:100%;height:100%;object-fit:cover;border-radius:16px;transition:transform .6s var(--ease)}
+.grid figure{margin:0;overflow:hidden;border-radius:16px}
+.grid figure:hover img{transform:scale(1.04)}
+.grid .g1{aspect-ratio:3/4}
+.grid .g2{aspect-ratio:416/256}
+
+/* philosophy */
+.why{padding:var(--section) var(--m);display:grid;grid-template-columns:auto 1fr;gap:clamp(28px,5vw,80px);align-items:center}
+.why img{width:clamp(140px,18vw,240px);height:auto;border-radius:50%}
+.why blockquote{margin:0;font:700 clamp(1.75rem,1rem + 3vw,3.75rem)/1.05 var(--display);letter-spacing:-.03em;max-width:18ch}
+.why p{margin-top:24px;color:var(--dim);max-width:44ch;font-size:var(--step-lead);line-height:1.4}
+
+/* visit */
+.visit{margin:0 var(--m);padding:clamp(28px,4vw,56px);background:var(--night-2);border-radius:var(--r);display:grid;grid-template-columns:1fr 1fr;gap:var(--m);align-items:end}
+.visit h2{font:700 var(--step-head)/1 var(--display);letter-spacing:-.03em}
+.visit dl{margin:28px 0 0;display:grid;grid-template-columns:auto 1fr;gap:10px 24px}
+.visit dt{color:var(--dim)}
+.visit dd{margin:0;font-weight:600}
+.visit .acts{display:flex;flex-direction:column;gap:10px}
+.visit .acts .btn{justify-content:space-between}
+
+.foot{padding:var(--section) var(--m) 28px}
+.word{font:800 clamp(2.5rem,10.6vw,13rem)/.85 var(--display);letter-spacing:-.05em;white-space:nowrap}
+.word span{color:var(--red)}
+.foot-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;color:var(--dim);font-size:var(--step-small)}
+.foot-meta a{color:var(--white)}
+
+.js .rise{opacity:0;transform:translateY(22px)}
+.js .rise.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .8s var(--ease)}
+@media (prefers-reduced-motion:reduce){.js .rise{opacity:1;transform:none}.hero-pic,.status.open i::after{animation:none}}
+
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr;min-height:0}
+  .stack{height:520px}
+  .beats{grid-template-columns:1fr 1fr}
+  .bowls{grid-template-columns:1fr}
+  .bowl--big{grid-template-columns:1fr}
+  .bowl--big img{grid-column:1;grid-row:auto}
+  .visit{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .links{display:none}
+  .stack{height:440px}
+  .stack .p1{width:70%}
+  .stack .p2{width:56%}
+  .strip{height:64px}
+  .beats{grid-template-columns:1fr;gap:28px}
+  .grid{grid-template-columns:1fr}
+  .grid .g1{aspect-ratio:4/5}
+  .grid .g2{aspect-ratio:16/10}
+  .why{grid-template-columns:1fr}
+  .bowl{padding:22px}
+  .word{font-size:10.6vw}
+  .hero .acts .btn{flex:1;justify-content:center;white-space:nowrap;padding:0 16px}
+  .strip-wrap{padding-top:72px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="mark" href="#top" id="top" aria-label="True Ramen"><img src="img/logo.jpg" alt="True Ramen" width="151" height="93"></a>
+  <nav class="links" aria-label="Menu"><a href="#day" data-i="nav_day">День бульона</a><a href="#menu" data-i="nav_menu">Меню</a><a href="#visit" data-i="nav_visit">Как найти</a></nav>
+  <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="sr" aria-pressed="false">SR</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+</header>
+
+<main>
+<section class="hero" aria-labelledby="h1">
+  <div>
+    <h1 id="h1" class="rise" data-i="h1">Бульон варится,<br>пока город спит</h1>
+    <p class="sub rise" data-i="sub">Честный рамен в Старом Граде. Каждый день с 12:00 до 23:00.</p>
+    <div class="status rise" id="status" role="status"><i aria-hidden="true"></i><span id="status-t">Каждый день 12:00–23:00</span></div>
+    <div class="acts rise">
+      <a class="btn" href="#menu"><span data-i="cta_menu">Смотреть меню</span> <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--ghost" href="#visit" data-i="cta_visit">Как добраться</a>
+    </div>
+  </div>
+  <div class="stack" aria-hidden="true">
+    <img class="p1 hero-pic" src="img/bowl.jpg" alt="" width="330" height="546">
+    <img class="p2" src="img/closeup.jpg" alt="" width="416" height="395">
+    <img class="seal" src="img/geisha.jpg" alt="" width="182" height="182">
+  </div>
+</section>
+
+<section class="day" id="day" aria-labelledby="day-h">
+  <h2 id="day-h" class="rise" data-i="day_h">Сутки одной миски</h2>
+  <div class="strip-wrap rise">
+    <div class="strip" aria-hidden="true"><div class="n"></div><div class="o"></div><div class="c"></div></div>
+    <div class="now" id="now" style="left:50%"><span id="now-t" class="num">—</span></div>
+    <div class="hours num" aria-hidden="true"><span>00:00</span><span>12:00</span><span>23:00</span></div>
+  </div>
+  <ol class="beats">
+    <li class="rise"><b data-i="b1_t">Ночь</b><p data-i="b1">Бульон томится часами, пока город спит.</p></li>
+    <li class="rise"><b data-i="b2_t">Утро</b><p data-i="b2">Лапша, маринованные яйца, свежая зелень.</p></li>
+    <li class="rise"><b class="num">12:00</b><p data-i="b3">Открываем двери. Первые миски — горячие с плиты.</p></li>
+    <li class="rise"><b class="num">23:00</b><p data-i="b4">Последняя миска за день. Завтра — всё заново.</p></li>
+  </ol>
+</section>
+
+<section class="menu" id="menu" aria-labelledby="menu-h">
+  <div class="menu-head">
+    <h2 id="menu-h" class="rise" data-i="menu_h">Меню</h2>
+    <p class="rise" data-i="menu_p">Пять мисок, которые мы готовим каждый день.</p>
+  </div>
+  <div class="bowls">
+    <article class="bowl bowl--big rise">
+      <div class="big-t"><div class="big-h"><h3 data-i="m1_t">Острый с морепродуктами</h3><span class="hot" data-i="hot">остро</span></div><p data-i="m1">Креветки, кальмар, лимон, кунжут и шпинат в пряном бульоне.</p></div>
+      <img src="img/shrimp.jpg" alt="" width="416" height="263" loading="lazy">
+    </article>
+    <article class="bowl rise"><h3 data-i="m2_t">Тонкоцу</h3><p data-i="m2">Густой свиной бульон, чашу, яйцо, нори.</p></article>
+    <article class="bowl rise"><h3 data-i="m3_t">Шою</h3><p data-i="m3">Соевый бульон, курица, зелёный лук, бамбук.</p></article>
+    <article class="bowl rise"><h3 data-i="m4_t">Мисо</h3><p data-i="m4">Мисо-паста, кукуруза, сливочное масло, ростки.</p></article>
+    <article class="bowl rise"><h3 data-i="m5_t">Овощной</h3><p data-i="m5">Грибной бульон, тофу, овощи. Без мяса.</p></article>
+  </div>
+  <p class="menu-note rise"><span data-i="menu_note">Цены и полное меню —</span> <a href="https://www.instagram.com/trueramen.belgrade/" target="_blank" rel="noopener">Instagram</a></p>
+</section>
+
+<section class="look" aria-labelledby="look-h">
+  <h2 id="look-h" class="rise" data-i="look_h">Заглянуть ближе</h2>
+  <div class="grid">
+    <figure class="g1 rise"><img src="img/guest.jpg" alt="Гостья True Ramen" width="413" height="552" loading="lazy"></figure>
+    <figure class="g2 rise"><img src="img/sign.jpg" alt="Вывеска True Ramen" width="416" height="256" loading="lazy"></figure>
+  </div>
+</section>
+
+<section class="why" aria-label="Philosophy">
+  <img class="rise" src="img/cat.jpg" alt="" width="182" height="182" loading="lazy">
+  <div>
+    <blockquote class="rise" lang="en">Honest story,<br>authentic taste.</blockquote>
+    <p class="rise" data-i="why_p">Мы не делаем рамен быстрым. Мы делаем его настоящим — так, как его едят в Японии.</p>
+  </div>
+</section>
+
+<section class="visit" id="visit" aria-labelledby="visit-h">
+  <div>
+    <h2 id="visit-h" class="rise" data-i="visit_h">Приходите на миску</h2>
+    <dl class="rise">
+      <dt data-i="v_hours">Часы</dt><dd class="num" data-i="v_hours_v">Каждый день, 12:00–23:00</dd>
+      <dt data-i="v_where">Где</dt><dd data-i="v_where_v">Стари Град, Белград</dd>
+    </dl>
+  </div>
+  <div class="acts rise">
+    <a class="btn" href="https://www.google.com/maps/search/?api=1&query=True+Ramen+Belgrade" target="_blank" rel="noopener"><span data-i="v_map">Открыть на карте</span> <span class="arrow" aria-hidden="true">→</span></a>
+    <a class="btn btn--ghost" href="https://ig.me/m/trueramen.belgrade" target="_blank" rel="noopener"><span data-i="v_dm">Написать в Instagram</span> <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="word" aria-hidden="true">True<span>·</span>Ramen</div>
+  <div class="foot-meta"><span data-i="foot">Рамен в Белграде · каждый день 12:00–23:00</span><a href="https://www.instagram.com/trueramen.belgrade/" target="_blank" rel="noopener">@trueramen.belgrade</a></div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement;root.classList.add('js');
+  var T={
+    sr:{nav_day:"Dan supe",nav_menu:"Meni",nav_visit:"Kako do nas",h1:"Supa se kuva<br>dok grad spava",sub:"Pošten ramen na Starom gradu. Svakog dana od 12 do 23 h.",cta_menu:"Pogledajte meni",cta_visit:"Kako do nas",
+      day_h:"Dan jedne činije",b1_t:"Noć",b1:"Supa se satima krčka dok grad spava.",b2_t:"Jutro",b2:"Rezanci, marinirana jaja, sveže začinsko bilje.",b3:"Otvaramo vrata. Prve činije stižu pravo sa šporeta.",b4:"Poslednja činija za danas. Sutra sve iz početka.",
+      menu_h:"Meni",menu_p:"Pet činija koje pravimo svakog dana.",hot:"ljuto",m1_t:"Ljuti sa plodovima mora",m1:"Škampi, lignje, limun, susam i spanać u začinjenoj supi.",m2_t:"Tonkotsu",m2:"Gusta svinjska supa, čašu, jaje, nori.",m3_t:"Šoju",m3:"Supa od soje, piletina, mladi luk, bambus.",m4_t:"Miso",m4:"Miso pasta, kukuruz, puter, klice.",m5_t:"Povrtni",m5:"Supa od pečuraka, tofu, povrće. Bez mesa.",menu_note:"Cene i ceo meni —",
+      look_h:"Pogledajte izbliza",why_p:"Ne pravimo ramen brzo. Pravimo ga pravim — onako kako se jede u Japanu.",visit_h:"Svratite na činiju",v_hours:"Radno vreme",v_hours_v:"Svakog dana, 12:00–23:00",v_where:"Gde",v_where_v:"Stari grad, Beograd",v_map:"Otvorite mapu",v_dm:"Pišite na Instagramu",foot:"Ramen u Beogradu · svakog dana 12:00–23:00",
+      open:"Otvoreno · zatvaramo za ",closed:"Zatvoreno · otvaramo u 12:00, za ",h:" h ",min:" min",now:"sada ",title:"True Ramen — ramen u Beogradu"},
+    en:{nav_day:"A day of broth",nav_menu:"Menu",nav_visit:"Find us",h1:"Broth cooked<br>while you sleep",sub:"Honest ramen in Stari Grad, Belgrade. Every day, 12:00–23:00.",cta_menu:"See the menu",cta_visit:"How to get here",
+      day_h:"A day of one bowl",b1_t:"Night",b1:"The broth simmers for hours while the city sleeps.",b2_t:"Morning",b2:"Noodles, marinated eggs, fresh greens.",b3:"Doors open. The first bowls come straight off the stove.",b4:"Last bowl of the day. Tomorrow, all over again.",
+      menu_h:"Menu",menu_p:"Five bowls we cook every day.",hot:"spicy",m1_t:"Spicy seafood",m1:"Shrimp, squid, lemon, sesame and spinach in a spiced broth.",m2_t:"Tonkotsu",m2:"Rich pork broth, chashu, egg, nori.",m3_t:"Shoyu",m3:"Soy broth, chicken, spring onion, bamboo.",m4_t:"Miso",m4:"Miso paste, corn, butter, sprouts.",m5_t:"Vegetable",m5:"Mushroom broth, tofu, vegetables. No meat.",menu_note:"Prices and the full menu —",
+      look_h:"Take a closer look",why_p:"We don't make ramen fast. We make it real — the way it's eaten in Japan.",visit_h:"Come in for a bowl",v_hours:"Hours",v_hours_v:"Every day, 12:00–23:00",v_where:"Where",v_where_v:"Stari Grad, Belgrade",v_map:"Open the map",v_dm:"Message on Instagram",foot:"Ramen in Belgrade · every day 12:00–23:00",
+      open:"Open now · closes in ",closed:"Closed · opens at 12:00, in ",h:" h ",min:" min",now:"now ",title:"True Ramen — ramen in Belgrade"},
+    ru:{open:"Открыто · закроемся через ",closed:"Закрыто · откроемся в 12:00, через ",h:" ч ",min:" мин",now:"сейчас ",title:"True Ramen — рамен в Белграде"}
+  };
+  var els=[].slice.call(document.querySelectorAll('[data-i]'));
+  els.forEach(function(e){e.dataset.ru=e.innerHTML});
+  var lang='ru';
+  function t(k){return (T[lang]&&T[lang][k])||T.ru[k]}
+  function setLang(l){
+    lang=l;root.lang=l==='sr'?'sr-Latn':l;
+    els.forEach(function(e){var k=e.dataset.i;e.innerHTML=(l!=='ru'&&T[l][k])?T[l][k]:e.dataset.ru});
+    document.title=t('title');
+    document.querySelectorAll('.lang button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.lang===l)});
+    try{localStorage.setItem('tr-lang',l)}catch(e){}
+    tick();
+  }
+  document.querySelectorAll('.lang button').forEach(function(b){b.addEventListener('click',function(){setLang(b.dataset.lang)})});
+
+  /* Belgrade time: open 12:00–23:00 every day */
+  function belgrade(){
+    var p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+    var h=+p.find(function(x){return x.type==='hour'}).value%24,m=+p.find(function(x){return x.type==='minute'}).value;return h*60+m;
+  }
+  function dur(mins){var h=Math.floor(mins/60),m=mins%60;return (h?h+t('h'):'')+m+t('min')}
+  function tick(){
+    var now=belgrade(),open=now>=720&&now<1380,s=document.getElementById('status');
+    s.classList.toggle('open',open);
+    document.getElementById('status-t').textContent=open?t('open')+dur(1380-now):t('closed')+dur(((720-now)+1440)%1440);
+    var hh=String(Math.floor(now/60)).padStart(2,'0'),mm=String(now%60).padStart(2,'0');
+    document.getElementById('now').style.left=(now/1440*100)+'%';
+    document.getElementById('now-t').textContent=t('now')+hh+':'+mm;
+  }
+  setInterval(tick,30000);
+
+  var saved=null;try{saved=localStorage.getItem('tr-lang')}catch(e){}
+  var nav=(navigator.language||'').toLowerCase();
+  setLang(saved||(nav.indexOf('sr')===0?'sr':nav.indexOf('ru')===0?'ru':'en'));
+
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var el=e.target,sib=[].slice.call(el.parentNode.children).filter(function(x){return x.classList.contains('rise')});setTimeout(function(){el.classList.add('in')},Math.max(0,sib.indexOf(el))*80);io.unobserve(el)}})},{rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.rise').forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>
