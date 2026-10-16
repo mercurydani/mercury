@@ -38,6 +38,15 @@
         ],
         "createdAt": "2026-10-15T10:37:30.367Z",
         "reason": "Claude triage: sizes are clamp()/var tokens the static scan reads as 16px; rendered h1 75px, h2 60px, body 18px"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/drugakuca/index.html"
+        ],
+        "createdAt": "2026-10-16T12:58:56.188Z",
+        "reason": "Claude triage: sizes are clamp()/var tokens the static scan reads as 16px; rendered h1 84px, h2 56px, body 18px"
       }
     ]
   }

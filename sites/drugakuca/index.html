@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Druga kuća — frizerski salon u Zemunu</title>
+<meta name="description" content="Frizerski salon „Druga kuća – kod tetke“, Vere Dimitrijević 21, Zemun. Šišanje, farbanje, pramenovi, blajhanje, mini val i svečane frizure. Zakazivanje: 064 302 5281.">
+<link rel="icon" href="logo/mark.svg" type="image/svg+xml">
+<meta name="theme-color" content="#f5f5f3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f5f3;
+  --paper-2:#e9e8e5;
+  --paper-3:#dcdad6;
+  --ink:#231c1b;
+  --muted:#574b48;
+  --red:#b8323a;
+  --red-soft:#f3dcd9;
+  --serif:"Lora",Georgia,serif;
+  --sans:"Manrope",system-ui,sans-serif;
+  --step-small:0.9375rem;
+  --step-body:clamp(1.0625rem,1rem + .2vw,1.1875rem);
+  --step-lead:clamp(1.25rem,1.1rem + .6vw,1.5rem);
+  --step-head:clamp(2rem,1.3rem + 2.6vw,3.5rem);
+  --step-display:clamp(2.5rem,1.2rem + 4.6vw,5.25rem);
+  --m:clamp(16px,3vw,48px);
+  --r:22px;
+  --section:clamp(88px,10vw,160px);
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 var(--step-body)/1.55 var(--sans)}
+h1,h2,h3,p{margin:0}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+.num{font-variant-numeric:tabular-nums}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;min-height:54px;padding:0 24px;border:0;border-radius:999px;background:var(--red);color:#fff;font-weight:700;text-decoration:none;cursor:pointer;transition:transform .15s var(--ease),background-color .2s}
+.btn:hover{background:#9c2830}
+.btn:active{transform:scale(.97)}
+.btn--ink{background:var(--ink)}
+.btn--ink:hover{background:#000}
+.btn--soft{background:var(--paper-2);color:var(--ink)}
+.btn--soft:hover{background:var(--paper-3)}
+.arrow{transition:transform .2s var(--ease)}
+.btn:hover .arrow{transform:translateX(4px)}
+
+/* bar */
+.bar{display:flex;align-items:center;gap:24px;padding:16px var(--m)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;margin-right:auto}
+.brand svg{width:46px;height:46px;flex:none}
+.brand b{display:block;font:600 22px/1 var(--serif);letter-spacing:-.01em}
+.brand small{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.links{display:flex;gap:28px}
+.links a{text-decoration:none;font-weight:500;font-size:var(--step-small);color:var(--muted);transition:color .2s}
+.links a:hover{color:var(--ink)}
+.script{display:flex;background:var(--paper-2);border-radius:999px;padding:4px}
+.script button{border:0;background:none;height:38px;padding:0 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;transition:background-color .2s,color .2s}
+.script button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:var(--m);align-items:center;padding:clamp(24px,5vw,72px) var(--m) 0}
+.hero h1{font:600 var(--step-display)/1.02 var(--serif);letter-spacing:-.025em}
+.hero .sub{margin-top:24px;font-size:var(--step-lead);line-height:1.4;max-width:30ch}
+.hero .note{margin-top:18px;color:var(--muted);max-width:40ch}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:32px}
+.hero-pics{position:relative;display:grid;grid-template-columns:1fr .78fr;gap:10px;align-items:end}
+.hero-pics img{width:100%;object-fit:cover;border-radius:var(--r)}
+.hero-pics img{max-height:min(74svh,680px)}
+.hero-pics .big{aspect-ratio:3/4.2}
+.hero-pics .small{aspect-ratio:3/4}
+.hero-pics .sign{position:absolute;left:-18px;bottom:28px;background:var(--paper);border-radius:16px;padding:14px 18px;max-width:230px}
+.hero-pics .sign b{display:block;font:600 18px/1.2 var(--serif)}
+.hero-pics .sign span{font-size:14px;color:var(--muted)}
+
+/* before / after */
+.ba{padding:var(--section) var(--m) 0}
+.sec-h{font:600 var(--step-head)/1.05 var(--serif);letter-spacing:-.02em}
+.ba-top{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.ba-top p{color:var(--muted);max-width:38ch}
+.ba-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:32px}
+.ba-tabs button{border:0;border-radius:999px;padding:10px 18px;background:var(--paper-2);font-weight:700;font-size:15px;cursor:pointer;transition:background-color .2s,color .2s}
+.ba-tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.ba-body{display:grid;grid-template-columns:minmax(0,520px) minmax(260px,1fr);gap:var(--m);margin-top:20px;align-items:center}
+.compare{position:relative;width:100%;aspect-ratio:3/4;border-radius:var(--r);overflow:hidden;background:var(--paper-2);touch-action:pan-y;user-select:none;cursor:ew-resize}
+.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;pointer-events:none}
+.compare .after{clip-path:inset(0 0 0 var(--pos,50%))}
+.compare .handle{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:4px;margin-left:-2px;background:#fff}
+.compare .knob{position:absolute;top:50%;left:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:700;color:var(--ink)}
+.compare .tag{position:absolute;top:16px;padding:6px 12px;border-radius:999px;background:rgba(43,29,26,.72);color:#fff;font-size:14px;font-weight:700}
+.compare .tag.l{left:16px}.compare .tag.r{right:16px}
+.compare input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.ba-text{max-width:44ch}
+.ba-text h3{font:600 var(--step-head)/1.05 var(--serif);letter-spacing:-.02em}
+.ba-text p{margin-top:12px;color:var(--muted)}
+.ba-text .price{margin-top:20px;font-weight:700}
+.ba-text .btn{margin-top:24px}
+
+/* price list */
+.prices{margin-top:var(--section);background:var(--paper-2);padding:var(--section) var(--m);border-radius:var(--r) var(--r) 0 0}
+.p-top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.p-top p{margin-top:16px;color:var(--muted);max-width:44ch}
+.len{display:flex;gap:6px;flex-wrap:wrap;background:var(--paper);border-radius:999px;padding:6px}
+.len button{border:0;background:none;border-radius:999px;padding:10px 16px;font-weight:700;font-size:15px;color:var(--muted);cursor:pointer;transition:background-color .2s,color .2s}
+.len button[aria-pressed="true"]{background:var(--red);color:#fff}
+.groups{margin-top:48px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.group{background:var(--paper);border-radius:18px;padding:22px 24px 14px}
+.group h3{font:600 1.25rem/1.2 var(--serif);margin-bottom:8px}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;width:100%;padding:11px 0;border:0;background:none;text-align:left;cursor:pointer;border-radius:10px;transition:background-color .2s}
+.row + .row{box-shadow:inset 0 1px 0 var(--paper-2)} /* taste-skill-ignore: a price list is a table, its rows keep a divider */
+.row:hover{background:#fafaf9}
+.row .p{font-weight:700;white-space:nowrap}
+.row .p.na{color:var(--muted);font-weight:500}
+.row .add{width:30px;height:30px;border-radius:50%;background:var(--paper-2);display:grid;place-items:center;font-weight:700;transition:background-color .2s,color .2s,transform .2s var(--ease)}
+.row[aria-pressed="true"] .add{background:var(--red);color:#fff;transform:rotate(45deg)}
+.row[aria-pressed="true"] .n{font-weight:700}
+.row:disabled{cursor:default;opacity:.55}
+.row:disabled .add{visibility:hidden}
+
+.pick{position:relative;margin-top:24px;background:var(--ink);color:var(--paper);border-radius:var(--r);padding:20px 22px;display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:center}
+.pick.has{position:sticky;bottom:12px}
+.pick b{font:600 var(--step-lead)/1.2 var(--serif)}
+.pick p{color:#cbbab3;font-size:var(--step-small);margin-top:4px}
+.pick .acts{display:flex;gap:8px;flex-wrap:wrap}
+.pick .btn--soft{background:#41302c;color:var(--paper)}
+.pick .btn--soft:hover{background:#52403b}
+.pick small{grid-column:1/-1;color:#cbbab3;font-size:14px;min-height:1.3em}
+
+/* visit */
+.visit{padding:var(--section) var(--m);display:grid;grid-template-columns:1fr 1fr;gap:var(--m);align-items:start}
+.visit dl{margin:32px 0 0;display:grid;grid-template-columns:auto 1fr;gap:14px 28px}
+.visit dt{color:var(--muted)}
+.visit dd{margin:0;font-weight:600}
+.visit .acts{display:grid;gap:10px}
+.visit .acts .btn{justify-content:space-between}
+.visit figure{margin:0}
+.visit figure img{width:100%;max-height:560px;aspect-ratio:4/3;object-fit:cover;object-position:50% 72%;border-radius:var(--r)}
+.visit figcaption{margin-top:12px;color:var(--muted);font-size:var(--step-small)}
+
+.foot{background:var(--ink);color:var(--paper);padding:48px var(--m) 28px}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--m)}
+.foot .brand{margin:0}
+.foot .brand small{color:#cbbab3}
+.foot h3{font-size:var(--step-small);color:#cbbab3;font-weight:500;margin-bottom:10px}
+.foot ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.foot a{text-decoration:none}
+.foot a:hover{color:#f0a9a3}
+.foot .quote{margin-top:16px;font:500 1.125rem/1.4 var(--serif);max-width:26ch}
+.foot-meta{margin-top:40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:#cbbab3;font-size:14px}
+
+.js .rise{opacity:0;transform:translateY(20px)}
+.js .rise.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .8s var(--ease)}
+@media (prefers-reduced-motion:reduce){.js .rise{opacity:1;transform:none}}
+
+@media (max-width:980px){
+  .links{display:none}
+  .hero,.ba-body,.visit{grid-template-columns:1fr}
+  .groups{grid-template-columns:1fr}
+  .p-top{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  .bar{gap:12px}
+  .brand small{display:none}
+  .brand b{font-size:19px}
+  .bar .btn{display:none}
+  .hero .acts .btn{flex:1}
+  .hero-pics .sign{left:10px;bottom:10px;max-width:190px;padding:10px 14px}
+  .compare{aspect-ratio:3/4.2}
+  .len{border-radius:18px}
+  .len button{flex:1 1 40%}
+  .group{padding:18px 16px 10px}
+  .pick{grid-template-columns:1fr;padding:16px}
+  .pick.has{bottom:8px}
+  .pick .acts .btn{flex:1;min-height:48px;padding:0 14px}
+  .foot-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 120 120">
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 56 L58 16 L100 52"/><path d="M25 45 V104 H66"/><path d="M42 104 V82 a9 9 0 0 1 18 0 V104"/>
+      <path d="M88 42 C 106 58, 74 66, 86 82 C 96 95, 88 110, 76 106 C 66 103, 68 92, 77 93" stroke="var(--lock,#b8323a)"/>
+    </g>
+  </symbol>
+</svg>
+
+<header class="bar">
+  <a class="brand" href="#top" id="top"><svg role="img" aria-label="Druga kuća"><use href="#mark"/></svg><span><b>Druga kuća</b><small>frizerski salon · kod tetke</small></span></a>
+  <nav class="links" aria-label="Meni"><a href="#radovi">Radovi</a><a href="#cene">Cenovnik</a><a href="#kontakt">Kontakt</a></nav>
+  <div class="script" role="group" aria-label="Pismo"><button type="button" data-s="lat" aria-pressed="true">Lat</button><button type="button" data-s="cyr" aria-pressed="false">Ћир</button></div>
+  <a class="btn" href="#cene">Zakažite <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<main>
+<section class="hero" aria-labelledby="h1">
+  <div>
+    <h1 id="h1" class="rise">Frizerski salon<br>u Zemunu</h1>
+    <p class="sub rise">Male stvari čine veliko zadovoljstvo. Šišanje, boja, pramenovi i svečane frizure kod Sandre.</p>
+    <p class="note rise">Radimo po zakazivanju. Javite se porukom ili pozivom i dogovorićemo termin koji vam odgovara.</p>
+    <div class="acts rise">
+      <a class="btn" href="viber://chat?number=%2B381643025281"><span>Viber</span> <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--ink" href="tel:+381643025281"><span class="num">064 302 5281</span></a>
+    </div>
+  </div>
+  <div class="hero-pics rise">
+    <img class="big" src="img/svecana.jpg" alt="Svečana frizura: polupunđa sa loknama, bakarna boja" width="900" height="1556">
+    <img class="small" src="img/plava-posle.jpg" alt="Plavi pramenovi posle tretmana" width="700" height="1474">
+    <div class="sign"><b>Vere Dimitrijević 21</b><span>Zemun, kod Maxi Nove Galenike</span></div>
+  </div>
+</section>
+
+<section class="ba" id="radovi" aria-labelledby="ba-h">
+  <div class="ba-top">
+    <h2 id="ba-h" class="sec-h rise">Pre i posle</h2>
+    <p class="rise">Povucite liniju levo i desno da vidite razliku.</p>
+  </div>
+  <div class="ba-tabs rise" role="group" aria-label="Radovi">
+    <button type="button" aria-pressed="true" data-w="0">Pramenovi</button>
+    <button type="button" aria-pressed="false" data-w="1">Boja i talasi</button>
+    <button type="button" aria-pressed="false" data-w="2">Blajhanje korena</button>
+  </div>
+  <div class="ba-body">
+    <div class="compare rise" id="compare" style="--pos:50%">
+      <img class="before" id="c-pre" src="img/pramen-pre.jpg" alt="Pre" width="700" height="1405">
+      <img class="after" id="c-posle" src="img/pramen-posle.jpg" alt="Posle" width="700" height="1405">
+      <span class="tag l">Pre</span><span class="tag r">Posle</span>
+      <span class="handle" aria-hidden="true"><span class="knob">↔</span></span>
+      <input type="range" min="0" max="100" value="50" id="c-range" aria-label="Pre i posle">
+    </div>
+    <div class="ba-text rise">
+      <h3 id="w-t">Pramenovi preko cele glave</h3>
+      <p id="w-d">Topla, tamna boja prešla je u svetlu, hladnu plavu, bez žutih tonova.</p>
+      <p class="price" id="w-p">Pramenovi – cela glava: od 3.500 din</p>
+      <a class="btn btn--soft" href="#cene">Ceo cenovnik <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="prices" id="cene" aria-labelledby="cene-h">
+  <div class="p-top">
+    <div>
+      <h2 id="cene-h" class="sec-h rise">Cenovnik</h2>
+      <p class="rise">Cena zavisi od dužine kose, a crtica znači da tu uslugu za tu dužinu ne radimo. Izaberite svoju dužinu, a usluge koje želite označite i pošaljite nam poruku za termin.</p>
+    </div>
+    <div class="len rise" role="group" aria-label="Dužina kose">
+      <button type="button" data-l="0" aria-pressed="false">Kratka</button>
+      <button type="button" data-l="1" aria-pressed="true">Srednja</button>
+      <button type="button" data-l="2" aria-pressed="false">Duga</button>
+      <button type="button" data-l="3" aria-pressed="false">Ekstra duga</button>
+    </div>
+  </div>
+  <div class="groups" id="groups"></div>
+  <noscript><p>Cenovnik: pozovite 064 302 5281.</p></noscript>
+  <div class="pick" id="pick" aria-live="polite">
+    <div><b id="pick-t">Izaberite usluge iz cenovnika</b><p id="pick-s">Cene su u dinarima, važe od 19. 1. 2026.</p></div>
+    <div class="acts">
+      <a class="btn" id="go-viber" href="viber://chat?number=%2B381643025281">Viber</a>
+      <a class="btn btn--soft" id="go-wa" href="https://wa.me/381643025281" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn btn--soft" id="go-sms" href="sms:+381643025281">SMS</a>
+    </div>
+    <small id="pick-hint"></small>
+  </div>
+</section>
+
+<section class="visit" id="kontakt" aria-labelledby="k-h">
+  <div>
+    <h2 id="k-h" class="sec-h rise">Dođite kod tetke</h2>
+    <dl class="rise">
+      <dt>Adresa</dt><dd>Vere Dimitrijević 21, Zemun</dd>
+      <dt>Termin</dt><dd>Po dogovoru, radno vreme je klizno</dd>
+      <dt>Telefon</dt><dd class="num"><a href="tel:+381643025281">064 302 5281</a></dd>
+    </dl>
+    <div class="acts rise" style="margin-top:32px">
+      <a class="btn" href="viber://chat?number=%2B381643025281"><span>Pišite na Viber</span> <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--soft" href="https://www.google.com/maps/search/?api=1&query=Vere+Dimitrijevi%C4%87+21%2C+Zemun" target="_blank" rel="noopener"><span>Otvorite mapu</span> <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--soft" href="https://www.instagram.com/druga_kuca_21/" target="_blank" rel="noopener"><span>Instagram</span> <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </div>
+  <figure class="rise">
+    <img src="img/braon-posle.jpg" alt="Kosa posle farbanja i blagih talasa" width="627" height="1228" loading="lazy">
+    <figcaption>Iz salona: boja i blagi talasi.</figcaption>
+  </figure>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="foot-grid">
+    <div>
+      <a class="brand" href="#top" style="--lock:#f0a9a3"><svg aria-hidden="true"><use href="#mark"/></svg><span><b>Druga kuća</b><small>frizerski salon · kod tetke</small></span></a>
+      <p class="quote">„Male stvari čine veliko zadovoljstvo.“</p>
+    </div>
+    <div><h3>Kontakt</h3><ul><li><a class="num" href="tel:+381643025281">064 302 5281</a></li><li><a href="viber://chat?number=%2B381643025281">Viber</a></li><li><a href="https://wa.me/381643025281" target="_blank" rel="noopener">WhatsApp</a></li></ul></div>
+    <div><h3>Gde smo</h3><ul><li>Vere Dimitrijević 21</li><li>Zemun, Beograd</li><li><a href="https://www.instagram.com/druga_kuca_21/" target="_blank" rel="noopener" translate="no">@druga_kuca_21</a></li></ul></div>
+  </div>
+  <div class="foot-meta"><span>© 2026 Druga kuća · Sandra Đinović</span><a href="#top">Na vrh</a></div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement;root.classList.add('js');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var PHONE='381643025281';
+
+  /* price list from the salon's own cenovnik (19. 1. 2026), in dinars: [short, medium, long, extra long] */
+  var P=[
+    ['Šišanje i feniranje',[
+      ['Feniranje',[1000,1200,1400,1600]],['Šišanje',[1000,1100,1200,1300]],['Šišanje i feniranje',[2000,2300,2600,2900]],
+      ['Pranje i sušenje',[700,800,900,1100]],['Pranje, šišanje i sušenje',[1400,1600,1800,2100]],['Upotreba prese i figaro',[600,650,700,800]],['Pakovanje',[600,700,800,900]]]],
+    ['Boja',[
+      ['Farbanje – koren',[1800,2000,2200,2500]],['Farbanje – cela dužina',[2000,2200,2400,2800]],['Farbanje donetom bojom',[800,900,1000,1100]],['Preliv',[1200,1400,1600,1900]]]],
+    ['Pramenovi i blajhanje',[
+      ['Pramenovi – površinski',[2500,3000,3500,4000]],['Pramenovi – cela glava',[3500,5000,8000,9500]],
+      ['Blajhanje – koren',[2400,2800,3200,3600]],['Blajhanje – cela dužina',[3000,3500,4100,5000]],['Mini val',[2500,3500,4500,5500]]]],
+    ['Svečano, muškarci i deca',[
+      ['Punđa – svečana frizura',[0,2800,3300,4000]],['Pletenica – 1 kom.',[0,600,700,800]],['Pletenica u boji',[0,900,1100,1300]],
+      ['Muško šišanje',[950,0,0,0]],['Muško šišanje i pranje',[1100,0,0,0]],['Dečije muško šišanje',[600,0,0,0]],
+      ['Dečije žensko šišanje (suvo)',[800,900,1000,0]],['Dečije žensko šišanje (pranje i sušenje)',[1200,1300,1500,0]]]]
+  ];
+  var LEN=['kratka','srednja','duga','ekstra duga'],len=1,picked=[];
+  function din(n){return n.toLocaleString('de-DE')+' din'}
+
+  /* Latin -> Cyrillic (Serbian), so the page reads like the salon's own printed price list */
+  var MAP={'lj':'љ','Lj':'Љ','LJ':'Љ','nj':'њ','Nj':'Њ','NJ':'Њ','dž':'џ','Dž':'Џ','DŽ':'Џ','a':'а','b':'б','c':'ц','č':'ч','ć':'ћ','d':'д','đ':'ђ','e':'е','f':'ф','g':'г','h':'х','i':'и','j':'ј','k':'к','l':'л','m':'м','n':'н','o':'о','p':'п','r':'р','s':'с','š':'ш','t':'т','u':'у','v':'в','z':'з','ž':'ж',
+    'A':'А','B':'Б','C':'Ц','Č':'Ч','Ć':'Ћ','D':'Д','Đ':'Ђ','E':'Е','F':'Ф','G':'Г','H':'Х','I':'И','J':'Ј','K':'К','L':'Л','M':'М','N':'Н','O':'О','P':'П','R':'Р','S':'С','Š':'Ш','T':'Т','U':'У','V':'В','Z':'З','Ž':'Ж'};
+  var KEEP=/(Viber|WhatsApp|Instagram|SMS|Maxi|@druga_kuca_21)/;
+  function cyr(s){
+    return s.split(KEEP).map(function(part,i){
+      if(i%2)return part;
+      return part.replace(/Lj|LJ|lj|Nj|NJ|nj|Dž|DŽ|dž|[A-Za-zČčĆćĐđŠšŽž]/g,function(m){return MAP[m]||m});
+    }).join('');
+  }
+  var script='lat',orig=new WeakMap();
+  function T(s){return script==='cyr'?cyr(s):s}
+  function applyScript(){
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
+      var p=n.parentElement;if(!p||p.closest('script,style,[translate="no"],.script'))return NodeFilter.FILTER_REJECT;
+      return n.nodeValue.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}});
+    var n;while(n=w.nextNode()){if(!orig.has(n))orig.set(n,n.nodeValue);n.nodeValue=T(orig.get(n))}
+    document.querySelectorAll('img[alt],[aria-label]').forEach(function(e){['alt','aria-label'].forEach(function(a){
+      if(!e.hasAttribute(a))return;var k='o'+a.replace('-','');if(!e.dataset[k])e.dataset[k]=e.getAttribute(a);e.setAttribute(a,T(e.dataset[k]))})});
+    root.lang=script==='cyr'?'sr-Cyrl':'sr-Latn';
+    document.title=T('Druga kuća — frizerski salon u Zemunu');
+  }
+  document.querySelectorAll('.script button').forEach(function(b){b.addEventListener('click',function(){
+    script=b.dataset.s;document.querySelectorAll('.script button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+    try{localStorage.setItem('dk-script',script)}catch(e){}
+    renderAll();
+  })});
+
+  /* price list */
+  var groups=document.getElementById('groups');
+  function renderPrices(){
+    groups.innerHTML='';
+    P.forEach(function(g){
+      var box=document.createElement('div');box.className='group';
+      var h=document.createElement('h3');h.textContent=g[0];box.appendChild(h);
+      g[1].forEach(function(s){
+        var price=s[1][len],b=document.createElement('button');b.type='button';b.className='row';
+        var on=picked.indexOf(s[0])>-1;b.setAttribute('aria-pressed',on);
+        b.innerHTML='<span class="n"></span><span class="p num"></span><span class="add" aria-hidden="true">+</span>';
+        b.querySelector('.n').textContent=s[0];
+        var pe=b.querySelector('.p');pe.textContent=price?din(price):'—';if(!price)b.title='Za ovu dužinu ne radimo';if(!price){pe.classList.add('na');b.disabled=true}
+        b.addEventListener('click',function(){var i=picked.indexOf(s[0]);if(i>-1)picked.splice(i,1);else picked.push(s[0]);renderAll()});
+        box.appendChild(b);
+      });
+      groups.appendChild(box);
+    });
+  }
+  function priceOf(name){for(var i=0;i<P.length;i++)for(var j=0;j<P[i][1].length;j++)if(P[i][1][j][0]===name)return P[i][1][j][1][len];return 0}
+  function message(){
+    var lines=['Zdravo Sandra! Želela bih termin.'];
+    if(picked.length){lines.push('Usluge: '+picked.join(', ')+'.');lines.push('Dužina kose: '+LEN[len]+'.')}
+    lines.push('Kada imate slobodno?');
+    return T(lines.join('\n'));
+  }
+  function renderPick(){
+    picked=picked.filter(function(n){return priceOf(n)>0});
+    document.getElementById('pick').classList.toggle('has',picked.length>0);
+    var sum=picked.reduce(function(a,n){return a+priceOf(n)},0);
+    document.getElementById('pick-t').textContent=picked.length?(picked.length===1?picked[0]:picked.length+' usluge')+' · oko '+din(sum):'Izaberite usluge iz cenovnika';
+    document.getElementById('pick-s').textContent=picked.length?'Dužina: '+LEN[len]+'. Tačnu cenu potvrđujemo u salonu.':'Cene su u dinarima, važe od 19. 1. 2026.';
+    var m=encodeURIComponent(message());
+    document.getElementById('go-wa').href='https://wa.me/'+PHONE+'?text='+m;
+    document.getElementById('go-sms').href='sms:+'+PHONE+'?&body='+m;
+    document.getElementById('pick-hint').textContent='';
+  }
+  document.getElementById('go-viber').addEventListener('click',function(){
+    var hint=document.getElementById('pick-hint');
+    if(navigator.clipboard)navigator.clipboard.writeText(message()).then(function(){hint.textContent=T('Poruka je kopirana. Nalepite je u Viber.')},function(){});
+  });
+  document.querySelectorAll('.len button').forEach(function(b){b.addEventListener('click',function(){
+    len=+b.dataset.l;document.querySelectorAll('.len button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});renderAll();
+    if(!reduce)groups.animate([{opacity:.4},{opacity:1}],{duration:300});
+  })});
+
+  /* before / after */
+  var W=[
+    {pre:'img/pramen-pre.jpg',posle:'img/pramen-posle.jpg',t:'Pramenovi preko cele glave',d:'Topla, tamna boja prešla je u svetlu, hladnu plavu, bez žutih tonova.',s:'Pramenovi – cela glava'},
+    {pre:'img/braon-pre.jpg',posle:'img/braon-posle.jpg',t:'Boja i blagi talasi',d:'Ravna tamna kosa dobila je toplije, svetlije tonove i meke talase.',s:'Pramenovi – površinski'},
+    {pre:'img/plava-pre.jpg',posle:'img/plava-posle.jpg',t:'Blajhanje korena',d:'Izrastao tamni koren izjednačen je sa ostatkom kose.',s:'Blajhanje – koren'}
+  ],cur=0;
+  var cmp=document.getElementById('compare'),rng=document.getElementById('c-range');
+  rng.addEventListener('input',function(){cmp.style.setProperty('--pos',rng.value+'%')});
+  function renderWork(){
+    var w=W[cur],p=priceOf(w.s)||P[2][1][1][1][0];
+    document.getElementById('c-pre').src=w.pre;document.getElementById('c-posle').src=w.posle;
+    document.getElementById('w-t').textContent=w.t;document.getElementById('w-d').textContent=w.d;
+    document.getElementById('w-p').textContent=w.s+' ('+LEN[len]+' kosa): '+din(priceOf(w.s));
+  }
+  document.querySelectorAll('.ba-tabs button').forEach(function(b){b.addEventListener('click',function(){
+    cur=+b.dataset.w;document.querySelectorAll('.ba-tabs button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+    rng.value=50;cmp.style.setProperty('--pos','50%');renderAll();
+  })});
+
+  function renderAll(){renderPrices();renderPick();renderWork();applyScript()}
+  try{if(localStorage.getItem('dk-script')==='cyr'){script='cyr';document.querySelectorAll('.script button').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.s==='cyr')})}}catch(e){}
+  renderAll();
+
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var el=e.target,sib=[].slice.call(el.parentNode.children).filter(function(x){return x.classList.contains('rise')});setTimeout(function(){el.classList.add('in')},Math.max(0,sib.indexOf(el))*80);io.unobserve(el)}})},{rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.rise').forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>
