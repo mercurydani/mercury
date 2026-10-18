@@ -67,7 +67,6 @@
   var shots = document.querySelectorAll(".sat-screen img"), url = document.getElementById("sat-url"), cur = 0;
   if (shots.length > 1 && !reduce) setInterval(function () {
     shots[cur].classList.remove("on"); cur = (cur + 1) % shots.length; shots[cur].classList.add("on");
-    if (url) url.textContent = shots[cur].dataset.url;
   }, 3800);
 
   /* ---------- where Mercury is today (mean heliocentric longitude, J2000) ---------- */
