@@ -26,9 +26,10 @@ h1, h2, h3, h4, p, figure { margin: 0; }
 .bar a:hover { text-decoration: underline; }
 .bar a[aria-current] { text-decoration: underline; }
 .lang { display: flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
-.lang button { background: none; border: 0; padding: 4px 9px; font: 500 12px var(--sans); color: var(--mute); cursor: pointer; }
-.lang button + button { border-left: 1px solid var(--rule); }
-.lang button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.bar .lang a { padding: 4px 9px; font: 500 12px var(--sans); color: var(--mute); text-decoration: none; }
+.bar .lang a + a { border-left: 1px solid var(--rule); }
+.bar .lang a:hover { color: var(--text); text-decoration: none; }
+.bar .lang a[aria-current="true"] { background: var(--text); color: var(--bg); text-decoration: none; }
 
 /* intro */
 .intro { padding: clamp(40px, 6vw, 80px) 0 clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 7fr 5fr; gap: clamp(24px, 5vw, 80px); align-items: end; }

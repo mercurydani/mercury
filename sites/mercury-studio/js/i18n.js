@@ -2,9 +2,10 @@
    Default language: Serbian (Latin). Add a key to all three languages. */
 const I18N = {
   sr: {
-    meta_title: "Mercury Studio — sajtovi, internet prodavnice i Telegram botovi · Beograd",
+    meta_title: "Izrada sajtova i Telegram botova u Beogradu · Mercury Studio",
     meta_title_work: "Primeri radova — Mercury Studio",
-    meta_desc: "Web studio iz Beograda: sajtovi, internet prodavnice, Telegram botovi, dizajn, SEO i podrška sajta za male biznise. Srpski, engleski, ruski.",
+    meta_desc: "Mercury Studio iz Beograda: izrada sajtova, internet prodavnica i Telegram botova, dizajn i SEO za male biznise. Radimo na srpskom, engleskom i ruskom.",
+    meta_desc_work: "Primeri sajtova i internet prodavnica koje je napravio Mercury Studio za klijente u Srbiji, Rusiji i Kazahstanu: Sushi Tempo, KazRenCompany, J’adore Wedding.",
 
     nav_services: "Usluge",
     nav_process: "Kako radimo",
@@ -247,9 +248,10 @@ const I18N = {
   },
 
   en: {
-    meta_title: "Mercury Studio — websites, online stores & Telegram bots · Belgrade",
+    meta_title: "Websites & Telegram bots in Belgrade · Mercury Studio",
     meta_title_work: "Our work — Mercury Studio",
-    meta_desc: "A Belgrade web studio: websites, online stores, Telegram bots, design, SEO and site support for small businesses. Serbian, English, Russian.",
+    meta_desc: "Mercury Studio in Belgrade: websites, online stores, Telegram bots, design and SEO for small businesses. We work in Serbian, English and Russian.",
+    meta_desc_work: "Websites and online stores built by Mercury Studio for clients in Serbia, Russia and Kazakhstan: Sushi Tempo, KazRenCompany, J’adore Wedding.",
 
     nav_services: "Services",
     nav_process: "Process",
@@ -492,9 +494,10 @@ const I18N = {
   },
 
   ru: {
-    meta_title: "Mercury Studio — сайты, интернет-магазины и Telegram-боты · Белград",
+    meta_title: "Создание сайтов и Telegram-ботов в Белграде · Mercury Studio",
     meta_title_work: "Примеры работ — Mercury Studio",
-    meta_desc: "Веб-студия в Белграде: сайты, интернет-магазины, Telegram-боты, дизайн, SEO и поддержка сайтов для малого бизнеса. Сербский, английский, русский.",
+    meta_desc: "Mercury Studio в Белграде: создание сайтов, интернет-магазинов и Telegram-ботов, дизайн и SEO для малого бизнеса. Работаем на сербском, английском и русском.",
+    meta_desc_work: "Сайты и интернет-магазины, которые Mercury Studio сделала для клиентов в Сербии, России и Казахстане: Sushi Tempo, KazRenCompany, J’adore Wedding.",
 
     nav_services: "Услуги",
     nav_process: "Как работаем",
@@ -737,78 +740,17 @@ const I18N = {
   },
 };
 
+/* Each language has its own URL (/, /en/, /ru/) and build.mjs writes the text into the HTML,
+   so this script no longer swaps text. It only remembers the chosen language and runs small UI bits. */
 (function () {
-  const LANGS = ["sr", "en", "ru"];
-  const HTML_LANG = { sr: "sr-Latn", en: "en", ru: "ru" };
-
-  function getSaved() {
-    try { return localStorage.getItem("lang"); } catch (e) { return null; }
-  }
-  function save(l) {
-    try { localStorage.setItem("lang", l); } catch (e) {}
-  }
-
-  function apply(lang) {
-    const dict = I18N[lang] || I18N.sr;
-    document.documentElement.lang = HTML_LANG[lang];
-    document.querySelectorAll("[data-i18n]").forEach((el) => {
-      const v = dict[el.dataset.i18n];
-      if (v !== undefined) el.textContent = v;
-    });
-    document.querySelectorAll("[data-i18n-html]").forEach((el) => {
-      const v = dict[el.dataset.i18nHtml];
-      if (v !== undefined) el.innerHTML = v;
-    });
-    const titleKey = document.body.dataset.titleKey || "meta_title";
-    document.title = dict[titleKey];
-    const md = document.querySelector('meta[name="description"]');
-    if (md) md.setAttribute("content", dict.meta_desc);
-    document.querySelectorAll(".lang button").forEach((b) => {
-      b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
-    });
-    // keep language when moving between pages
-    document.querySelectorAll("a[data-keep-lang]").forEach((a) => {
-      const url = new URL(a.getAttribute("href"), location.href);
-      if (lang === "sr") url.searchParams.delete("lang");
-      else url.searchParams.set("lang", lang);
-      a.setAttribute("href", url.pathname.split("/").pop() + url.search + url.hash);
-    });
-  }
-
-  function setLang(lang) {
-    if (!LANGS.includes(lang)) lang = "sr";
-    save(lang);
-    apply(lang);
-    const url = new URL(location.href);
-    if (lang === "sr") url.searchParams.delete("lang");
-    else url.searchParams.set("lang", lang);
-    try { history.replaceState(null, "", url); } catch (e) {}
-  }
+  const cur = (document.documentElement.lang || "sr").slice(0, 2);
+  const remember = (l) => { try { localStorage.setItem("lang", l); } catch (e) {} };
+  remember(cur);
 
   document.addEventListener("DOMContentLoaded", () => {
-    const fromUrl = new URL(location.href).searchParams.get("lang");
-    const initial = LANGS.includes(fromUrl) ? fromUrl : (LANGS.includes(getSaved()) ? getSaved() : "sr");
-    apply(initial);
-
-    document.querySelectorAll(".lang button").forEach((b) =>
-      b.addEventListener("click", () => setLang(b.dataset.lang))
+    document.querySelectorAll(".lang a[data-lang]").forEach((a) =>
+      a.addEventListener("click", () => remember(a.dataset.lang))
     );
-
-    // mobile menu
-    const burger = document.querySelector(".burger");
-    const header = document.querySelector(".header");
-    if (burger) {
-      burger.addEventListener("click", () => {
-        const open = header.classList.toggle("open");
-        burger.setAttribute("aria-expanded", String(open));
-      });
-      document.querySelectorAll(".nav a").forEach((a) =>
-        a.addEventListener("click", () => {
-          header.classList.remove("open");
-          burger.setAttribute("aria-expanded", "false");
-        })
-      );
-    }
 
     // reveal on scroll
     const els = document.querySelectorAll(".reveal");
