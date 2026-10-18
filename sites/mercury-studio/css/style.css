@@ -253,3 +253,15 @@ html:not(.js) .reveal { opacity: 1; transform: none; }
 .sat { position: absolute; left: 24%; top: 38%; width: 54%; height: 36%; z-index: 2; border-radius: 18px; }
 .sat > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .sat:focus-visible { outline: 2px solid var(--blue-hi); outline-offset: 6px; }
+
+/* phone: the planet sits between the words and the buttons */
+@media (max-width: 980px) {
+  .intro .lede { display: contents; }
+  .intro h1, .intro .lede > *, .planet-wrap { grid-row: auto; grid-column: 1; }
+  .intro h1 { order: 1; }
+  .intro .lede > p:first-child { order: 2; margin-top: 24px; }
+  .intro .traits { order: 3; }
+  .planet-wrap { order: 4; margin: 40px auto 36px; }
+  .intro .hero-acts { order: 5; margin-top: 0; }
+  .intro .orbit-now { order: 6; }
+}
