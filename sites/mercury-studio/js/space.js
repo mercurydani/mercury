@@ -58,51 +58,55 @@
       blot(x - rad * .06, y - rad * .06, rad * .88, "#777b83", .32);
       blot(x - rad * .3, y - rad * .3, rad * .45, "#9ea2aa", .16);
     }
+    /* where the billboard stands: a dark trench dug into the ground and blue light spilling round it */
+    var BLAT = -0.17, BU = TW / 2, BV = Math.round(TH * (0.5 - BLAT / Math.PI));
+    g.save(); g.filter = "blur(26px)"; g.fillStyle = "rgba(10,12,18,.85)";
+    g.beginPath(); g.ellipse(BU, BV, TW * 37 / 360, TH * 23 / 180, 0, 0, 6.2832); g.fill(); g.restore();
+    g.save(); g.filter = "blur(60px)"; g.globalCompositeOperation = "lighter"; g.fillStyle = "rgba(61,107,255,.22)";
+    g.beginPath(); g.ellipse(BU, BV, TW * 44 / 360, TH * 30 / 180, 0, 0, 6.2832); g.fill(); g.restore();
     var baseData = g.getImageData(0, 0, TW, TH).data;
 
-    /* the screen lives in the texture: lon -38..38 deg, lat -22..22 deg around the front */
-    var em = document.createElement("canvas"); em.width = TW; em.height = TH;
-    var e = em.getContext("2d"), emData = null;
-    var SX0 = Math.round(TW * (0.5 - 38 / 360)), SX1 = Math.round(TW * (0.5 + 38 / 360));
-    var SY0 = Math.round(TH * (0.5 - 22 / 180)), SY1 = Math.round(TH * (0.5 + 22 / 180));
+    /* the billboard's face: a flat screen, painted once per slide */
+    var SW = 1200, SH = 740, scr = document.createElement("canvas"); scr.width = SW; scr.height = SH;
+    var e = scr.getContext("2d");
     var sat = document.querySelector(".sat");
     var say = sat ? (sat.querySelector(".sat-say b") || {}).textContent : "";
     var sub = sat ? (sat.querySelector(".sat-say span") || {}).textContent : "";
     var urlT = (document.getElementById("sat-url") || {}).textContent || "";
     var pics = sat ? Array.prototype.slice.call(sat.querySelectorAll(".sat-screen img")) : [], pic = 0;
-    function rr(c, x, y, w, h, rd) { c.beginPath(); c.moveTo(x + rd, y); c.arcTo(x + w, y, x + w, y + h, rd); c.arcTo(x + w, y + h, x, y + h, rd); c.arcTo(x, y + h, x, y, rd); c.arcTo(x, y, x + w, y, rd); c.closePath(); }
     function wrap(c, text, maxW) {
       var words = text.split(" "), lines = [], line = "";
       words.forEach(function (w) { var t = line ? line + " " + w : w; if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; });
       if (line) lines.push(line); return lines;
     }
     function paintScreen() {
-      var W = SX1 - SX0, H = SY1 - SY0, pad = 56;
-      e.clearRect(0, 0, TW, TH);
-      e.save();
-      e.shadowColor = "rgba(61,107,255,.95)"; e.shadowBlur = 90;          // glow spilling onto the ground
-      rr(e, SX0, SY0, W, H, 34); e.fillStyle = "#0a0d13"; e.fill();
-      e.shadowBlur = 40; e.fill();
-      e.restore();
-      e.save(); rr(e, SX0, SY0, W, H, 34); e.clip();
+      var bar = 92, pad = 96;
+      e.fillStyle = "#0a0d13"; e.fillRect(0, 0, SW, SH);
       var img = pics[pic];
       if (img && img.complete && img.naturalWidth) {
-        var ih = W * img.naturalHeight / img.naturalWidth;
-        e.globalAlpha = .38; e.drawImage(img, SX0, SY0 + 64, W, Math.max(ih, H)); e.globalAlpha = 1;
+        var ih = SW * img.naturalHeight / img.naturalWidth;
+        e.globalAlpha = .4; e.drawImage(img, 0, bar, SW, Math.max(ih, SH - bar)); e.globalAlpha = 1;
       }
-      e.fillStyle = "rgba(6,9,16,.6)"; e.fillRect(SX0, SY0, W, H);
-      e.fillStyle = "#141a26"; e.fillRect(SX0, SY0, W, 64);
-      ["#6a8dff", "#343c4d", "#343c4d"].forEach(function (c, i) { e.fillStyle = c; e.beginPath(); e.arc(SX0 + 40 + i * 30, SY0 + 32, 9, 0, 6.2832); e.fill(); });
-      e.fillStyle = "#9ba3b1"; e.font = "500 26px Onest, sans-serif"; e.textBaseline = "middle"; e.fillText(urlT, SX0 + 140, SY0 + 33);
-      e.fillStyle = "#ffffff"; e.font = "700 62px Onest, sans-serif"; e.textBaseline = "alphabetic";
-      var lines = wrap(e, say, W - pad * 2), lh = 66, ty = SY0 + 64 + (H - 64) / 2 - ((lines.length - 1) * lh + 60) / 2 + 22;
-      lines.forEach(function (l, i) { e.fillText(l, SX0 + pad, ty + i * lh); });
-      e.fillStyle = "#b9c8ff"; e.font = "600 30px Onest, sans-serif"; e.fillText(sub, SX0 + pad, ty + (lines.length - 1) * lh + 58);
-      e.restore();
-      e.save(); rr(e, SX0, SY0, W, H, 34); e.lineWidth = 6; e.strokeStyle = "rgba(106,141,255,.8)"; e.stroke(); e.restore();
-      emData = e.getImageData(0, 0, TW, TH).data;
+      e.fillStyle = "rgba(6,9,16,.58)"; e.fillRect(0, bar, SW, SH - bar);
+      e.fillStyle = "#141a26"; e.fillRect(0, 0, SW, bar);
+      ["#6a8dff", "#343c4d", "#343c4d"].forEach(function (c, i) { e.fillStyle = c; e.beginPath(); e.arc(56 + i * 42, bar / 2, 13, 0, 6.2832); e.fill(); });
+      e.fillStyle = "#9ba3b1"; e.font = "500 40px Onest, sans-serif"; e.textBaseline = "middle"; e.fillText(urlT, 200, bar / 2 + 2);
+      e.textBaseline = "alphabetic"; e.fillStyle = "#fff"; e.font = "700 112px Onest, sans-serif";
+      var lines = wrap(e, say, SW - pad * 2), lh = 118, block = (lines.length - 1) * lh + 112 + 90;
+      var ty = bar + (SH - bar - block) / 2 + 96;
+      lines.forEach(function (l, i) { e.fillText(l, pad, ty + i * lh); });
+      e.fillStyle = "#b9c8ff"; e.font = "600 54px Onest, sans-serif"; e.fillText(sub, pad, ty + (lines.length - 1) * lh + 96);
+      var sh = e.createLinearGradient(0, 0, SW * .7, SH); sh.addColorStop(0, "rgba(255,255,255,.08)"); sh.addColorStop(.45, "rgba(255,255,255,0)"); // glass glare
+      e.fillStyle = sh; e.fillRect(0, 0, SW, SH);
     }
 
+    /* billboard geometry in sphere units: a flat panel standing out of the surface, with a frame and depth */
+    function bill(off) {
+      var ph = -off, th = BLAT, cp = Math.cos(ph), sp = Math.sin(ph), ct = Math.cos(th), st = Math.sin(th);
+      var n = [ct * sp, -st, ct * cp], east = [cp, 0, -sp], down = [st * sp, ct, st * cp];
+      function pt(dn, ex, dy) { return [n[0] * dn + east[0] * ex + down[0] * dy, n[1] * dn + east[1] * ex + down[1] * dy, n[2] * dn + east[2] * ex + down[2] * dy]; }
+      return { n: n, east: east, down: down, pt: pt };
+    }
     /* per-pixel sphere: orthographic view, lit from the upper left */
     var N = 0, px, out, ctx2 = cv.getContext("2d"), idx, lonA, rowA, shadeA, limbA;
     function setup() {
@@ -126,17 +130,41 @@
         var u = (lonA[q] + off) / twoPi + 0.5; u -= Math.floor(u);
         var t = (rowA[q] * TW + ((u * TW) | 0)) * 4, s = shadeA[q];
         var rr_ = baseData[t] * s, gg = baseData[t + 1] * s, bb = baseData[t + 2] * s;
-        if (emData) {
-          var a = emData[t + 3] / 255;
-          if (a > 0) { var k2 = limbA[q]; rr_ = rr_ * (1 - a) + emData[t] * k2 * a; gg = gg * (1 - a) + emData[t + 1] * k2 * a; bb = bb * (1 - a) + emData[t + 2] * k2 * a; }
-        }
         px[idx[q]] = 0xff000000 | (Math.min(255, bb) << 16) | (Math.min(255, gg) << 8) | Math.min(255, rr_);
       }
       ctx2.putImageData(out, 0, 0);
+      drawBill(off);
+    }
+    function drawBill(off) {
+      var B = bill(off), R = N / 2, F = 0.94, D = 0.16, A = 0.5, H = 0.31, FR = 0.035;
+      function P(v) { return [R + v[0] * R, R + v[1] * R]; }
+      var c = ctx2;
+      function quad(p, fill) { c.beginPath(); c.moveTo(p[0][0], p[0][1]); for (var i = 1; i < p.length; i++) c.lineTo(p[i][0], p[i][1]); c.closePath(); c.fillStyle = fill; c.fill(); }
+      var fA = A + FR, fH = H + FR;
+      var f = [B.pt(F, -fA, -fH), B.pt(F, fA, -fH), B.pt(F, fA, fH), B.pt(F, -fA, fH)];
+      var k = [B.pt(F - D, -fA, -fH), B.pt(F - D, fA, -fH), B.pt(F - D, fA, fH), B.pt(F - D, -fA, fH)];
+      var Lx = -0.55, Ly = -0.5, Lz = 0.67;
+      function lit(nv, base) { var d = Math.max(0, nv[0] * Lx + nv[1] * Ly + nv[2] * Lz), v = Math.round(base * (0.35 + 0.9 * d)); return "rgb(" + v + "," + (v + 3) + "," + (v + 10) + ")"; }
+      var sides = [ [[0, 1], [-B.down[0], -B.down[1], -B.down[2]]], [[1, 2], B.east], [[2, 3], B.down], [[3, 0], [-B.east[0], -B.east[1], -B.east[2]]] ];
+      c.save();
+      sides.forEach(function (sd) {                         // the thickness of the panel
+        var nv = sd[1]; if (nv[2] <= 0.002) return;
+        var i = sd[0][0], j = sd[0][1];
+        quad([P(f[i]), P(f[j]), P(k[j]), P(k[i])], lit(nv, 92));
+      });
+      c.shadowColor = "rgba(61,107,255,.9)"; c.shadowBlur = R * .16;   // the screen's light
+      quad(f.map(P), "#1c212c");
+      c.shadowBlur = 0;
+      quad(f.map(P), lit(B.n, 70));                         // the frame face
+      var s0 = P(B.pt(F + .001, -A, -H)), s1 = P(B.pt(F + .001, A, -H)), s3 = P(B.pt(F + .001, -A, H));
+      c.setTransform((s1[0] - s0[0]) / SW, (s1[1] - s0[1]) / SW, (s3[0] - s0[0]) / SH, (s3[1] - s0[1]) / SH, s0[0], s0[1]);
+      c.drawImage(scr, 0, 0);
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.restore();
     }
     setup();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    ready.then(function () { paintScreen(); render(swing(performance.now())); });
+    paintScreen(); ready.then(function () { paintScreen(); render(swing(performance.now())); });
     pics.forEach(function (im) { im.loading = "eager"; if (!im.complete) im.addEventListener("load", function () { if (im === pics[pic]) paintScreen(); }); });
     function swing(now) { return reduce ? 0 : 0.42 * Math.sin(now / 1000 * 0.22); }  // the planet turns side to side, about 24 degrees
     render(0);

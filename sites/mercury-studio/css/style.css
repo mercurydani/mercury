@@ -250,6 +250,6 @@ html:not(.js) .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .js .intro h1, .js .intro .lede > *, .js .planet-wrap { animation: none; } }
 
 /* the screen is painted into the planet by space.js; this link is the clickable spot over it */
-.sat { position: absolute; left: 22%; top: 30%; width: 56%; height: 40%; z-index: 2; border-radius: 18px; }
+.sat { position: absolute; left: 24%; top: 38%; width: 54%; height: 36%; z-index: 2; border-radius: 18px; }
 .sat > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .sat:focus-visible { outline: 2px solid var(--blue-hi); outline-offset: 6px; }
