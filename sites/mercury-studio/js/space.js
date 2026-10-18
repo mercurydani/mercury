@@ -13,7 +13,7 @@
       var r = rng(7), n = Math.round(w * h / 4200); stars = [];
       for (var i = 0; i < n; i++) {
         var z = r();
-        stars.push({ x: r() * w, y: r() * h * 1.6, s: .3 + z * z * 1.4, a: .25 + r() * .6, z: z, tw: r() < .12 ? r() * 6.28 : -1, blue: r() < .18 });
+        stars.push({ x: r() * w, y: r() * h * 1.6, s: .3 + z * z * 1.4, a: .25 + r() * .6, z: z, tw: r() < .5 ? r() * 6.28 : -1, sp: .5 + r() * 1.6, blue: r() < .18 });
       }
     }
     function draw(now) {
@@ -23,7 +23,7 @@
         var s = stars[i], y = (s.y - sy * (0.02 + s.z * 0.08)) % (h * 1.6);
         if (y < 0) y += h * 1.6;
         if (y > h) continue;
-        var a = s.tw >= 0 && !reduce ? s.a * (.55 + .45 * Math.sin(t * 1.3 + s.tw)) : s.a;
+        var a = s.tw >= 0 && !reduce ? s.a * (.7 + .3 * Math.sin(t * s.sp + s.tw)) : s.a;
         ctx.globalAlpha = a; ctx.fillStyle = s.blue ? "#a9bcff" : "#ffffff";
         ctx.beginPath(); ctx.arc(s.x, y, s.s, 0, 6.2832); ctx.fill();
       }
@@ -62,6 +62,13 @@
     }
     try { planet.style.backgroundImage = "url(" + c.toDataURL("image/jpeg", .86) + ")"; } catch (e) {}
   }
+
+  /* ---------- the screen in orbit cycles through our work ---------- */
+  var shots = document.querySelectorAll(".sat-screen img"), url = document.getElementById("sat-url"), cur = 0;
+  if (shots.length > 1 && !reduce) setInterval(function () {
+    shots[cur].classList.remove("on"); cur = (cur + 1) % shots.length; shots[cur].classList.add("on");
+    if (url) url.textContent = shots[cur].dataset.url;
+  }, 3800);
 
   /* ---------- where Mercury is today (mean heliocentric longitude, J2000) ---------- */
   var line = document.getElementById("orbit-now");

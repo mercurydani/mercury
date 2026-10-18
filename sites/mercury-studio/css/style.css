@@ -71,7 +71,7 @@ button { font: inherit; color: inherit; }
 
 /* the planet: a texture rolled across a circle, lit from the upper left, a blue sunrise on the limb */
 .planet-wrap { position: relative; grid-column: 2; grid-row: 1 / span 2; align-self: center; justify-self: end; width: min(46vw, 660px); aspect-ratio: 1; margin-right: calc(-1 * var(--pad) - 4vw); z-index: 0; }
-.planet { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; background-color: #5d6169; background-size: 200% 100%; background-repeat: repeat-x; animation: spin 140s linear infinite; }
+.planet { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; background-color: #5d6169; background-size: 200% 100%; background-repeat: repeat-x; animation: spin 70s linear infinite; }
 .planet::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
   background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.18) 0, rgba(255,255,255,0) 34%), radial-gradient(circle at 70% 72%, rgba(3,5,9,.0) 0, rgba(3,5,9,.55) 46%, rgba(3,5,9,.96) 68%); } /* taste-skill-ignore: shading of the drawn sphere */
 .planet-wrap::before { content: ""; position: absolute; inset: -1.5%; border-radius: 50%;
@@ -252,3 +252,17 @@ html:not(.js) .reveal { opacity: 1; transform: none; }
 .js .planet-wrap { animation: planet-in 1.6s var(--ease) .1s both; }
 .show-tabs button, .work .shot, .flow li, .end li a { will-change: auto; }
 @media (prefers-reduced-motion: reduce) { .js .intro h1, .js .intro .lede > *, .js .planet-wrap { animation: none; } }
+
+/* a screen in orbit: our work, one site after another */
+.sat { position: absolute; left: -16%; bottom: 10%; width: 52%; z-index: 2; display: block; border-radius: 14px; overflow: hidden; background: var(--hull-2); text-decoration: none; outline: 6px solid rgba(6,8,12,.9); animation: drift 9s ease-in-out infinite; transition: transform .3s var(--ease); }
+.sat:hover { animation-play-state: paused; transform: translateY(-6px) rotate(-2deg) scale(1.03); }
+.sat-bar { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; background: var(--hull-3); }
+.sat-bar i { width: 8px; height: 8px; border-radius: 50%; background: #3a4150; }
+.sat-bar i:first-child { background: var(--blue-hi); }
+.sat-bar b { margin-left: 8px; font-weight: 500; font-size: 12px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sat-screen { position: relative; display: block; aspect-ratio: 16 / 10; background: var(--hull); }
+.sat-screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transition: opacity .9s ease; }
+.sat-screen img.on { opacity: 1; }
+@keyframes drift { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(-1.5deg); } }
+@media (max-width: 980px) { .sat { left: -6%; width: 56%; bottom: 4%; } }
+@media (prefers-reduced-motion: reduce) { .sat { animation: none; transform: rotate(-3deg); } }
