@@ -47,6 +47,42 @@
         ],
         "createdAt": "2026-10-16T12:58:56.188Z",
         "reason": "Claude triage: sizes are clamp()/var tokens the static scan reads as 16px; rendered h1 84px, h2 56px, body 18px"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/mercury-studio/index.html"
+        ],
+        "createdAt": "2026-10-18T20:49:53.460Z",
+        "reason": "Claude triage: .promo/.show-body/.end pad via clamp() vars (9-72px); browser screenshots at 1440/390 show the inset"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/mercury-studio/en/index.html"
+        ],
+        "createdAt": "2026-10-18T20:49:53.472Z",
+        "reason": "Claude triage: .promo/.show-body/.end pad via clamp() vars (9-72px); browser screenshots at 1440/390 show the inset"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/mercury-studio/ru/index.html"
+        ],
+        "createdAt": "2026-10-18T20:49:53.484Z",
+        "reason": "Claude triage: .promo/.show-body/.end pad via clamp() vars (9-72px); browser screenshots at 1440/390 show the inset"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/mercury-studio/css/style.css"
+        ],
+        "createdAt": "2026-10-18T20:49:53.496Z",
+        "reason": "Claude triage: .promo/.show-body/.end pad via clamp() vars (9-72px); browser screenshots at 1440/390 show the inset"
       }
     ]
   }
