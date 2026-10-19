@@ -83,6 +83,24 @@
         ],
         "createdAt": "2026-10-18T20:49:53.496Z",
         "reason": "Claude triage: .promo/.show-body/.end pad via clamp() vars (9-72px); browser screenshots at 1440/390 show the inset"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/sparkly/index.html"
+        ],
+        "createdAt": "2026-10-19T16:29:02.378Z",
+        "reason": "Claude triage: .coll/.proba/.kon pad via clamp() vars (40-168px); 390/1440 screenshots show the inset"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "sites/sparkly/index.html"
+        ],
+        "createdAt": "2026-10-19T16:29:02.403Z",
+        "reason": "Client brief fixes the palette: ivory #F8F4EC, champagne #E9DCC8"
       }
     ]
   }
