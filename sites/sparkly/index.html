@@ -59,6 +59,15 @@ button{font:inherit;color:inherit}
 .hero h1 i{font-style:italic}
 .hero p.sub{margin-top:18px;font-size:clamp(1.0625rem,1rem + .4vw,1.25rem);line-height:1.5;max-width:30ch;color:rgba(248,244,236,.92)}
 .hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.hero-pic{position:absolute;inset:0}
+@media (min-width:861px){
+  .hero{align-items:center}
+  .hero-pic{left:auto;width:min(calc(100svh * 720 / 954),56%)}
+  .hero video,.hero .poster{object-position:50% 0}
+  .hero::after{background:linear-gradient(90deg,#2b2621 0,#2b2621 calc(100% - min(calc(100svh * 720 / 954),56%)),rgba(43,38,33,0) calc(100% - min(calc(100svh * 720 / 954),56%) + 120px)),linear-gradient(180deg,rgba(30,27,24,.3) 0,rgba(30,27,24,0) 22%)} /* taste-skill-ignore: scrim blends the photo into the text panel */
+  .hero-in{padding:120px var(--m) 80px;max-width:calc(100% - min(calc(100svh * 720 / 954),56%) + 40px)}
+  .hero .vid-note{right:auto;left:24px;top:auto;bottom:24px}
+}
 .vid-note{position:absolute;z-index:2;top:84px;right:var(--m);font-size:.8125rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(248,244,236,.75);border:1px solid rgba(248,244,236,.35);padding:7px 12px} /* taste-skill-ignore: sketch annotation */
 
 /* BIG SIZE */
@@ -217,13 +226,15 @@ figcaption{margin-top:10px}
 
 <main>
 <section class="hero" aria-labelledby="h1">
-  <img class="poster" src="img/big-2.jpg" alt="" width="720" height="954">
-  <video autoplay muted loop playsinline preload="none" poster="img/big-2.jpg" aria-hidden="true"><source src="video/hero.mp4" type="video/mp4"></video>
-  <span class="vid-note">Skica · ovde ide video haljine</span>
+  <div class="hero-pic">
+    <img class="poster" src="img/big-2.jpg" alt="" width="720" height="954">
+    <video autoplay muted loop playsinline preload="none" poster="img/big-2.jpg" aria-hidden="true"><source src="video/hero.mp4" type="video/mp4"></video>
+    <span class="vid-note">Skica · ovde ide video haljine</span>
+  </div>
   <div class="hero-in">
     <p class="caps rise">Niš · Obrenovićeva</p>
     <h1 id="h1" class="rise">Venčanice<br><i>Sparkly</i></h1>
-    <p class="sub rise">Venčanice i svečane haljine u Nišu. Iznajmljivanje i prodaja.</p>
+    <p class="sub rise">Venčanice i svečane haljine u Nišu. Iznajmljivanje i prodaja. Modeli iz Ukrajine, Dubaija i drugih zemalja.</p>
     <div class="acts rise">
       <a class="btn btn--light" href="viber://chat?number=%2B381641913966">Zakaži probu</a>
       <a class="btn btn--ghost-light" href="#kolekcija">Pogledaj kolekciju</a>
@@ -236,7 +247,7 @@ figcaption{margin-top:10px}
     <p class="caps rise">Big size</p>
     <h2 id="big-h" class="rise">Venčanice za svaku figuru</h2>
     <p class="lead rise">Veliki izbor BIG SIZE modela, jer svaka mlada zaslužuje haljinu iz snova.</p>
-    <p class="badge rise">BIG SIZE</p>
+    <p class="badge rise">Do veličine 60</p>
     <a class="btn rise" href="#kolekcija" data-filter="big">Pogledaj BIG SIZE kolekciju</a>
   </div>
   <div class="big-pics">
@@ -292,8 +303,8 @@ figcaption{margin-top:10px}
 <section class="why" aria-labelledby="why-h">
   <div><p class="caps rise">Zašto Sparkly</p><h2 id="why-h" class="rise">Zašto mlade biraju nas</h2></div>
   <ul>
-    <li class="rise"><b aria-hidden="true"></b><span>Veliki izbor BIG SIZE venčanica</span></li>
-    <li class="rise"><b aria-hidden="true"></b><span>Kolekcije ukrajinskih dizajnera</span></li>
+    <li class="rise"><b aria-hidden="true"></b><span>BIG SIZE venčanice do veličine 60</span></li>
+    <li class="rise"><b aria-hidden="true"></b><span>Haljine iz Ukrajine, Dubaija i drugih zemalja</span></li>
     <li class="rise"><b aria-hidden="true"></b><span>Iznajmljivanje ili kupovina, kako vama odgovara</span></li>
   </ul>
 </section>
