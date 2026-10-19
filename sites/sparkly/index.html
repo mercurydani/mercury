@@ -61,13 +61,25 @@ button{font:inherit;color:inherit}
 .hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
 .hero-pic{position:absolute;inset:0}
 @media (min-width:861px){
-  .hero{align-items:center}
-  .hero-pic{left:auto;width:min(calc(100svh * 720 / 954),56%)}
+  .hero{--pw:min(calc(100svh * 720 / 954),56%);align-items:center;background:var(--champagne);color:var(--ink)}
+  .hero-pic{left:auto;width:var(--pw);border-left:1px solid var(--gold)}
   .hero video,.hero .poster{object-position:50% 0}
-  .hero::after{background:linear-gradient(90deg,#2b2621 0,#2b2621 calc(100% - min(calc(100svh * 720 / 954),56%)),rgba(43,38,33,0) calc(100% - min(calc(100svh * 720 / 954),56%) + 120px)),linear-gradient(180deg,rgba(30,27,24,.3) 0,rgba(30,27,24,0) 22%)} /* taste-skill-ignore: scrim blends the photo into the text panel */
-  .hero-in{padding:120px var(--m) 80px;max-width:calc(100% - min(calc(100svh * 720 / 954),56%) + 40px)}
-  .hero .vid-note{right:auto;left:24px;top:auto;bottom:24px}
+  .hero::after{display:none}
+  .hero-in{padding:110px var(--m) 130px;max-width:calc(100% - var(--pw))}
+  .hero .caps{color:var(--taupe-ink)}
+  .hero p.sub{color:var(--taupe-ink);max-width:34ch}
+  .hero h1 i{color:var(--taupe-ink)}
+  .hero .btn--light{background:var(--ink);color:var(--ivory);border-color:var(--ink)}
+  .hero .btn--light:hover{background:#000}
+  .hero .btn--ghost-light{color:var(--ink);border-color:var(--ink)}
+  .hero .btn--ghost-light:hover{background:var(--ink);color:var(--ivory)}
+  .hero .vid-note{right:auto;left:24px;top:auto;bottom:24px;background:rgba(30,27,24,.45)}
+  .top{color:var(--ink);justify-content:flex-start;gap:clamp(28px,3vw,56px)}
+  .top nav{gap:28px}
+  .hero-facts{display:flex!important;position:absolute;z-index:1;left:var(--m);right:calc(var(--pw) + var(--m));bottom:40px;gap:28px;padding:18px 0 0;border-top:1px solid rgba(183,154,107,.6);list-style:none;margin:0;font-size:.8125rem;letter-spacing:.18em;text-transform:uppercase;color:var(--taupe-ink)}
+  .top .tel{margin-left:auto;background:rgba(248,244,236,.9);padding:9px 14px}
 }
+.hero-facts{display:none}
 .vid-note{position:absolute;z-index:2;top:84px;right:var(--m);font-size:.8125rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(248,244,236,.75);border:1px solid rgba(248,244,236,.35);padding:7px 12px} /* taste-skill-ignore: sketch annotation */
 
 /* BIG SIZE */
@@ -231,6 +243,7 @@ figcaption{margin-top:10px}
     <video autoplay muted loop playsinline preload="none" poster="img/big-2.jpg" aria-hidden="true"><source src="video/hero.mp4" type="video/mp4"></video>
     <span class="vid-note">Skica · ovde ide video haljine</span>
   </div>
+  <ul class="hero-facts" aria-hidden="true"><li>Big size do veličine 60</li><li>Ukrajina · Dubai</li><li>Najam i prodaja</li></ul>
   <div class="hero-in">
     <p class="caps rise">Niš · Obrenovićeva</p>
     <h1 id="h1" class="rise">Venčanice<br><i>Sparkly</i></h1>
