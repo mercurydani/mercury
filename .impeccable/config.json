@@ -101,6 +101,33 @@
         ],
         "createdAt": "2026-10-19T16:29:02.403Z",
         "reason": "Client brief fixes the palette: ivory #F8F4EC, champagne #E9DCC8"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/tennis/public/index.html"
+        ],
+        "createdAt": "2026-10-20T17:30:50.282Z",
+        "reason": "Claude triage: .trial has clamp(22px,3.4vw,36px) padding; .qs rule sits above summaries with 20px padding"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "sites/tennis/public/index.html"
+        ],
+        "createdAt": "2026-10-20T17:30:50.297Z",
+        "reason": "Claude triage: footer #1a1840 text sits on the yellow closing planet, not on #0d0b26"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/tennis/public/index.html"
+        ],
+        "createdAt": "2026-10-20T17:30:50.312Z",
+        "reason": "The glow is the planet-ball's light, the site's one deliberate effect"
       }
     ]
   }

@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mercury Tennis · теннис в Белграде на русском</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Mercury Tennis: тренировки по теннису в Белграде на русском для взрослых и детей. Корты TK Haron у Ветеринарного факультета, корт включён в цену. Пробное занятие 1500 RSD.">
+<meta name="theme-color" content="#0d0b26">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://mercurytennis.site/">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:locale:alternate" content="sr_RS">
+<meta property="og:site_name" content="Mercury Tennis">
+<meta property="og:title" content="Mercury Tennis · теннис в Белграде на русском">
+<meta property="og:description" content="Индивидуальные и групповые тренировки для взрослых и детей. Корт включён в цену. Пробное занятие 1500 RSD.">
+<meta property="og:url" content="https://mercurytennis.site/">
+<meta property="og:image" content="https://mercurytennis.site/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsActivityLocation","name":"Mercury Tennis","description":"Тренировки по теннису в Белграде на русском и сербском языке","url":"https://mercurytennis.site/","telephone":"+381653454290","image":"https://mercurytennis.site/og.jpg","address":{"@type":"PostalAddress","addressLocality":"Beograd","addressCountry":"RS"},"priceRange":"1300–3600 RSD","sameAs":["https://t.me/mercurydani_tenisrs"]}</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@400;600;800&display=swap">
+<style>
+/*
+  Mercury Tennis. One loud thing: the hero planet-ball (canvas) with a real 3D seam,
+  a moon on a tilted orbit and a warp-in on load. Everything below stays quiet:
+  indigo space, sand for numbers, optic yellow only for the ball and primary actions.
+*/
+:root{
+  --void:#0d0b26; --deep:#15113a; --nebula:#2b2170;
+  --star:#eeeafe; --dust:#aba4d6; --faint:#7d77ad;
+  --line:rgb(238 234 254 / .12); --line-2:rgb(238 234 254 / .22);
+  --sand:#e2cda8; --ball:#e4f04e; --ball-ink:#1a1840; --flare:#ff8f5c;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --gutter:clamp(16px,4vw,40px);
+}
+html[lang="ru"] [data-l="sr"],html[lang="sr"] [data-l="ru"]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px;background:var(--void)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--void);color:var(--star);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%}
+a{color:inherit}
+h1,h2,h3,p{margin:0}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.02em;line-height:1.02;text-wrap:balance}
+h2{font-size:clamp(1.9rem,4.4vw,3.3rem)}
+h3{font-weight:600;font-size:1.08rem;line-height:1.3}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:var(--gutter)}
+.muted{color:var(--dust)}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--ball);outline-offset:3px;border-radius:8px}
+::selection{background:var(--ball);color:var(--ball-ink)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font:600 1rem/1 var(--body);border-radius:999px;padding:16px 24px;border:1.5px solid transparent;cursor:pointer;white-space:nowrap;transition:transform .18s,box-shadow .18s,background-color .18s,border-color .18s}
+.btn svg{width:18px;height:18px;flex:none}
+.btn-ball{background:var(--ball);color:var(--ball-ink)}
+.btn-ball:hover{background:#eef68a}
+.btn-ball:active{transform:none}
+.btn-ghost{border-color:var(--line-2);color:var(--star);background:rgb(13 11 38 / .35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)} /* taste-skill-ignore: ghost button over the canvas */
+.btn-ghost:hover{border-color:var(--sand)}
+.btn-sm{padding:11px 16px;font-size:.92rem}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto;z-index:30;padding-top:env(safe-area-inset-top,0px);transition:background-color .3s,border-color .3s;border-bottom:1px solid transparent} /* taste-skill-ignore: sticky bar edge */
+.nav.scrolled{background:rgb(13 11 38 / .78);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-bottom-color:var(--line)} /* taste-skill-ignore: the one sticky bar */
+.nav-in{display:flex;align-items:center;gap:18px;height:68px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font:600 .98rem/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.mark{position:relative;width:30px;height:30px;flex:none}
+.mark i{position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#f6fba8,var(--ball) 42%,#8c951f 100%)} /* taste-skill-ignore: logo is a tennis ball, drawn */
+.mark i::after{content:"";position:absolute;inset:-1px 3px;border:1.6px solid rgb(255 255 255 / .85);border-radius:50%;border-top-color:transparent;border-bottom-color:transparent;transform:rotate(28deg)}
+.mark b{position:absolute;inset:11px -3px;border:1.4px solid var(--sand);border-radius:50%;transform:rotate(-18deg);opacity:.8}
+.links{display:flex;gap:2px;margin-left:auto}
+.links a{text-decoration:none;font-size:.94rem;font-weight:500;color:var(--dust);padding:9px 13px;border-radius:999px;transition:color .15s,background-color .15s}
+.links a:hover{color:var(--star);background:rgb(238 234 254 / .07)}
+.langs{display:flex;border:1px solid var(--line-2);border-radius:999px;padding:3px}
+.langs button{font:600 .78rem/1 var(--body);background:none;color:var(--dust);border:0;padding:8px 11px;border-radius:999px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--star);color:var(--void)}
+@media (max-width:900px){.links{display:none}.langs{margin-left:auto}.nav-in{gap:10px}}
+@media (max-width:440px){.nav .btn-sm span{display:none}.nav .btn-sm{padding:11px}.logo{font-size:.86rem;gap:9px}.mark{width:26px;height:26px}.langs button{padding:7px 9px}}
+
+/* hero */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;isolation:isolate;overflow:hidden}
+#space{position:absolute;inset:0;width:100%;height:100%;z-index:-1;display:block}
+.hero::after{content:"";position:absolute;inset:auto 0 0;height:38%;z-index:-1;background:linear-gradient(transparent,var(--void));pointer-events:none} /* taste-skill-ignore: fade from canvas into page */
+.hero-in{padding-top:110px;padding-bottom:clamp(28px,5vh,56px);display:grid;gap:clamp(18px,3vh,28px);max-width:1180px;width:100%;margin:0 auto;padding-inline:var(--gutter)}
+.hero h1{font-size:clamp(2.5rem,7vw,5.8rem);text-shadow:0 2px 40px rgb(13 11 38 / .55);font-weight:800;line-height:.94;letter-spacing:-.035em;max-width:11ch} /* taste-skill-ignore: legibility over moving starfield */
+.hero h1 .ln{display:block;overflow:hidden;padding-bottom:.06em}
+.hero h1 .ln>span{display:block}
+.hero .lead{font-size:clamp(1.02rem,1.5vw,1.2rem);color:var(--dust);max-width:44ch}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.where{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.92rem;color:var(--dust)}
+.where span{display:inline-flex;align-items:center;gap:8px}
+.where svg{width:16px;height:16px;color:var(--sand);flex:none}
+
+/* load choreography: runs once after the warp; skipped with reduced motion */
+.js .rise{opacity:0;transform:translateY(24px)}
+.js .hero h1 .ln>span{transform:translateY(105%)}
+.ready .rise{opacity:1;transform:none;transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.ready .hero h1 .ln>span{transform:none;transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.ready .hero h1 .ln:nth-child(2)>span{transition-delay:.08s}
+.ready .hero h1 .ln:nth-child(3)>span{transition-delay:.16s}
+.ready .d1{transition-delay:.3s}.ready .d2{transition-delay:.42s}.ready .d3{transition-delay:.54s}.ready .d4{transition-delay:.66s}
+@media (prefers-reduced-motion:reduce){.js .rise,.js .hero h1 .ln>span{opacity:1;transform:none}}
+
+
+section{padding-block:clamp(72px,10vw,128px)}
+.head{display:grid;gap:14px;align-content:start;margin-bottom:clamp(28px,4vw,48px);max-width:60ch}
+.head p{color:var(--dust);font-size:1.06rem}
+
+/* prices */
+.trial{position:relative;display:grid;grid-template-columns:1fr auto;gap:20px 32px;align-items:center;padding:clamp(22px,3.4vw,36px);border-radius:28px;background:var(--deep);border:1px solid var(--line-2);overflow:hidden}
+.trial h3{font:600 clamp(1.3rem,2.4vw,1.7rem)/1.15 var(--display);letter-spacing:-.01em}
+.trial p{color:var(--dust);margin-top:8px;max-width:46ch}
+.trial-r{display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:flex-end}
+.big{font:600 clamp(2.2rem,4.4vw,3.2rem)/1 var(--display);letter-spacing:-.03em;color:var(--ball)}
+.big small{font:500 .95rem var(--body);color:var(--dust);margin-left:6px;letter-spacing:0}
+@media (max-width:720px){.trial{grid-template-columns:1fr}.trial-r{justify-content:space-between}}
+
+.rows{margin-top:12px;border-top:1px solid var(--line)} /* taste-skill-ignore: price table rules */
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 190px 128px;gap:12px 28px;align-items:center;padding:24px 4px;border-bottom:1px solid var(--line)} /* taste-skill-ignore: price table rules */
+.row h3{font:600 1.18rem/1.2 var(--display);letter-spacing:-.01em}
+.row .tag{display:inline-block;margin-top:8px;font-size:.8rem;font-weight:600;color:var(--ball-ink);background:var(--sand);padding:4px 10px;border-radius:999px}
+.row ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;color:var(--dust);font-size:.95rem}
+.row li{display:flex;align-items:center;gap:8px}
+.row li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--faint);flex:none}
+.price{text-align:right;white-space:nowrap}
+.price b{font:600 1.7rem/1 var(--display);letter-spacing:-.02em;color:var(--sand)}
+.price span{display:block;font-size:.84rem;color:var(--dust);margin-top:6px}
+.row .btn{padding:12px 18px;font-size:.94rem;justify-self:end}
+@media (max-width:900px){.row{grid-template-columns:1fr auto}.row .btn{justify-self:start}.row ul{grid-column:1/-1;order:3}.row .btn{grid-column:1/-1;order:4;justify-self:start}.price{order:2}}
+.extra{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pack{padding:22px 24px;border:1px dashed var(--line-2);border-radius:20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.pack .num{font:600 1.3rem var(--display);color:var(--sand);white-space:nowrap}
+.terms{list-style:none;margin:0;padding:22px 4px;display:grid;gap:10px;color:var(--dust);font-size:.95rem}
+.terms li{display:flex;gap:12px;align-items:baseline}
+.terms li::before{content:"";width:14px;height:1.5px;background:var(--sand);flex:none;transform:translateY(-4px)}
+@media (max-width:760px){.extra{grid-template-columns:1fr}}
+
+/* booking */
+.builder{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}
+.panel{display:grid;gap:26px;min-width:0}
+fieldset{border:0;margin:0;padding:0;display:grid;min-width:0}
+legend,.lbl{display:block;padding:0;margin-bottom:12px;font-size:.92rem;font-weight:600;color:var(--dust)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{position:relative}
+.opt input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.opt span{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px solid var(--line-2);border-radius:999px;font-size:.95rem;font-weight:500;user-select:none;transition:border-color .15s,background-color .15s,color .15s}
+.opt:hover span{border-color:var(--faint)}
+.opt input:checked+span{border-color:var(--sand);background:rgb(226 205 168 / .12);color:var(--star)}
+.opt input:checked+span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ball)}
+.opt input:focus-visible+span{outline:2px solid var(--ball);outline-offset:3px}
+@media (max-width:520px){#o-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}#o-days .opt span{justify-content:center;width:100%;padding:11px 0}#o-days .opt input:checked+span::before{display:none}}
+.opt span em{font-style:normal;font-size:.82rem;color:var(--dust)}
+.field input{width:100%;max-width:420px;font:500 1rem var(--body);color:var(--star);background:transparent;border:0;border-bottom:1.5px solid var(--line-2);border-radius:0;padding:12px 2px}
+.field input::placeholder{color:var(--faint)}
+.field input:focus{outline:none;border-bottom-color:var(--ball)}
+.preview{position:sticky;top:92px;display:grid;gap:18px;padding:24px;border-radius:28px;background:var(--deep);border:1px solid var(--line-2);min-width:0}
+.preview .lbl{margin:0;color:var(--sand)}
+.bubble{position:relative;background:rgb(238 234 254 / .08);border:1px solid var(--line);border-radius:20px 20px 20px 6px;padding:18px;font-size:.98rem;white-space:pre-wrap;overflow-wrap:anywhere;min-height:150px}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:4px}
+.total span{color:var(--dust);font-size:.94rem}
+.total b{font:600 1.5rem var(--display);color:var(--ball);letter-spacing:-.02em}
+.preview .acts{display:flex;gap:10px;flex-wrap:wrap}
+.preview .acts .btn{flex:1 1 160px}
+.hint{font-size:.86rem;color:var(--dust)}
+@media (max-width:880px){.builder{grid-template-columns:1fr}.preview{position:static}}
+
+/* session: a real sequence of minutes, drawn as one trajectory */
+.track{position:relative;display:grid;grid-template-columns:1fr 2fr 2fr 1fr;gap:0}
+.seg{position:relative;padding-top:34px;padding-right:20px;min-width:0}
+.seg::before{content:"";position:absolute;left:0;right:6px;top:10px;height:4px;border-radius:4px;background:var(--c)}
+.seg::after{content:"";position:absolute;left:-2px;top:4px;width:16px;height:16px;border-radius:50%;background:var(--void);border:3px solid var(--c)}
+.seg .t{font:600 .95rem var(--display);color:var(--c);letter-spacing:-.01em}
+.seg h3{margin:8px 0 6px;font-size:1.12rem}
+.seg p{font-size:.95rem;color:var(--dust);max-width:34ch}
+.seg{--c:var(--sand)}.seg::before{opacity:.55}
+@media (max-width:760px){.track{grid-template-columns:1fr;gap:26px}.seg{padding:0 0 0 34px}.seg::before{left:6px;right:auto;top:22px;bottom:-26px;width:4px;height:auto}.seg:last-child::before{display:none}.seg::after{left:0;top:4px}}
+
+/* coach */
+.coach{display:grid;max-width:820px}
+.coach-text{display:grid;gap:20px;min-width:0}
+.coach-text>p{max-width:60ch;color:var(--dust);font-size:1.06rem}
+.coach-text>p strong{color:var(--star);font-weight:600}
+.method{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:8px}
+.method div{border-top:1px solid var(--line-2);padding-top:16px;display:grid;gap:6px;align-content:start} /* taste-skill-ignore: editorial column rule */
+.method p{font-size:.93rem;color:var(--dust)}
+@media (max-width:620px){.method{grid-template-columns:1fr}}
+
+/* place */
+.place{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.pc{border-top:1px solid var(--line-2);padding-top:20px;display:grid;gap:10px;align-content:start} /* taste-skill-ignore: editorial column rule */
+.pc svg{width:26px;height:26px;color:var(--sand)}
+.pc p{color:var(--dust);font-size:.97rem}
+.pc a{font-weight:600;color:var(--ball);text-underline-offset:4px}
+@media (max-width:760px){.place{grid-template-columns:1fr}}
+
+/* faq */
+.faq{display:grid;grid-template-columns:.8fr 1.2fr;gap:clamp(24px,5vw,72px)}
+.qs{border-top:1px solid var(--line);min-width:0} /* taste-skill-ignore: accordion rules */
+details{border-bottom:1px solid var(--line)} /* taste-skill-ignore: accordion rules */
+summary{list-style:none;cursor:pointer;font-weight:600;font-size:1.06rem;padding:20px 4px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";width:12px;height:12px;flex:none;border-right:2px solid var(--sand);border-bottom:2px solid var(--sand);transform:rotate(45deg) translate(-3px,-3px);transition:transform .25s}
+details[open] summary::after{transform:rotate(225deg) translate(-3px,-3px)}
+details p{padding:0 4px 22px;color:var(--dust);max-width:62ch}
+@media (max-width:760px){.faq{grid-template-columns:1fr}}
+
+/* closing: the planet rises over the bottom edge */
+.final{position:relative;overflow:hidden;isolation:isolate;padding-top:clamp(80px,12vw,150px);padding-bottom:0}
+.final-in{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:end;position:relative;z-index:2}
+.final h2{font-size:clamp(2.2rem,5.4vw,4.4rem);font-weight:800;letter-spacing:-.035em;line-height:.98}
+.final .sub{color:var(--dust);margin-top:16px;max-width:42ch;font-size:1.06rem}
+.contacts{display:grid;gap:10px}
+.ct{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 14px 20px;border-radius:20px;background:var(--deep);border:1px solid var(--line-2);min-width:0}
+.ct small{display:block;font-size:.82rem;color:var(--dust)}
+.ct a,.ct .val{font-weight:600;font-size:1.06rem;text-decoration:none;overflow-wrap:anywhere}
+.copy{font:600 .86rem var(--body);background:transparent;color:var(--star);border:1px solid var(--line-2);border-radius:999px;padding:9px 14px;cursor:pointer;flex:none}
+.copy:hover{border-color:var(--sand)}
+.horizon{position:relative;height:clamp(200px,30vw,360px);margin-top:clamp(40px,6vw,80px);z-index:1;pointer-events:none}
+.horizon .pl{position:absolute;left:50%;top:0;width:max(1400px,140vw);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 50% 2%,#f8fcc4 0,var(--ball) 9%,#a3ad2a 26%,#3e4210 46%,#16152f 62%);box-shadow:0 -10px 90px 10px rgb(228 240 78 / .28)} /* taste-skill-ignore: closing planet, the second drawn ball */
+.horizon .pl{overflow:hidden}
+.horizon .pl::before,.horizon .pl::after{content:"";position:absolute;width:62%;aspect-ratio:1;border-radius:50%;border:clamp(4px,.5vw,7px) solid rgb(255 255 248 / .82);box-shadow:0 0 0 clamp(6px,.8vw,11px) rgb(40 46 6 / .22)} /* taste-skill-ignore: ball seam */
+.horizon .pl::before{left:-34%;top:-18%} /* taste-skill-ignore: ball seam */
+.horizon .pl::after{right:-34%;top:-18%}
+@media (max-width:760px){.final-in{grid-template-columns:1fr}}
+
+footer{position:relative;z-index:2;margin-top:-64px;padding-block:22px 28px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;color:var(--ball-ink);font-size:.9rem;font-weight:500}
+footer a{color:var(--ball-ink)}
+
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--star);color:var(--void);padding:11px 18px;border-radius:999px;font-weight:600;font-size:.94rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+
+<nav class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="#top" aria-label="Mercury Tennis"><span class="mark" aria-hidden="true"><i></i><b></b></span><span class="wm">Mercury Tennis</span></a>
+    <div class="links">
+      <a href="#prices" data-l="ru">Цены</a><a href="#prices" data-l="sr">Cene</a>
+      <a href="#session" data-l="ru">Тренировка</a><a href="#session" data-l="sr">Trening</a>
+      <a href="#coach" data-l="ru">Тренер</a><a href="#coach" data-l="sr">Trener</a>
+      <a href="#faq" data-l="ru">Вопросы</a><a href="#faq" data-l="sr">Pitanja</a>
+    </div>
+    <div class="langs" role="group" aria-label="Язык / Jezik">
+      <button type="button" data-set="ru" aria-pressed="true">RU</button>
+      <button type="button" data-set="sr" aria-pressed="false">SR</button>
+    </div>
+    <a class="btn btn-ball btn-sm" href="#book"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-l="ru">Записаться</span><span data-l="sr">Prijava</span></a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="space" aria-hidden="true"></canvas>
+  <div class="hero-in">
+    <h1 data-l="ru"><span class="ln"><span>Теннис</span></span><span class="ln"><span>в&nbsp;Белграде</span></span><span class="ln"><span>на&nbsp;русском</span></span></h1>
+    <h1 data-l="sr"><span class="ln"><span>Tenis</span></span><span class="ln"><span>u&nbsp;Beogradu</span></span><span class="ln"><span>za&nbsp;sve nivoe</span></span></h1>
+    <p class="lead rise d2" data-l="ru">Индивидуальные и групповые тренировки для взрослых и детей. Ставлю технику с нуля и помогаю любителям выйти на новый уровень. Корт уже в цене.</p>
+    <p class="lead rise d2" data-l="sr">Individualni i grupni treninzi za odrasle i decu. Učim tehniku od nule i pomažem rekreativcima da podignu nivo igre. Teren je uračunat u cenu.</p>
+    <div class="ctas rise d3">
+      <a class="btn btn-ball" href="#book" data-pick="trial"><span data-l="ru">Записаться на пробное за 1&nbsp;500&nbsp;RSD</span><span data-l="sr">Zakaži probni za 1.500&nbsp;RSD</span></a>
+      <a class="btn btn-ghost" href="#prices"><span data-l="ru">Посмотреть цены</span><span data-l="sr">Pogledaj cene</span></a>
+    </div>
+    <div class="where rise d4">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>TK Haron, Veterinarski fakultet</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 18c3-9 15-9 18 0M3 18h18"/></svg><span data-l="ru">Зимой под балоном</span><span data-l="sr">Zimi pod balonom</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-l="ru">Утро, день и вечер</span><span data-l="sr">Jutro, dan i veče</span></span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="prices" class="wrap">
+    <div class="head">
+      <h2 data-l="ru">Цены за час, корт включён</h2><h2 data-l="sr">Cene po satu, teren je uključen</h2>
+      <p data-l="ru">Корт отдельно бронировать и оплачивать не нужно. Цены в динарах.</p>
+      <p data-l="sr">Teren ne morate posebno da rezervišete i plaćate. Cene su u dinarima.</p>
+    </div>
+
+    <div class="trial">
+      <div>
+        <h3 data-l="ru">Пробное занятие</h3><h3 data-l="sr">Probni trening</h3>
+        <p data-l="ru">Час на корте: смотрю ваш уровень, разбираем цели и подбираем формат.</p>
+        <p data-l="sr">Sat na terenu: procena nivoa, ciljevi i izbor formata.</p>
+      </div>
+      <div class="trial-r">
+        <span class="big num">1 500<small>RSD</small></span>
+        <a class="btn btn-ball" href="#book" data-pick="trial"><span data-l="ru">Хочу пробное</span><span data-l="sr">Želim probni</span></a>
+      </div>
+    </div>
+
+    <div class="rows">
+      <article class="row">
+        <div><h3 data-l="ru">Индивидуально</h3><h3 data-l="sr">Individualno</h3>
+          <span class="tag" data-l="ru">Быстрее всего</span><span class="tag" data-l="sr">Najbrži napredak</span></div>
+        <ul data-l="ru"><li>Тренер только ваш</li><li>План под ваши цели</li><li>Разбор ошибок по ходу игры</li></ul>
+        <ul data-l="sr"><li>Trener je samo vaš</li><li>Plan prema vašim ciljevima</li><li>Ispravljanje grešaka tokom igre</li></ul>
+        <div class="price"><b class="num">3 000</b><span data-l="ru">RSD за час</span><span data-l="sr">RSD po satu</span></div>
+        <a class="btn btn-ghost" href="#book" data-pick="ind"><span data-l="ru">Выбрать</span><span data-l="sr">Izaberi</span></a>
+      </article>
+      <article class="row">
+        <div><h3 data-l="ru">Вдвоём</h3><h3 data-l="sr">U paru</h3></div>
+        <ul data-l="ru"><li>1 800 с человека</li><li>С другом, партнёром или ребёнком</li><li>Больше игровых упражнений</li></ul>
+        <ul data-l="sr"><li>1.800 po osobi</li><li>Sa prijateljem, partnerom ili detetom</li><li>Više vežbi kroz igru</li></ul>
+        <div class="price"><b class="num">3 600</b><span data-l="ru">RSD за час на двоих</span><span data-l="sr">RSD po satu za dvoje</span></div>
+        <a class="btn btn-ghost" href="#book" data-pick="pair"><span data-l="ru">Выбрать</span><span data-l="sr">Izaberi</span></a>
+      </article>
+      <article class="row">
+        <div><h3 data-l="ru">Мини-группа</h3><h3 data-l="sr">Mala grupa</h3></div>
+        <ul data-l="ru"><li>3–4 взрослых одного уровня</li><li>Розыгрыши и игра на счёт</li><li>Самый доступный формат</li></ul>
+        <ul data-l="sr"><li>3–4 odrasle osobe istog nivoa</li><li>Poeni i igra na rezultat</li><li>Najpovoljniji format</li></ul>
+        <div class="price"><b class="num">1 300</b><span data-l="ru">RSD с человека</span><span data-l="sr">RSD po osobi</span></div>
+        <a class="btn btn-ghost" href="#book" data-pick="group"><span data-l="ru">Выбрать</span><span data-l="sr">Izaberi</span></a>
+      </article>
+      <article class="row">
+        <div><h3 data-l="ru">Детская группа</h3><h3 data-l="sr">Grupa za decu</h3></div>
+        <ul data-l="ru"><li>4 занятия, раз в неделю</li><li>С 6 лет</li><li>На русском, в игровой форме</li></ul>
+        <ul data-l="sr"><li>4 treninga, jednom nedeljno</li><li>Od 6 godina</li><li>I na ruskom, kroz igru</li></ul>
+        <div class="price"><b class="num">5 000</b><span data-l="ru">RSD в месяц</span><span data-l="sr">RSD mesečno</span></div>
+        <a class="btn btn-ghost" href="#book" data-pick="kids"><span data-l="ru">Выбрать</span><span data-l="sr">Izaberi</span></a>
+      </article>
+    </div>
+
+    <div class="extra">
+      <div class="pack">
+        <div><h3 data-l="ru">Абонемент на 10 индивидуальных</h3><h3 data-l="sr">Paket od 10 individualnih</h3>
+          <span class="muted" data-l="ru">2 700 за занятие вместо 3 000, действует 3 месяца</span>
+          <span class="muted" data-l="sr">2.700 po treningu umesto 3.000, važi 3 meseca</span></div>
+        <span class="num">27 000 RSD</span>
+      </div>
+      <ul class="terms" data-l="ru"><li>Оплата на месте: наличные или перевод</li><li>Бесплатная отмена за 12 часов</li><li>Мячи мои</li></ul>
+      <ul class="terms" data-l="sr"><li>Plaćanje na licu mesta: gotovina ili prenos</li><li>Besplatno otkazivanje 12 sati ranije</li><li>Loptice obezbeđujem</li></ul>
+    </div>
+  </section>
+
+  <section id="book" class="wrap" style="padding-top:0">
+    <div class="head">
+      <h2 data-l="ru">Запись</h2><h2 data-l="sr">Prijava</h2>
+      <p data-l="ru">Отметьте, что вам подходит, и отправьте получившееся сообщение мне в Telegram.</p>
+      <p data-l="sr">Označite šta vam odgovara i pošaljite poruku na Telegram.</p>
+    </div>
+    <div class="builder">
+      <form class="panel" id="form" autocomplete="off">
+        <fieldset><legend data-l="ru">Формат</legend><legend data-l="sr">Format</legend><div class="opts" id="o-format"></div></fieldset>
+        <fieldset><legend data-l="ru">Для кого</legend><legend data-l="sr">Za koga</legend><div class="opts" id="o-who"></div></fieldset>
+        <fieldset><legend data-l="ru">Уровень</legend><legend data-l="sr">Nivo</legend><div class="opts" id="o-level"></div></fieldset>
+        <fieldset><legend data-l="ru">Удобные дни</legend><legend data-l="sr">Dani koji odgovaraju</legend><div class="opts" id="o-days"></div></fieldset>
+        <fieldset><legend data-l="ru">Время</legend><legend data-l="sr">Vreme</legend><div class="opts" id="o-time"></div></fieldset>
+        <div class="field"><label for="f-name" class="lbl"><span data-l="ru">Как вас зовут</span><span data-l="sr">Vaše ime</span></label>
+          <input id="f-name" type="text" maxlength="40" placeholder="Анна"></div>
+      </form>
+      <aside class="preview" aria-live="polite">
+        <span class="lbl" data-l="ru">Ваше сообщение</span><span class="lbl" data-l="sr">Vaša poruka</span>
+        <div class="bubble" id="msg"></div>
+        <div class="total"><span data-l="ru">Стоимость</span><span data-l="sr">Cena</span><b id="cost">1 500 RSD</b></div>
+        <div class="acts">
+          <button class="btn btn-ball" type="button" id="copy-msg"><span data-l="ru">Скопировать</span><span data-l="sr">Kopiraj</span></button>
+          <a class="btn btn-ghost" href="https://t.me/mercurydani_tenisrs" target="_blank" rel="noopener"><span data-l="ru">Открыть Telegram</span><span data-l="sr">Otvori Telegram</span></a>
+        </div>
+        <span class="hint" data-l="ru">Отвечаю в тот же день. Telegram: @mercurydani_tenisrs</span>
+        <span class="hint" data-l="sr">Odgovaram istog dana. Telegram: @mercurydani_tenisrs</span>
+      </aside>
+    </div>
+  </section>
+
+  <section id="session" class="wrap" style="padding-top:0">
+    <div class="head">
+      <h2 data-l="ru">Как проходит час на корте</h2><h2 data-l="sr">Kako izgleda sat na terenu</h2>
+    </div>
+    <div class="track">
+      <div class="seg s1"><span class="t num">0–10′</span><h3 data-l="ru">Разминка</h3><h3 data-l="sr">Zagrevanje</h3>
+        <p data-l="ru">Работа ног и мини-теннис у сетки.</p><p data-l="sr">Rad nogu i mini tenis kod mreže.</p></div>
+      <div class="seg s2"><span class="t num">10–30′</span><h3 data-l="ru">Техника</h3><h3 data-l="sr">Tehnika</h3>
+        <p data-l="ru">Один удар по частям: хват, замах, контакт, проводка. Сначала с корзины, потом в обмене.</p>
+        <p data-l="sr">Jedan udarac u delovima: držanje, zamah, kontakt, završetak. Prvo iz korpe, zatim u razmeni.</p></div>
+      <div class="seg s3"><span class="t num">30–50′</span><h3 data-l="ru">Игровые ситуации</h3><h3 data-l="sr">Situacije iz igre</h3>
+        <p data-l="ru">Подача и приём, выход к сетке, защита. Закрепляем удар в настоящей игре.</p>
+        <p data-l="sr">Servis i prijem, izlazak na mrežu, odbrana. Udarac učvršćujemo u pravoj igri.</p></div>
+      <div class="seg s4"><span class="t num">50–60′</span><h3 data-l="ru">Игра на счёт</h3><h3 data-l="sr">Igra na rezultat</h3>
+        <p data-l="ru">Тай-брейк или гейм, итоги и задание на неделю.</p><p data-l="sr">Tajbrejk ili gem, rezime i zadatak za nedelju.</p></div>
+    </div>
+  </section>
+
+  <section id="coach" class="wrap" style="padding-top:0">
+    <div class="coach">
+      <div class="coach-text">
+        <h2 data-l="ru">Даниил Помазков</h2><h2 data-l="sr">Daniil Pomazkov</h2>
+        <p data-l="ru">Играю в теннис больше 10 лет и много раз занимал первые и вторые места на турнирах. 3–4 года тренировал в России детей и взрослых, от полных новичков до турнирных игроков, и судил соревнования. Теперь живу в Белграде и тренирую на русском.</p>
+        <p data-l="sr">Igram tenis više od 10 godina i više puta sam osvajao prva i druga mesta na turnirima. 3–4 godine sam u Rusiji trenirao decu i odrasle, od potpunih početnika do takmičara, i sudio na turnirima. Sada živim u Beogradu.</p>
+        <div class="method">
+          <div><h3 data-l="ru">По частям</h3><h3 data-l="sr">U delovima</h3>
+            <p data-l="ru">Удар разбит на шаги. Прогресс виден уже через пару занятий.</p><p data-l="sr">Udarac je podeljen na korake. Napredak se vidi posle par treninga.</p></div>
+          <div><h3 data-l="ru">От простого</h3><h3 data-l="sr">Od jednostavnog</h3>
+            <p data-l="ru">Сначала база, потом связки и игра. Без перегруза.</p><p data-l="sr">Prvo osnova, pa kombinacije i igra. Bez preopterećenja.</p></div>
+          <div><h3 data-l="ru">Через игру</h3><h3 data-l="sr">Kroz igru</h3>
+            <p data-l="ru">Отрабатываем ситуации, которые реально случаются на корте.</p><p data-l="sr">Vežbamo situacije koje se zaista dešavaju na terenu.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" style="padding-top:0">
+    <div class="head">
+      <h2 data-l="ru">Корты клуба «Харон»</h2><h2 data-l="sr">Tereni TK Haron</h2>
+    </div>
+    <div class="place">
+      <div class="pc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <h3 data-l="ru">У Ветеринарного факультета</h3><h3 data-l="sr">Kod Veterinarskog fakulteta</h3>
+        <p data-l="ru">Точное место корта отмечено на карте.</p><p data-l="sr">Tačna lokacija terena je označena na mapi.</p>
+        <a href="https://maps.app.goo.gl/VyQ3v974LtXgkpUQA" target="_blank" rel="noopener"><span data-l="ru">Открыть на карте</span><span data-l="sr">Otvori mapu</span></a></div>
+      <div class="pc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 19c2.5-10 17.5-10 20 0M2 19h20M7 19v-3M17 19v-3"/></svg>
+        <h3 data-l="ru">Зимой под балоном</h3><h3 data-l="sr">Zimi pod balonom</h3>
+        <p data-l="ru">Крытый корт с ноября по март, тренировки не прерываются.</p><p data-l="sr">Natkriven teren od novembra do marta, treninzi se ne prekidaju.</p></div>
+      <div class="pc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <h3 data-l="ru">Постоянное время</h3><h3 data-l="sr">Stalni termin</h3>
+        <p data-l="ru">Закрепляю за вами день и час, чтобы тренироваться регулярно.</p><p data-l="sr">Dogovaramo stalni dan i sat za redovne treninge.</p></div>
+    </div>
+  </section>
+
+  <section id="faq" class="wrap" style="padding-top:0">
+    <div class="faq">
+      <div class="head">
+        <h2 data-l="ru">Частые вопросы</h2><h2 data-l="sr">Česta pitanja</h2>
+        <p data-l="ru">Не нашли ответ? Напишите в Telegram.</p><p data-l="sr">Niste našli odgovor? Pišite na Telegram.</p>
+      </div>
+      <div class="qs">
+        <details><summary><span data-l="ru">Я никогда не играл. Можно?</span><span data-l="sr">Nikad nisam igrao. Može li?</span></summary>
+          <p data-l="ru">Да, большинство учеников начинают с нуля. На пробном занятии поставим хват и первые удары.</p>
+          <p data-l="sr">Da, većina počinje od nule. Na probnom treningu učimo držanje reketa i prve udarce.</p></details>
+        <details><summary><span data-l="ru">Нужна своя ракетка?</span><span data-l="sr">Da li mi treba reket?</span></summary>
+          <p data-l="ru">Мячи мои. Своя ракетка желательна. Если её нет, напишите заранее, и я подскажу, какую взять для начала.</p>
+          <p data-l="sr">Loptice obezbeđujem. Poželjno je da imate svoj reket. Ako ga nemate, javite se ranije i posavetovaću vas koji da uzmete.</p></details>
+        <details><summary><span data-l="ru">С какого возраста берёте детей?</span><span data-l="sr">Od kog uzrasta primate decu?</span></summary>
+          <p data-l="ru">С 6 лет. Для младших занятия идут в игровой форме с облегчёнными мячами.</p>
+          <p data-l="sr">Od 6 godina. Za mlađe treninzi su kroz igru, sa lakšim lopticama.</p></details>
+        <details><summary><span data-l="ru">На каком языке занятия?</span><span data-l="sr">Na kom jeziku su treninzi?</span></summary>
+          <p data-l="ru">На русском. Можно на сербском или английском на базовом уровне.</p>
+          <p data-l="sr">Na ruskom, a mogu i na srpskom ili engleskom na osnovnom nivou.</p></details>
+        <details><summary><span data-l="ru">Что если нужно отменить?</span><span data-l="sr">Šta ako moram da otkažem?</span></summary>
+          <p data-l="ru">Предупредите за 12 часов, и отмена бесплатная. Позже занятие считается проведённым.</p>
+          <p data-l="sr">Javite 12 sati ranije i otkazivanje je besplatno. Kasnije se trening računa kao održan.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap final-in">
+      <div>
+        <h2 data-l="ru">Первая тренировка за 1&nbsp;500 динаров</h2><h2 data-l="sr">Prvi trening za 1.500 dinara</h2>
+        <p class="sub" data-l="ru">Напишите, когда вам удобно, и я предложу ближайшее свободное время.</p>
+        <p class="sub" data-l="sr">Javite kada vam odgovara i predložiću prvi slobodan termin.</p>
+      </div>
+      <div class="contacts">
+        <div class="ct"><div><small>Telegram</small><a href="https://t.me/mercurydani_tenisrs" target="_blank" rel="noopener">@mercurydani_tenisrs</a></div>
+          <button class="copy" type="button" data-copy="@mercurydani_tenisrs"><span data-l="ru">Копировать</span><span data-l="sr">Kopiraj</span></button></div>
+        <div class="ct"><div><small>Viber, WhatsApp</small><a class="val" href="tel:+381653454290">+381 65 345 4290</a></div>
+          <button class="copy" type="button" data-copy="+381653454290"><span data-l="ru">Копировать</span><span data-l="sr">Kopiraj</span></button></div>
+      </div>
+    </div>
+    <div class="horizon" aria-hidden="true">
+      <div class="pl"></div>
+    </div>
+    <footer class="wrap"><span>© 2026 Mercury Tennis, Daniil Pomazkov</span><a href="#top" data-l="ru">Наверх</a><a href="#top" data-l="sr">Na vrh</a></footer>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* booking builder, language switch, copy, nav */
+(function(){
+  var root=document.documentElement;
+  var T={
+    ru:{format:[["trial","Пробное",1500,"1 500"],["ind","Индивидуально",3000,"3 000"],["pair","Вдвоём",3600,"3 600"],["group","Мини-группа",1300,"1 300 с чел."],["kids","Детская группа",5000,"5 000 в мес."]],
+        who:[["me","Для себя"],["child","Для ребёнка"]],
+        level:[["zero","С нуля"],["some","Играю немного"],["reg","Играю регулярно"]],
+        days:["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
+        time:[["m","Утро"],["d","День"],["e","Вечер"]],
+        hello:"Здравствуйте, Даниил!",me:"Меня зовут ",want:"Хочу записаться: ",forChild:" (для ребёнка)",
+        lvl:"Уровень: ",d:"Удобные дни: ",t:"Время: ",any:"любые",bye:"Когда есть свободное время?",
+        per:{group:" RSD с человека",kids:" RSD в месяц"},rsd:" RSD",copied:"Сообщение скопировано",copiedS:"Скопировано",sel:"Текст выделен, скопируйте его вручную",ph:"Анна"},
+    sr:{format:[["trial","Probni",1500,"1.500"],["ind","Individualno",3000,"3.000"],["pair","U paru",3600,"3.600"],["group","Mala grupa",1300,"1.300 po os."],["kids","Grupa za decu",5000,"5.000 mes."]],
+        who:[["me","Za sebe"],["child","Za dete"]],
+        level:[["zero","Od nule"],["some","Igram malo"],["reg","Igram redovno"]],
+        days:["Pon","Uto","Sre","Čet","Pet","Sub","Ned"],
+        time:[["m","Jutro"],["d","Dan"],["e","Veče"]],
+        hello:"Zdravo, Daniil!",me:"Zovem se ",want:"Želim da se prijavim: ",forChild:" (za dete)",
+        lvl:"Nivo: ",d:"Dani: ",t:"Vreme: ",any:"bilo koji",bye:"Kada imate slobodan termin?",
+        per:{group:" RSD po osobi",kids:" RSD mesečno"},rsd:" RSD",copied:"Poruka je kopirana",copiedS:"Kopirano",sel:"Tekst je označen, kopirajte ga ručno",ph:"Ana"}
+  };
+  var state={format:"trial",who:"me",level:"zero",days:[],time:[]};
+  try{var s=JSON.parse(localStorage.getItem("bk")||"null");if(s&&s.format)state=Object.assign(state,s);}catch(e){}
+  var lang="ru";
+  function $(id){return document.getElementById(id)}
+  function opt(name,val,label,type,checked,extra){
+    var id="o-"+name+"-"+val;
+    return '<label class="opt" for="'+id+'"><input id="'+id+'" type="'+type+'" name="'+name+'" value="'+val+'"'+(checked?" checked":"")+'><span>'+label+(extra?' <em>'+extra+'</em>':'')+'</span></label>';
+  }
+  function build(){
+    var t=T[lang];
+    $("o-format").innerHTML=t.format.map(function(f){return opt("format",f[0],f[1],"radio",state.format===f[0],f[3])}).join("");
+    $("o-who").innerHTML=t.who.map(function(f){return opt("who",f[0],f[1],"radio",state.who===f[0])}).join("");
+    $("o-level").innerHTML=t.level.map(function(f){return opt("level",f[0],f[1],"radio",state.level===f[0])}).join("");
+    $("o-days").innerHTML=t.days.map(function(d,i){return opt("days",String(i),d,"checkbox",state.days.indexOf(String(i))>-1)}).join("");
+    $("o-time").innerHTML=t.time.map(function(f){return opt("time",f[0],f[1],"checkbox",state.time.indexOf(f[0])>-1)}).join("");
+    $("f-name").placeholder=t.ph;
+    render();
+  }
+  function fmt(n){return lang==="sr"?n.toLocaleString("de-DE"):n.toLocaleString("ru-RU").replace(/\s/g," ")}
+  function render(){
+    var t=T[lang],f=t.format.filter(function(x){return x[0]===state.format})[0]||t.format[0];
+    var name=$("f-name").value.trim();
+    var lv=t.level.filter(function(x){return x[0]===state.level})[0];
+    var days=state.days.map(Number).sort().map(function(i){return t.days[i]});
+    var times=t.time.filter(function(x){return state.time.indexOf(x[0])>-1}).map(function(x){return x[1].toLowerCase()});
+    var lines=[t.hello];
+    if(name)lines.push(t.me+name+".");
+    lines.push(t.want+f[1].toLowerCase()+(state.who==="child"?t.forChild:"")+".");
+    if(lv)lines.push(t.lvl+lv[1].toLowerCase()+".");
+    lines.push(t.d+(days.length?days.join(", "):t.any)+".");
+    lines.push(t.t+(times.length?times.join(", "):t.any)+".");
+    lines.push(t.bye);
+    $("msg").textContent=lines.join("\n");
+    $("cost").textContent=fmt(f[2])+(t.per[f[0]]||t.rsd);
+    try{localStorage.setItem("bk",JSON.stringify(state))}catch(e){}
+  }
+  $("form").addEventListener("change",function(e){
+    var n=e.target.name;if(!n)return;
+    if(e.target.type==="radio")state[n]=e.target.value;
+    else state[n]=Array.prototype.map.call(document.querySelectorAll('input[name="'+n+'"]:checked'),function(i){return i.value});
+    render();
+  });
+  $("f-name").addEventListener("input",render);
+  $("form").addEventListener("submit",function(e){e.preventDefault()});
+
+  function setLang(l){
+    lang=l;root.lang=l;
+    document.querySelectorAll("[data-set]").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.set===l?"true":"false")});
+    try{localStorage.setItem("lang",l)}catch(e){}
+    build();
+  }
+  document.querySelectorAll("[data-set]").forEach(function(b){b.addEventListener("click",function(){setLang(b.dataset.set)})});
+  document.querySelectorAll("[data-pick]").forEach(function(a){a.addEventListener("click",function(){state.format=a.dataset.pick;build()})});
+
+  var toastEl=$("toast"),tt;
+  function toast(m){toastEl.textContent=m;toastEl.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove("on")},1800)}
+  function selectEl(el){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r)}
+  function copy(text,el,msg){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){toast(msg)},function(){selectEl(el);toast(T[lang].sel)});
+    }else{selectEl(el);toast(T[lang].sel)}
+  }
+  $("copy-msg").addEventListener("click",function(){var m=$("msg");copy(m.textContent,m,T[lang].copied)});
+  document.querySelectorAll("[data-copy]").forEach(function(b){b.addEventListener("click",function(){copy(b.dataset.copy,b.parentNode.querySelector("a,.val"),T[lang].copiedS)})});
+
+  var nav=$("nav");
+  function onScroll(){nav.classList.toggle("scrolled",window.scrollY>12)}
+  window.addEventListener("scroll",onScroll,{passive:true});onScroll();
+
+  var saved=null;try{saved=localStorage.getItem("lang")}catch(e){}
+  setLang(saved==="sr"?"sr":"ru");
+})();
+
+/*
+  Hero space. Stars in three depths with pointer parallax, a warp-in on load,
+  the planet-ball with a true tennis seam (a curve on the unit sphere) rotating
+  under a fixed light, a moon on a tilted orbit that passes behind and in front,
+  and an occasional comet. Reduced motion: one still frame, no warp.
+*/
+(function(){
+  var cv=document.getElementById("space"),root=document.documentElement;
+  function done(){root.classList.add("ready")}
+  if(!cv||!cv.getContext){done();return}
+  var ctx=cv.getContext("2d"),reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var W=0,H=0,DPR=1,stars=[],bg=null,felt=null,P={x:0,y:0,R:0},px=0,py=0,tx=0,ty=0;
+  var T0=performance.now(),WARP=reduce?0:1500,running=true,comet=null,nextComet=T0+4000;
+
+  // the seam: x=a cos t + b cos 3t, y=a sin t - b sin 3t, z=2√(ab) sin 2t with a+b=1 lies on the unit sphere
+  var SEAM=[],N=220,a=.72,b=.28,c=2*Math.sqrt(a*b);
+  for(var i=0;i<=N;i++){var t=i/N*Math.PI*2;SEAM.push([a*Math.cos(t)+b*Math.cos(3*t),a*Math.sin(t)-b*Math.sin(3*t),c*Math.sin(2*t)])}
+
+  function rnd(m,n){return m+Math.random()*(n-m)}
+  function layout(){
+    var r=cv.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(window.devicePixelRatio||1,2);
+    cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);
+    if(W<760){ // sit the planet above the text block, never behind it
+      var st=[].filter.call(document.querySelectorAll(".hero h1"),function(h){return h.offsetParent})[0],top=st?st.getBoundingClientRect().top-r.top-24:H*.45;
+      P.R=Math.max(70,Math.min(W*.4,(top-70)/2.2));P.x=W*.64;P.y=top-P.R*1.08-6;
+    }else{
+      P.R=Math.min(H*.34,W*.24);P.x=W*.76;P.y=H*.45;
+      // keep the ball clear of the headline: measure the visible lines, then slide right (it may bleed off the edge) or shrink
+      var tr=0;document.querySelectorAll(".hero h1 .ln>span").forEach(function(sp){if(!sp.offsetParent)return;var rg=document.createRange();rg.selectNodeContents(sp);tr=Math.max(tr,rg.getBoundingClientRect().right-r.left)});
+      var gap=tr+36-(P.x-P.R);
+      if(gap>0){P.x=Math.min(P.x+gap,W-P.R*.35);if(P.x-P.R<tr+36){P.R=Math.max(140,(W-tr-36)/1.35);P.x=W-P.R*.35}}
+    }
+    var n=Math.round(W*H/1900);stars=[];
+    for(var k=0;k<n;k++){var d=Math.pow(Math.random(),2.2);stars.push({x:Math.random()*W,y:Math.random()*H,d:.15+d*.85,s:.4+d*1.5,ph:Math.random()*6.28,tw:rnd(.6,2.2),warm:Math.random()<.12})}
+    // nebula, cached
+    bg=document.createElement("canvas");bg.width=cv.width;bg.height=cv.height;var g=bg.getContext("2d");g.scale(DPR,DPR);
+    g.fillStyle="#0d0b26";g.fillRect(0,0,W,H);
+    function blob(x,y,r,col){var gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col);gr.addColorStop(1,"rgba(13,11,38,0)");g.fillStyle=gr;g.fillRect(0,0,W,H)}
+    blob(W*.78,H*.3,Math.max(W,H)*.55,"rgba(64,44,170,.45)");
+    blob(W*.12,H*.85,Math.max(W,H)*.5,"rgba(110,40,140,.28)");
+    blob(P.x,P.y,P.R*2.6,"rgba(228,240,78,.07)");
+    // felt texture for the ball, cached
+    var fs=Math.ceil(P.R*2*DPR);felt=document.createElement("canvas");felt.width=felt.height=fs;var f=felt.getContext("2d");
+    for(var q=0;q<fs*fs/26;q++){f.fillStyle=Math.random()<.5?"rgba(255,255,230,.07)":"rgba(40,50,0,.07)";f.fillRect(Math.random()*fs,Math.random()*fs,1.2*DPR,1.2*DPR)}
+  }
+
+  function rot(p,ay,ax){ // rotate around y, then x
+    var x=p[0],y=p[1],z=p[2],cy=Math.cos(ay),sy=Math.sin(ay),cx=Math.cos(ax),sx=Math.sin(ax);
+    var x1=x*cy+z*sy,z1=-x*sy+z*cy;
+    return [x1,y*cx-z1*sx,y*sx+z1*cx];
+  }
+
+  function drawStars(now,k){
+    var cx=W/2,cy=H/2;
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i],ox=-px*s.d*26,oy=-py*s.d*18,x=s.x+ox,y=s.y+oy;
+      var al=.35+.65*s.d*(.7+.3*Math.sin(now/1000*s.tw+s.ph));
+      if(k<1){ // warp: stars stream out of the centre
+        var e=1-Math.pow(1-k,3),e0=Math.max(0,e-.18);
+        var x0=cx+(x-cx)*e0,y0=cy+(y-cy)*e0,x1=cx+(x-cx)*e,y1=cy+(y-cy)*e;
+        ctx.strokeStyle="rgba(238,234,254,"+(al*Math.min(1,k*3)).toFixed(3)+")";ctx.lineWidth=s.s;
+        ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+      }else{
+        ctx.fillStyle=s.warm?"rgba(255,214,170,"+al.toFixed(3)+")":"rgba(238,234,254,"+al.toFixed(3)+")";
+        ctx.beginPath();ctx.arc(x,y,s.s*.75,0,6.283);ctx.fill();
+      }
+    }
+  }
+
+  function orbitPoint(phi,R,tilt){ // ellipse in the planet's frame; z>0 means in front
+    var ex=Math.cos(phi)*R*1.85,ey=Math.sin(phi)*R*.36,ct=Math.cos(tilt),st=Math.sin(tilt);
+    return {x:ex*ct-ey*st,y:ex*st+ey*ct,z:Math.sin(phi)};
+  }
+  function drawOrbit(cx,cy,R,tilt,front){
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(tilt);
+    ctx.strokeStyle="rgba(226,205,168,"+(front?.55:.22)+")";ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.ellipse(0,0,R*1.85,R*.36,0,front?0:Math.PI,front?Math.PI:Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+  function drawMoon(cx,cy,R,tilt,phi,front){
+    var m=orbitPoint(phi,R,tilt);if((m.z>0)!==front)return;
+    var r=R*(.075+.02*m.z),x=cx+m.x,y=cy+m.y;
+    ctx.lineCap="butt";
+    for(var j=0;j<18;j++){var q0=orbitPoint(phi-j*.03,R,tilt),q1=orbitPoint(phi-(j+1)*.03,R,tilt);if((q0.z>0)!==front)continue;
+      ctx.strokeStyle="rgba(228,240,78,"+(.32*(1-j/18)).toFixed(3)+")";ctx.lineWidth=r*1.6*(1-j/22);
+      ctx.beginPath();ctx.moveTo(cx+q0.x,cy+q0.y);ctx.lineTo(cx+q1.x,cy+q1.y);ctx.stroke()}
+    var g=ctx.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);
+    g.addColorStop(0,"#f8fcc4");g.addColorStop(.5,"#e4f04e");g.addColorStop(1,"#7f881c");
+    ctx.fillStyle=g;ctx.globalAlpha=front?1:.55;ctx.beginPath();ctx.arc(x,y,r,0,6.283);ctx.fill();ctx.globalAlpha=1;
+  }
+
+  function drawPlanet(now,k){
+    var e=k<1?Math.max(0,(k-.45)/.55):1;e=1-Math.pow(1-e,3);
+    var R=P.R*(.6+.4*e),cx=P.x+px*10,cy=P.y+py*8+(1-e)*40,tilt=-.32+px*.04;
+    if(e<=0)return;
+    ctx.globalAlpha=e;
+    var t=(now-T0)/1000,phi=reduce?2.2:t*.55+2.2;
+    drawOrbit(cx,cy,R,tilt,false);drawMoon(cx,cy,R,tilt,phi,false);
+    // glow
+    var gl=ctx.createRadialGradient(cx,cy,R*.9,cx,cy,R*1.6);gl.addColorStop(0,"rgba(228,240,78,.22)");gl.addColorStop(1,"rgba(228,240,78,0)");
+    ctx.fillStyle=gl;ctx.beginPath();ctx.arc(cx,cy,R*1.6,0,6.283);ctx.fill();
+    // body under a fixed light from the upper left
+    var g=ctx.createRadialGradient(cx-R*.38,cy-R*.42,R*.05,cx,cy,R);
+    g.addColorStop(0,"#fbfdd0");g.addColorStop(.28,"#e6f150");g.addColorStop(.7,"#9aa324");g.addColorStop(1,"#2f330c");
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,6.283);ctx.clip();
+    ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2);
+    if(felt)ctx.drawImage(felt,cx-R,cy-R,R*2,R*2);
+    // seam
+    var ay=reduce?.9:t*.32+px*.25,ax=.45+py*.15;
+    var pts=SEAM.map(function(p){return rot(p,ay,ax)});
+    var runs=[],run=[];
+    for(var i=0;i<pts.length;i++){if(pts[i][2]>0){run.push(pts[i])}else if(run.length){runs.push(run);run=[]}}
+    if(run.length)runs.push(run);
+    // the curve is closed: join the last run onto the first when it wraps through index 0
+    if(runs.length>1&&pts[0][2]>0&&pts[pts.length-1][2]>0){runs[0]=runs.pop().concat(runs[0])}
+    ctx.lineCap="round";ctx.lineJoin="round";
+    // groove: one continuous stroke per visible run
+    ctx.strokeStyle="rgba(40,46,6,.38)";ctx.lineWidth=R*.075;
+    runs.forEach(function(r){if(r.length<2)return;ctx.beginPath();ctx.moveTo(cx+r[0][0]*R,cy-r[0][1]*R);
+      for(var j=1;j<r.length;j++)ctx.lineTo(cx+r[j][0]*R,cy-r[j][1]*R);ctx.stroke()});
+    // seam: opaque colour lit by the same light as the ball, so it dims on the night side without beading
+    ctx.lineWidth=R*.032;
+    runs.forEach(function(r){for(var j=1;j<r.length;j++){
+      var q0=r[j-1],q1=r[j],nx=(q0[0]+q1[0])/2,ny=(q0[1]+q1[1])/2,nz=(q0[2]+q1[2])/2;
+      var l=Math.max(0,-.5*nx+.55*ny+.67*nz),k2=Math.min(1,.18+l*1.05);
+      var cr=Math.round(70+185*k2),cg=Math.round(72+183*k2),cb=Math.round(40+208*k2);
+      ctx.strokeStyle="rgb("+cr+","+cg+","+cb+")";
+      ctx.beginPath();ctx.moveTo(cx+q0[0]*R,cy-q0[1]*R);ctx.lineTo(cx+q1[0]*R,cy-q1[1]*R);ctx.stroke();
+    }});
+    // terminator shade and violet rim light from the nebula
+    var sh=ctx.createRadialGradient(cx-R*.5,cy-R*.55,R*.4,cx-R*.1,cy-R*.1,R*1.35);
+    sh.addColorStop(0,"rgba(13,11,38,0)");sh.addColorStop(.62,"rgba(13,11,38,0)");sh.addColorStop(1,"rgba(13,11,38,.78)");
+    ctx.fillStyle=sh;ctx.fillRect(cx-R,cy-R,R*2,R*2);
+    var rim=ctx.createLinearGradient(cx+R*.4,cy+R*.6,cx+R,cy+R*.2);
+    rim.addColorStop(0,"rgba(150,120,255,0)");rim.addColorStop(1,"rgba(150,120,255,.35)");
+    ctx.fillStyle=rim;ctx.fillRect(cx-R,cy-R,R*2,R*2);
+    ctx.restore();
+    drawOrbit(cx,cy,R,tilt,true);drawMoon(cx,cy,R,tilt,phi,true);
+    ctx.globalAlpha=1;
+  }
+
+  function drawComet(now){
+    return;
+    if(!comet&&now>nextComet){var fromTop=Math.random()<.6;comet={x:fromTop?rnd(W*.2,W*.9):W+20,y:fromTop?-20:rnd(0,H*.4),vx:-rnd(.55,.85),vy:rnd(.28,.42),t:now}}
+    if(!comet)return;
+    var age=now-comet.t,L=age*1.0,x=comet.x+comet.vx*L,y=comet.y+comet.vy*L;
+    if(x<-200||y>H+200){comet=null;nextComet=now+rnd(5000,9000);return}
+    var len=140,gx=x-comet.vx*len,gy=y-comet.vy*len,gr=ctx.createLinearGradient(x,y,gx,gy);
+    gr.addColorStop(0,"rgba(255,240,210,.9)");gr.addColorStop(1,"rgba(255,143,92,0)");
+    ctx.strokeStyle=gr;ctx.lineWidth=1.6;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(gx,gy);ctx.stroke();
+  }
+
+  var shown=false;
+  function frame(now){
+    if(!running)return;
+    px+=(tx-px)*.05;py+=(ty-py)*.05;
+    var k=WARP?Math.min(1,(now-T0)/WARP):1;
+    if(bg)ctx.drawImage(bg,0,0,W,H);
+    drawStars(now,k);drawComet(now);drawPlanet(now,k);
+    if(!shown&&k>=.72){shown=true;done()}
+    if(!reduce)requestAnimationFrame(frame);
+  }
+  layout();
+  if(reduce){done();frame(performance.now())}else requestAnimationFrame(frame);
+
+  var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){layout();if(reduce)frame(performance.now())},120)});
+  function relayout(){layout();if(reduce)frame(performance.now())}
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(relayout);
+  document.querySelectorAll("[data-set]").forEach(function(btn){btn.addEventListener("click",function(){setTimeout(relayout,0)})});
+  window.addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;tx=e.clientX/W*2-1;ty=e.clientY/H*2-1},{passive:true});
+  function start(){if(running||reduce)return;running=true;requestAnimationFrame(frame)}
+  function stop(){running=false}
+  document.addEventListener("visibilitychange",function(){document.hidden?stop():start()});
+  if("IntersectionObserver" in window)new IntersectionObserver(function(en){en[0].isIntersecting?start():stop()}).observe(cv);
+  setTimeout(done,2500); // safety net: never leave the text hidden
+})();
+</script>
+</body>
+</html>
