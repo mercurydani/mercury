@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Программирование для детей на русском в Белграде и онлайн · MercuryCode</title>
+<meta name="description" content="Курсы программирования для детей 6–15 лет на русском: основы компьютера, игры на Scratch, свой сайт, Python и Godot. Онлайн и в Белграде. Бесплатный пробный урок.">
+<meta name="theme-color" content="#06080c">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:site_name" content="MercuryCode">
+<meta property="og:title" content="MercuryCode: программирование для детей на русском">
+<meta property="og:description" content="Игры, сайты и Python для детей 6–15 лет. Онлайн и в Белграде. Бесплатный пробный урок.">
+<meta property="og:image" content="og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400..800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"><!-- taste-skill-ignore: mono is only for the code in the editor -->
+<script type="application/ld+json">{{LD}}</script>
+<style>
+/* MercuryCode: the studio's sky, its grey planet and one blue. The one loud thing is the
+   first screen, where a short program is typed and a rocket flies the orbit it describes. */
+:root{
+  --void:#06080c;--deep:#0b0e14;--hull:#11151d;--hull-2:#181d27;--hull-3:#222937;
+  --text:#e8ebf0;--mute:#9ba3b1;--metal:#8c9099;--blue:#2f5be8;--blue-hi:#6a8dff;--pale:#b9c8ff;
+  --sans:"Onest","Helvetica Neue",Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --step-small:.9375rem;--step-body:clamp(1.0625rem,1rem + .2vw,1.125rem);--step-lead:clamp(1.25rem,1.1rem + .6vw,1.5rem);
+  --step-head:clamp(2.125rem,1.3rem + 3vw,4rem);
+  --pad:clamp(18px,3.4vw,56px);--section:clamp(96px,11vw,176px);--ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth;scroll-padding-top:24px;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;overflow-x:clip;background:var(--void);color:var(--text);font:400 var(--step-body)/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-underline-offset:.22em;text-decoration-thickness:1px}
+ul,ol{list-style:none;margin:0;padding:0}
+h1,h2,h3,h4,p,dl,dd,figure{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue-hi);outline-offset:3px}
+::selection{background:var(--blue);color:#fff}
+.wrap{max-width:1320px;margin-inline:auto;padding-inline:var(--pad)}
+mark.todo{background:var(--hull-3);color:var(--pale);border-radius:6px;padding:0 6px}
+#sky{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:var(--void)}
+
+/* bar */
+.bar .wrap{display:flex;align-items:center;gap:28px;min-height:76px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px;letter-spacing:-.01em;text-decoration:none;margin-right:auto;white-space:nowrap}
+.logo::before{content:"";width:26px;height:26px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 30%,#d4d7dc 0,#8c9099 38%,#3a3e46 72%,#15181d 100%);box-shadow:inset -3px -2px 0 0 rgba(0,0,0,.35),0 0 0 1.5px var(--blue)} /* taste-skill-ignore: the mark is the studio's drawn planet */
+.logo b{color:var(--blue-hi);font-weight:700}
+.bar nav{display:flex;gap:26px;font-size:var(--step-small)}
+.bar nav a{text-decoration:none;color:var(--mute);transition:color .2s}
+.bar nav a:hover{color:var(--text)}
+
+/* buttons */
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:.55em;min-height:54px;padding:0 26px;border:0;border-radius:999px;background:var(--blue);color:#fff;font:600 var(--step-body)/1 var(--sans);text-decoration:none;cursor:pointer;white-space:nowrap;transition:background-color .2s,transform .15s var(--ease)}
+.btn:hover{background:#244ccf}
+.btn:active{transform:scale(.97)}
+.btn-line{background:var(--hull-2);color:var(--text)}
+.btn-line:hover{background:var(--hull-3)}
+.btn-sm{min-height:44px;padding:0 18px;font-size:var(--step-small)}
+
+/* hero */
+.intro{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:clamp(32px,4vw,72px);align-items:start;padding:clamp(24px,4vw,64px) 0 0}
+.intro-txt{display:contents}
+.intro h1{grid-column:1/-1}
+.intro-rest{grid-column:1;padding-top:clamp(28px,3.4vw,52px)}
+.lab{grid-column:2;grid-row:2;margin-top:clamp(28px,3.4vw,52px)}
+.intro h1{font-weight:700;font-size:clamp(2.1rem,.6rem + 5.4vw,6.25rem);line-height:.98;letter-spacing:-.045em;text-wrap:balance}
+.intro h1 em{font-style:normal;color:var(--metal)}
+.intro .lead{font-size:var(--step-lead);line-height:1.4;max-width:30ch}
+.traits{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.traits li{padding:8px 14px;border-radius:999px;background:var(--hull);font-size:var(--step-small);font-weight:500}
+.hero-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:36px}
+.hero-acts .btn{padding:0 22px}
+
+/* the lab: a program on the left, the orbit it flies on the right */
+.lab{position:relative;aspect-ratio:1/.86;border-radius:32px;background:var(--deep);overflow:hidden;isolation:isolate}
+.lab canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.code{position:absolute;left:clamp(14px,2.4vw,28px);bottom:clamp(14px,2.4vw,28px);width:min(60%,430px);background:var(--hull-2);border-radius:20px;overflow:hidden;font:400 clamp(.78rem,.7rem + .22vw,.875rem)/1.65 var(--mono);box-shadow:0 30px 70px rgba(0,0,0,.55)} /* taste-skill-ignore: a floating editor window, an interface fragment */
+.code-top{display:flex;align-items:center;gap:8px;padding:12px 14px 10px 18px;font:500 14px/1 var(--sans);color:var(--mute)}
+.code-top i{width:10px;height:10px;border-radius:50%;background:var(--hull-3)}
+.code-top i:first-child{background:var(--blue-hi)}
+.code-top span{margin-left:8px;font-family:var(--mono);font-size:13px}
+.run{margin-left:auto;display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--blue);color:#fff;font:600 14px/1 var(--sans);cursor:pointer;transition:background-color .2s}
+.run:hover{background:#244ccf}
+.run::before{content:"";width:0;height:0;border-left:8px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.run[data-state="busy"]{background:var(--hull-3);color:var(--mute)}
+.run[data-state="busy"]::before{width:8px;height:8px;border:0;border-radius:50%;background:var(--blue-hi)}
+@keyframes blink{50%{opacity:.25}}
+.src{margin:0;padding:4px 18px 14px;overflow:hidden;color:var(--text);font:inherit}
+.src code{font:inherit}
+.src .ln{display:block;height:1.65em}
+.src .ln.gap{height:.55em}
+.src .ln>span{display:inline-block;white-space:pre;overflow:hidden;vertical-align:top}
+.k{color:var(--blue-hi)}.s{color:var(--pale)}.n{color:var(--pale)}.f{color:#fff;font-weight:600}.c{color:var(--metal)}
+.out{padding:10px 18px 12px;background:var(--hull);color:var(--mute);min-height:calc(1.65em * 2 + 22px);font-size:.92em}
+.out p::before{content:"› ";color:var(--metal)}
+.out p.done{color:var(--pale);font-weight:600}
+.caret{display:inline-block;width:.55ch;height:1.15em;background:var(--blue-hi);vertical-align:-.2em;margin-left:1px;animation:blink 1s steps(2) infinite}
+
+/* sections */
+.sec{padding-top:var(--section)}
+.sec-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 40px;flex-wrap:wrap;margin-bottom:clamp(28px,4vw,56px)}
+.sec-top h2,.end h2{font-weight:700;font-size:var(--step-head);line-height:1.02;letter-spacing:-.035em;text-wrap:balance}
+.sec-top p{color:var(--mute);max-width:44ch}
+
+/* who it suits */
+.who{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,4vw,56px) clamp(28px,5vw,88px)}
+.who li{display:grid;grid-template-columns:auto 1fr;gap:4px 20px;align-items:baseline}
+.who li::before{content:"";grid-row:1/3;width:14px;height:14px;border-radius:50%;background:var(--metal);transform:translateY(.15em)}
+.who li:nth-child(4)::before{background:var(--blue-hi)}
+.who h3{font-weight:700;font-size:clamp(1.375rem,1.1rem + 1vw,2rem);line-height:1.15;letter-spacing:-.02em}
+.who p{color:var(--mute);font-size:var(--step-lead);line-height:1.4}
+
+/* programs */
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.tabs button{display:grid;gap:4px;text-align:left;border:0;border-radius:20px;padding:18px 20px;background:var(--hull);cursor:pointer;transition:background-color .2s,transform .15s var(--ease)}
+.tabs button:hover{background:var(--hull-2)}
+.tabs button:active{transform:scale(.98)}
+.tabs b{font-weight:700;font-size:18px;letter-spacing:-.01em}
+.tabs span{font-size:14px;color:var(--mute)}
+.tabs button[aria-selected="true"]{background:var(--text);color:var(--void)}
+.tabs button[aria-selected="true"] span{color:#4a505c}
+.track{background:var(--deep);border-radius:28px;padding:clamp(22px,3.4vw,48px)}
+.track-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:14px 28px}
+.track h3{font-weight:700;font-size:clamp(1.75rem,1.1rem + 1.8vw,2.5rem);line-height:1.05;letter-spacing:-.03em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips li{padding:6px 12px;border-radius:999px;background:var(--hull-2);font-size:14px;color:var(--mute)}
+.track-lead{color:var(--mute);margin-top:16px;max-width:64ch}
+.months{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:clamp(24px,3vw,40px);counter-reset:m}
+.mo{padding:22px 22px 24px;background:var(--hull);border-radius:20px}
+.mo-n{font-size:14px;font-weight:600;color:var(--metal)}
+.mo.last .mo-n{color:var(--blue-hi)}
+.mo h4{font-weight:700;font-size:20px;line-height:1.25;margin:10px 0 14px;letter-spacing:-.01em}
+.mo ol{display:grid;gap:7px;font-size:var(--step-small)}
+.mo li{display:grid;grid-template-columns:2.2em 1fr;color:var(--mute)}
+.mo li .no{font:500 14px/1.75 var(--sans);font-style:normal;color:var(--metal);font-variant-numeric:tabular-nums}
+.mo li.proj{color:var(--text);font-weight:600}
+.mo li.proj .no{color:var(--blue-hi)}
+.after{margin-top:22px;color:var(--mute);max-width:70ch}
+
+/* lesson */
+.steps{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.steps::before{content:"";position:absolute;left:7px;right:0;top:7px;border-top:2px dotted rgba(185,200,255,.35)} /* taste-skill-ignore: the flight path the four stops sit on */
+.steps li{position:relative;padding-top:44px}
+.steps li::before{content:"";position:absolute;left:0;top:0;width:16px;height:16px;border-radius:50%;background:var(--void);box-shadow:inset 0 0 0 3px var(--metal)} /* taste-skill-ignore: a ring on the path */
+.steps li:last-child::before{background:var(--blue-hi);box-shadow:0 0 0 6px rgba(106,141,255,.18)} /* taste-skill-ignore: the arrival point */
+.steps .st{font:600 15px/1 var(--sans);color:var(--metal);margin-bottom:12px}
+.steps li:last-child .st{color:var(--blue-hi)}
+.steps p:last-child{max-width:28ch}
+.steps h3{font-weight:700;font-size:20px;margin-bottom:8px}
+.steps p:last-child{color:var(--mute)}
+
+/* teacher */
+.teacher{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,88px);align-items:start}
+.teacher h2{font-weight:700;font-size:var(--step-head);line-height:1.02;letter-spacing:-.035em}
+.teacher .say{margin-top:22px;font-size:var(--step-lead);line-height:1.4;max-width:30ch}
+.facts{display:grid;gap:8px}
+.facts div{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:16px;padding:18px 22px;background:var(--deep);border-radius:16px}
+.facts dt{color:var(--mute);font-size:var(--step-small)}
+.facts dd{font-weight:500}
+.legal{margin-top:8px;padding:22px;border-radius:16px;background:var(--hull)}
+.legal b{display:block;font-weight:700;font-size:18px;margin-bottom:4px}
+.legal p{color:var(--mute)}
+
+/* where */
+.where{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.where li{padding:28px 26px 30px;background:var(--deep);border-radius:20px}
+.where h3{font-weight:700;font-size:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.where p{color:var(--mute)}
+.where li.soon{background:transparent;box-shadow:inset 0 0 0 1.5px var(--hull-3)} /* taste-skill-ignore: an empty slot for a format that is not open yet */
+.pill{font:600 14px/1 var(--sans);padding:6px 10px;border-radius:999px;background:var(--blue);color:#fff}
+.note{margin-top:22px;color:var(--mute)}
+
+/* prices */
+.prices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.prices li{display:flex;flex-direction:column;padding:28px 24px;background:var(--deep);border-radius:22px;min-height:250px}
+.prices h3{font-weight:600;font-size:18px;margin-top:10px}
+.prices .sum{font-weight:700;font-size:clamp(1.9rem,1.4rem + 1.2vw,2.5rem);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prices .sum small{font-size:16px;font-weight:600;color:var(--mute);letter-spacing:0;margin-left:4px}
+.prices .sum{color:var(--text)}
+.prices p:last-child{margin-top:auto;padding-top:22px;color:var(--mute);font-size:var(--step-small)}
+.prices li.hot{background:var(--blue)}
+.prices li.hot .sum{color:#fff}
+.prices li.hot .sum small,.prices li.hot p:last-child{color:#fff}
+.prices .tag{align-self:flex-start;margin-top:12px;font:600 14px/1 var(--sans);padding:6px 10px;border-radius:999px;background:#fff;color:var(--blue)}
+
+/* faq */
+.faq{display:grid;gap:8px;max-width:900px}
+.faq details{background:var(--deep);border-radius:18px;transition:background-color .25s}
+.faq details[open]{background:var(--hull)}
+.faq summary{list-style:none;cursor:pointer;padding:20px 64px 20px 24px;font-weight:600;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:22px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:var(--hull-2);display:grid;place-items:center;font-weight:500;transition:transform .25s var(--ease),background-color .2s}
+.faq details[open] summary::after{transform:translateY(-50%) rotate(45deg);background:var(--blue);color:#fff}
+.faq details p{color:var(--mute);padding:0 24px 22px;max-width:64ch}
+
+/* end */
+.end{margin-top:var(--section);padding:clamp(28px,5vw,72px);background:var(--deep);border-radius:32px;display:grid;grid-template-columns:1.1fr .9fr;gap:var(--pad);align-items:end}
+.end p{color:var(--mute);margin-top:16px;max-width:34em}
+.end ul{display:grid;gap:8px}
+.end li a{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;border-radius:16px;background:var(--hull);text-decoration:none;font-weight:600;transition:background-color .2s,transform .15s var(--ease)}
+.end li a:hover{background:var(--hull-2)}
+.end li a:active{transform:scale(.99)}
+.end li:first-child a{background:var(--blue);color:#fff}
+.end li:first-child a:hover{background:#244ccf}
+.end li small{color:var(--mute);font-weight:500}
+.end li:first-child small{color:#fff}
+
+.foot{font-size:14px;color:var(--mute);padding:28px var(--pad) 32px;display:flex;justify-content:space-between;gap:10px 24px;flex-wrap:wrap;max-width:1320px;margin:0 auto}
+.foot a{color:var(--text);text-decoration:none}
+.foot a:hover{color:var(--blue-hi)}
+
+/* entrances */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .8s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+html:not(.js) .reveal{opacity:1;transform:none}
+@keyframes rise-in{from{opacity:0;transform:translateY(24px)}}
+.js .intro h1,.js .intro-rest>*{animation:rise-in .9s var(--ease) both}
+.js .intro-rest>:nth-child(1){animation-delay:.1s}.js .intro-rest>:nth-child(2){animation-delay:.18s}.js .intro-rest>:nth-child(3){animation-delay:.26s}
+.js .lab{animation:rise-in 1.2s var(--ease) .15s both}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.js .intro h1,.js .intro-rest>*,.js .lab{animation:none}.caret{animation:none}}
+
+@media (max-width:1080px){
+  .prices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:40px}
+  .steps::before{display:none}
+  .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .months{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:900px){
+  .bar nav{display:none}
+  .intro{grid-template-columns:1fr}
+  .intro-rest,.lab{grid-column:1;grid-row:auto}
+  .lab{aspect-ratio:auto;height:min(112vw,600px)}
+  .code{width:calc(100% - 28px)}
+  .teacher,.end{grid-template-columns:1fr}
+  .where{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .bar .wrap{min-height:64px;gap:12px}
+  .intro h1{font-size:clamp(2rem,9.3vw,3rem)}
+  .hero-acts .btn{flex:1 1 100%}
+  .who,.prices,.months{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;row-gap:28px;padding-left:34px}
+  .steps::before{display:block;left:7px;right:auto;top:8px;bottom:8px;border-top:0;border-left:2px dotted rgba(185,200,255,.35)}
+  .steps li{padding-top:0}
+  .steps li::before{left:-34px;top:2px}
+  .tabs button{padding:14px 16px}
+  .tabs b{font-size:16px}
+  .tabs span{font-size:14px}
+  .code{width:calc(100% - 28px)}
+  .prices li{min-height:0}
+  .facts div{grid-template-columns:1fr;gap:4px}
+  .end li a{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="logo" href="#top" id="top">Mercury<b>Code</b></a>
+    <nav aria-label="Разделы"><a href="#program">Программы</a><a href="#teacher">Преподаватель</a><a href="#format">Где занятия</a><a href="#price">Цены</a><a href="#faq">Вопросы</a></nav>
+    <a class="btn btn-sm" href="{{TG}}">Пробный урок</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro" aria-labelledby="h1">
+    <div class="intro-txt">
+      <h1 id="h1">Программирование для&nbsp;детей <em>6–15&nbsp;лет</em></h1>
+      <div class="intro-rest">
+      <p class="lead">Ребёнок сам выбирает, что ему интересно: игры, сайты или Python. Каждый месяц готовый проект, который можно показать родителям и друзьям.</p>
+      <ul class="traits"><li>На русском языке</li><li>Онлайн и в Белграде</li><li>Пробный урок бесплатно</li><li>Официально, по договору</li></ul>
+      <div class="hero-acts">
+        <a class="btn" href="{{TG}}">Записаться на пробный урок</a>
+        <a class="btn btn-line" href="#program">Выбрать программу</a>
+      </div>
+      </div>
+    </div>
+
+    <figure class="lab" aria-label="Пример: программа на Python, по которой ракета облетает Меркурий">
+      <canvas id="orbit" aria-hidden="true"></canvas>
+      <div class="code" data-ui>
+        <div class="code-top"><i></i><i></i><i></i><span>mission.py</span><button class="run" type="button" id="run" data-state="busy">Запустить</button></div>
+<pre class="src" id="src" aria-hidden="true"><code><span class="ln"><span><span class="k">from</span> mercury <span class="k">import</span> <span class="f">Планета</span>, <span class="f">Ракета</span></span></span><span class="ln gap"><span></span></span><span class="ln"><span>планета = <span class="f">Планета</span>(<span class="s">"Меркурий"</span>)</span></span><span class="ln"><span>ракета = <span class="f">Ракета</span>(пилот=<span class="s">"ты"</span>)</span></span><span class="ln gap"><span></span></span><span class="ln"><span><span class="k">for</span> виток <span class="k">in</span> <span class="f">range</span>(<span class="n">1</span>, <span class="n">4</span>):</span></span><span class="ln"><span>    ракета.<span class="f">облететь</span>(планета)</span></span><span class="ln"><span>    <span class="f">print</span>(<span class="s">"виток"</span>, виток)</span></span><span class="ln gap"><span></span></span><span class="ln"><span><span class="f">print</span>(<span class="s">"Миссия выполнена!"</span>)</span></span></code></pre>
+        <div class="out" id="out" aria-live="polite"></div>
+      </div>
+    </figure>
+  </section>
+
+  <section class="sec" aria-labelledby="who-h">
+    <div class="sec-top reveal"><h2 id="who-h">Кому подходит</h2></div>
+    <ul class="who reveal">{{WHO}}</ul>
+  </section>
+
+  <section class="sec" id="program" aria-labelledby="program-h">
+    <div class="sec-top reveal">
+      <h2 id="program-h">Выберите программу</h2>
+      <p>Каждая программа на 6 месяцев, 1 или 2 урока в неделю. Возраст только ориентир. После первого месяца можно сменить направление или совмещать два.</p>
+    </div>
+    <div class="tabs reveal" role="tablist" aria-label="Программы">{{TABS}}</div>
+    <div class="reveal">{{TRACKS}}</div>
+    <p class="after">Не знаете, что выбрать? На пробном уроке ребёнок попробует любое направление, и вместе решим, с чего начать. Если ребёнок ещё плохо знаком с компьютером, начнём с основ.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="lesson-h">
+    <div class="sec-top reveal"><h2 id="lesson-h">Как проходит урок</h2></div>
+    <ol class="steps reveal">{{LESSON}}</ol>
+  </section>
+
+  <section class="sec" id="teacher" aria-labelledby="teacher-h">
+    <div class="teacher">
+      <div class="reveal">
+        <h2 id="teacher-h">Даниил Помазков</h2>
+        <p class="say">Веду все занятия сам. Я не просто знаю программирование, а уже преподавал его: вёл в колледже программирование, веб-разработку и тестирование.</p>
+      </div>
+      <div class="reveal">
+        <dl class="facts">{{TEACHER}}</dl>
+        <div class="legal"><b>Официально, как ИП в Сербии</b><p>Работаю как зарегистрированный предприниматель (preduzetnik). Договор и счёт на оплату для родителей.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="format" aria-labelledby="format-h">
+    <div class="sec-top reveal"><h2 id="format-h">Где проходят занятия</h2></div>
+    <ul class="where reveal">
+      <li><h3>Онлайн</h3><p>Через Zoom или Google Meet с демонстрацией экрана. Из любого города Сербии и не только.</p></li>
+      <li class="soon"><h3>На дому в Белграде <span class="pill">Скоро</span></h3><p>Занятия с выездом к вам домой появятся в ближайшее время. Напишите, если интересно, сообщу первым.</p></li>
+      <li><h3>Мини-группа</h3><p>3–4 ребёнка с одной программой. Веселее и дешевле. <mark class="todo">[Место проведения уточняется]</mark></p></li>
+    </ul>
+    <p class="note">Нужен только ноутбук или компьютер. Все программы бесплатные, помогу установить на первом уроке.</p>
+  </section>
+
+  <section class="sec" id="price" aria-labelledby="price-h">
+    <div class="sec-top reveal">
+      <h2 id="price-h">Стоимость</h2>
+      <p>Программа одна и та же, разница в темпе. Два раза в неделю на каждую тему есть разбор и отдельная практика: ребёнок лучше запоминает и делает проекты сложнее.</p>
+    </div>
+    <ul class="prices reveal">
+      <li><p class="sum">Бесплатно</p><h3>Пробный урок</h3><p>40 минут: знакомимся, пробуем направление, рассказываю родителям программу.</p></li>
+      <li><p class="sum">10 000<small>RSD</small></p><h3>1 раз в неделю</h3><p>в месяц, 4 индивидуальных урока. 2 500 RSD за урок.</p></li>
+      <li class="hot"><p class="sum">18 000<small>RSD</small></p><h3>2 раза в неделю</h3><span class="tag">Быстрее результат</span><p>в месяц, 8 индивидуальных уроков. 2 250 RSD за урок.</p></li>
+      <li><p class="sum">6 000<small>RSD</small></p><h3>Мини-группа</h3><p>в месяц с ребёнка за 4 урока, 11 000 RSD за 8 уроков. Группа 3–4 человека.</p></li>
+    </ul>
+    <p class="note">Разовый урок без абонемента: 2 800 RSD. Перенос урока бесплатно при предупреждении за <mark class="todo">[24 часа]</mark>. Скидка <mark class="todo">[10%]</mark> для второго ребёнка из семьи.</p>
+  </section>
+
+  <section class="sec" id="faq" aria-labelledby="faq-h">
+    <div class="sec-top reveal"><h2 id="faq-h">Частые вопросы</h2></div>
+    <div class="faq reveal">{{FAQ}}</div>
+  </section>
+
+  <section class="end reveal" id="contacts" aria-labelledby="end-h">
+    <div>
+      <h2 id="end-h">Первый урок бесплатно</h2>
+      <p>Напишите возраст ребёнка, что ему интересно и когда удобно. Отвечу и предложу время для пробного урока.</p>
+    </div>
+    <ul>
+      <li><a href="{{TG}}">Telegram <small>@mercury_dani</small></a></li>
+      <li><a href="tel:{{PHONE}}">Позвонить <small>{{PHONE_H}}</small></a></li>
+    </ul>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>MercuryCode · программирование для детей · Белград и онлайн</span>
+  <span>Preduzetnik <mark class="todo">[название ИП]</mark> · PIB <mark class="todo">[номер]</mark></span>
+  <span>Сайт: <a href="https://mercurystudio.pro">Mercury Studio</a></span>
+</footer>
+
+<script>
+/* program tabs: click, or arrow keys inside the tab row */
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('[role="tab"]'));
+  function pick(t,focus){
+    tabs.forEach(function(x){var on=x===t;x.setAttribute("aria-selected",on);x.tabIndex=on?0:-1;document.getElementById(x.getAttribute("aria-controls")).hidden=!on});
+    if(focus)t.focus();
+  }
+  tabs.forEach(function(t,i){
+    t.addEventListener("click",function(){pick(t)});
+    t.addEventListener("keydown",function(e){var d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(d){e.preventDefault();pick(tabs[(i+d+tabs.length)%tabs.length],true)}});
+  });
+})();
+
+/* entrances */
+(function(){
+  var els=document.querySelectorAll(".reveal");
+  if(!("IntersectionObserver" in window)){els.forEach(function(el){el.classList.add("in")});return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}})},{rootMargin:"0px 0px -8% 0px"});
+  els.forEach(function(el){io.observe(el)});
+})();
+
+/* the studio's sky: stars that twinkle and drift a little on scroll */
+(function(){
+  var sky=document.getElementById("sky");if(!sky||!sky.getContext)return;
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var c=sky.getContext("2d"),st=[],dpr=Math.min(devicePixelRatio||1,2),w=0,h=0,t0=performance.now(),seed=7;
+  function r(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}
+  function build(){w=sky.clientWidth;h=sky.clientHeight;sky.width=w*dpr;sky.height=h*dpr;c.setTransform(dpr,0,0,dpr,0,0);seed=7;st=[];
+    for(var i=0,n=Math.round(w*h/4200);i<n;i++){var z=r();st.push({x:r()*w,y:r()*h*1.6,s:.3+z*z*1.4,a:.25+r()*.6,z:z,tw:r()<.5?r()*6.28:-1,sp:.5+r()*1.6,b:r()<.18})}}
+  function draw(now){c.clearRect(0,0,w,h);var sy=scrollY||0,t=(now-t0)/1000;
+    for(var i=0;i<st.length;i++){var s=st[i],y=(s.y-sy*(.02+s.z*.08))%(h*1.6);if(y<0)y+=h*1.6;if(y>h)continue;
+      c.globalAlpha=s.tw>=0&&!reduce?s.a*(.7+.3*Math.sin(t*s.sp+s.tw)):s.a;c.fillStyle=s.b?"#a9bcff":"#fff";c.beginPath();c.arc(s.x,y,s.s,0,6.2832);c.fill()}
+    c.globalAlpha=1}
+  build();
+  if(reduce){draw(0);addEventListener("scroll",function(){requestAnimationFrame(draw)},{passive:true})}
+  else(function loop(n){draw(n);requestAnimationFrame(loop)})(0);
+  addEventListener("resize",function(){build();draw(performance.now())});
+})();
+
+/* the lab: the program types itself, then the rocket flies three laps and the console answers */
+(function(){
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("orbit"),src=document.getElementById("src"),out=document.getElementById("out"),run=document.getElementById("run");
+  if(!cv||!cv.getContext)return;
+  var c=cv.getContext("2d"),W=0,H=0,dpr=Math.min(devicePixelRatio||1,2),P={x:0,y:0,R:0},O={rx:0,ry:0,tilt:-.32};
+  var lines=[].slice.call(src.querySelectorAll(".ln>span")),texts=lines.map(function(l){return l.innerHTML}),lens=lines.map(function(l){return l.textContent.length});
+  var state="type",tStart=0,laps=0,ang=Math.PI*.5,trail=[],craters=[],visible=true,printed=0,timer=null;
+
+  // a few craters on the planet, fixed so the face never changes
+  (function(){var s=11;function r(){s=(s*16807)%2147483647;return(s-1)/2147483646}for(var i=0;i<26;i++){var a=r()*6.28,d=Math.sqrt(r())*.82;craters.push([Math.cos(a)*d,Math.sin(a)*d,.04+Math.pow(r(),2)*.16])}})();
+
+  function layout(){
+    var b=cv.getBoundingClientRect();W=b.width;H=b.height;cv.width=W*dpr;cv.height=H*dpr;c.setTransform(dpr,0,0,dpr,0,0);
+    var code=src.parentNode.getBoundingClientRect(),freeTop=code.top-b.top,wide=code.width<W*.8;
+    P.R=Math.max(40,Math.min(W*.15,freeTop*.33));P.x=W*(wide?.62:.56);P.y=Math.max(P.R*1.3,freeTop*.52);   // in the free sky above the editor; the orbit dips behind it
+    O.rx=Math.min(P.R*2.6,W*.4);O.ry=P.R*.66;
+  }
+  function at(a){var x=Math.cos(a)*O.rx,y=Math.sin(a)*O.ry,ct=Math.cos(O.tilt),stl=Math.sin(O.tilt);return[P.x+x*ct-y*stl,P.y+x*stl+y*ct]}
+  function planet(){
+    var R=P.R;c.save();c.beginPath();c.arc(P.x,P.y,R,0,6.2832);c.clip();
+    c.fillStyle="#6d717a";c.fillRect(P.x-R,P.y-R,R*2,R*2);
+    craters.forEach(function(k){var x=P.x+k[0]*R,y=P.y+k[1]*R,rr=k[2]*R;c.fillStyle="rgba(76,80,88,.55)";c.beginPath();c.arc(x+rr*.12,y+rr*.12,rr,0,6.2832);c.fill();c.fillStyle="rgba(150,154,162,.35)";c.beginPath();c.arc(x-rr*.2,y-rr*.2,rr*.6,0,6.2832);c.fill()});
+    var g=c.createRadialGradient(P.x-R*.45,P.y-R*.5,R*.1,P.x-R*.1,P.y-R*.1,R*1.35);g.addColorStop(0,"rgba(255,255,255,.18)");g.addColorStop(.45,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(3,4,8,.92)");
+    c.fillStyle=g;c.fillRect(P.x-R,P.y-R,R*2,R*2);c.restore();
+    c.save();c.beginPath();c.arc(P.x,P.y,R+1,-1.25,.35);c.strokeStyle="rgba(106,141,255,.75)";c.lineWidth=Math.max(1.5,R*.035);c.shadowColor="rgba(61,107,255,.9)";c.shadowBlur=R*.25;c.stroke();c.restore();
+  }
+  function path(front){ // the dotted orbit, back half or front half
+    c.fillStyle="rgba(185,200,255,"+(front?.55:.22)+")";
+    for(var i=0;i<120;i++){var a=i/120*6.2832,s=Math.sin(a);if((s>0)!==front)continue;var p=at(a);c.beginPath();c.arc(p[0],p[1],1.1,0,6.2832);c.fill()}
+  }
+  function rocket(a){
+    var p=at(a),q=at(a+.02),dir=Math.atan2(q[1]-p[1],q[0]-p[0]),sz=Math.max(7,P.R*.13),depth=.82+.18*Math.sin(a);
+    for(var i=0;i<trail.length;i++){var t=trail[i],al=(i/trail.length)*.5;c.fillStyle="rgba(106,141,255,"+al+")";c.beginPath();c.arc(t[0],t[1],sz*.18*(i/trail.length+.3),0,6.2832);c.fill()}
+    c.save();c.translate(p[0],p[1]);c.rotate(dir);c.scale(depth,depth);
+    if(state==="fly"&&!reduce){c.fillStyle="#6a8dff";c.beginPath();c.moveTo(-sz*.55,0);c.lineTo(-sz*(1.1+Math.random()*.35),-sz*.16);c.lineTo(-sz*(1.1+Math.random()*.35),sz*.16);c.closePath();c.fill()}
+    c.fillStyle="#e8ebf0";c.beginPath();c.moveTo(sz*.9,0);c.quadraticCurveTo(sz*.3,-sz*.42,-sz*.55,-sz*.3);c.lineTo(-sz*.55,sz*.3);c.quadraticCurveTo(sz*.3,sz*.42,sz*.9,0);c.fill();
+    c.fillStyle="#8c9099";c.beginPath();c.moveTo(-sz*.2,-sz*.3);c.lineTo(-sz*.7,-sz*.62);c.lineTo(-sz*.55,-sz*.22);c.fill();c.beginPath();c.moveTo(-sz*.2,sz*.3);c.lineTo(-sz*.7,sz*.62);c.lineTo(-sz*.55,sz*.22);c.fill();
+    c.fillStyle="#2f5be8";c.beginPath();c.arc(sz*.25,0,sz*.13,0,6.2832);c.fill();
+    c.restore();
+  }
+  function scene(){
+    c.clearRect(0,0,W,H);
+    var behind=Math.sin(ang)<0;
+    path(false);if(behind)rocket(ang);planet();path(true);if(!behind)rocket(ang);
+  }
+  function say(t,done){var p=document.createElement("p");p.textContent=t;if(done)p.className="done";out.appendChild(p);while(out.children.length>2)out.removeChild(out.firstChild)}
+
+  // typing: each line's inner span grows one character at a time
+  var caret=document.createElement("span");caret.className="caret";
+  function typeAll(){
+    state="type";laps=0;printed=0;ang=Math.PI*.5;trail=[];out.innerHTML="";run.dataset.state="busy";run.textContent="Пишем код";
+    if(reduce){lines.forEach(function(l,i){l.innerHTML=texts[i]});launch();return}
+    lines.forEach(function(l){l.style.width="0ch";l.innerHTML=""});
+    var li=0,ch=0;
+    (function step(){
+      if(li>=lines.length){caret.remove();launch();return}
+      var l=lines[li];l.innerHTML=texts[li];l.style.width=ch+"ch";l.parentNode.appendChild(caret);
+      if(ch>=lens[li]){l.style.width="";li++;ch=0;timer=setTimeout(step,lens[li-1]?160:60);return}
+      ch++;timer=setTimeout(step,28+Math.random()*40);
+    })();
+  }
+  function launch(){state="fly";tStart=performance.now();run.dataset.state="busy";run.textContent="Летим";if(reduce){say("виток 3");say("Миссия выполнена!",true);state="done";run.dataset.state="";run.textContent="Запустить";scene()}}
+  run.addEventListener("click",function(){if(run.dataset.state==="busy")return;clearTimeout(timer);typeAll()});
+
+  var last=0,LAP=4200;
+  function frame(now){
+    if(visible&&W){
+      if(state==="fly"){
+        var k=(now-tStart)/LAP;ang=Math.PI*.5+k*6.2832;
+        var done=Math.floor(k);while(printed<Math.min(done,3)){printed++;say("виток "+printed)}
+        if(k>=3){state="done";say("Миссия выполнена!",true);run.dataset.state="";run.textContent="Ещё раз"}
+        var p=at(ang);trail.push(p);if(trail.length>26)trail.shift();
+      }else if(state==="done"){ang+=.004;var p2=at(ang);trail.push(p2);if(trail.length>26)trail.shift()}
+      scene();
+    }
+    if(!reduce)requestAnimationFrame(frame);
+  }
+  layout();
+  var ready=document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve();
+  ready.then(function(){layout();scene()});
+  if("IntersectionObserver" in window)new IntersectionObserver(function(es){visible=es[0].isIntersecting}).observe(cv);
+  addEventListener("resize",function(){layout();scene()});
+  typeAll();
+  if(reduce)scene();else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -155,6 +155,15 @@
         ],
         "createdAt": "2026-10-20T17:35:39.213Z",
         "reason": "Same page as sites/tennis/public/index.html (Serbian build); see its triage"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/mercurycode/index.html"
+        ],
+        "createdAt": "2026-10-20T23:38:10.711Z",
+        "reason": "Claude triage: .end has clamp(28px,5vw,72px) padding on all sides"
       }
     ]
   }
