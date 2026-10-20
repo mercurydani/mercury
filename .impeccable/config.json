@@ -128,6 +128,33 @@
         ],
         "createdAt": "2026-10-20T17:30:50.312Z",
         "reason": "The glow is the planet-ball's light, the site's one deliberate effect"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/tennis/public/sr/index.html"
+        ],
+        "createdAt": "2026-10-20T17:35:39.179Z",
+        "reason": "Same page as sites/tennis/public/index.html (Serbian build); see its triage"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "sites/tennis/public/sr/index.html"
+        ],
+        "createdAt": "2026-10-20T17:35:39.196Z",
+        "reason": "Same page as sites/tennis/public/index.html (Serbian build); see its triage"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/tennis/public/sr/index.html"
+        ],
+        "createdAt": "2026-10-20T17:35:39.213Z",
+        "reason": "Same page as sites/tennis/public/index.html (Serbian build); see its triage"
       }
     ]
   }
