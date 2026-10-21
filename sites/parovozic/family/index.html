@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Паровозич · водитель для всей семьи, Нови Сад</title>
+<meta name="description" content="Частный водитель из Нови Сада для семей с детьми: детские кресла и бустеры, визараны в Боснию и Черногорию, поездки по Сербии, ИКЕА и МЕТРО, перевозка вещей и животных.">
+<meta name="theme-color" content="#f5f7fb">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Variant 2, "light and friendly": soft colour blocks, big tap targets, a filter for destinations. */
+:root{
+  --paper:#f5f7fb;--ink:#26283a;--soft:#585c70;--coral:#2c5fd6;--coral-hi:#234db3;--price:#1f47a3;
+  --sun:#ffe9a8;--peach:#ffdccb;--mint:#cdeedd;--sky:#d6e6ff;--lilac:#e7ddff;--white:#fff;
+  --sans:"Rubik",system-ui,sans-serif;--pad:clamp(16px,4vw,48px);--r:28px;--ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-bottom:84px}
+h1,h2,h3,p,ul{margin:0;padding:0}
+ul{list-style:none}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:var(--pad)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:58px;padding:0 26px;border-radius:999px;font:700 17px/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background-color .2s,transform .15s var(--ease)}
+.btn svg{width:22px;height:22px;flex:none}
+.btn:active{transform:scale(.97)}
+.btn-tg{background:var(--coral);color:#fff}
+.btn-tg:hover{background:var(--coral-hi)}
+.btn-call{background:var(--white);color:var(--ink)}
+.btn-call:hover{background:#eceff6}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:72px}
+.logo{display:flex;align-items:center;gap:10px;font:700 22px/1 var(--sans);text-decoration:none}
+.logo svg{width:44px;height:30px}
+.top small{font:700 15px/1 var(--sans);color:var(--soft)}
+
+/* hero */
+.hero{display:grid;gap:18px;padding-top:6px}
+.pic{background:var(--sun);border-radius:var(--r);aspect-ratio:16/10;display:grid;place-items:end center;overflow:hidden;position:relative}
+.pic svg{width:92%;height:auto}
+.pic .cloud{position:absolute;fill:#fff}
+@keyframes drift{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+.js .pic .cloud{animation:drift 9s ease-in-out infinite alternate}
+.say{background:var(--white);border-radius:var(--r);padding:clamp(22px,4vw,44px)}
+.say h1{font:700 clamp(2.125rem,1.3rem + 3vw,3.4rem)/1.05 var(--sans);letter-spacing:-.02em}
+@media (min-width:860px){.say h1 .nw{white-space:nowrap}}
+.say p{color:var(--soft);margin-top:14px;max-width:38ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chips li{padding:9px 14px;border-radius:999px;background:var(--mint);font:700 15px/1.2 var(--sans)}
+.chips li:nth-child(2){background:var(--sky)}.chips li:nth-child(3){background:var(--peach)}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.acts .btn{flex:1 1 220px}
+.say .btn-call{background:var(--paper)}
+.say .btn-call:hover{background:#e6eaf3}
+
+/* destinations */
+.sec{padding-top:72px}
+.sec h2{font:700 clamp(1.875rem,1.3rem + 2.6vw,3rem)/1.1 var(--sans);letter-spacing:-.02em}
+.sec .lede{color:var(--soft);margin-top:10px;max-width:50ch}
+.filter{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.filter button{min-height:48px;padding:0 20px;border:0;border-radius:999px;background:var(--white);font:700 16px/1 var(--sans);color:var(--ink);cursor:pointer;transition:background-color .2s}
+.filter button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.dest{display:grid;gap:10px;margin-top:16px}
+.dest li{display:grid;grid-template-columns:64px 1fr;gap:2px 16px;align-items:center;padding:18px 20px;border-radius:24px;background:var(--white)}
+.dest li[hidden]{display:none}
+.dest .ic{grid-row:1/4;width:64px;height:64px;border-radius:20px;display:grid;place-items:center}
+.dest .ic svg{width:38px;height:38px}
+.dest .visa .ic{background:var(--peach)}.dest .rest .ic{background:var(--mint)}.dest .city .ic{background:var(--sky)}
+.dest h3{font:700 21px/1.2 var(--sans)}
+.dest p{color:var(--soft);font-size:16px;line-height:1.4}
+.dest .price{font:700 15px/1.3 var(--sans);color:var(--price)}
+
+/* more */
+.bento{display:grid;gap:10px;margin-top:22px}
+.bento li{border-radius:var(--r);padding:26px 24px;display:grid;gap:8px;align-content:start}
+.bento svg{width:52px;height:52px;margin-bottom:6px}
+.bento h3{font:700 24px/1.15 var(--sans)}
+.bento p{color:var(--ink)}
+.bento .price{font:700 16px/1.3 var(--sans);color:var(--price)}
+.b1{background:var(--sky)}.b2{background:var(--lilac)}.b3{background:var(--sun)}.b4{background:var(--peach)}
+
+/* family */
+.family{margin-top:72px;background:var(--mint);border-radius:var(--r);padding:clamp(24px,4vw,56px);display:grid;gap:24px}
+.family h2{font:700 clamp(1.875rem,1.3rem + 2.6vw,3rem)/1.1 var(--sans);letter-spacing:-.02em}
+.family .seat{width:min(220px,60%);justify-self:center}
+.perks{display:grid;gap:14px}
+.perks li{background:rgba(255,255,255,.65);border-radius:20px;padding:16px 18px}
+.perks h3{font:700 19px/1.25 var(--sans)}
+.perks p{color:#3f5348;font-size:16px;margin-top:2px}
+
+/* contact */
+.end{margin-top:72px;background:var(--coral);color:#fff;border-radius:var(--r);padding:clamp(26px,4vw,56px);display:grid;gap:20px}
+.end h2{font:700 clamp(2rem,1.3rem + 3vw,3.25rem)/1.05 var(--sans);letter-spacing:-.02em}
+.end p{margin-top:8px}
+.end .btn-tg{background:#fff;color:var(--price)}
+.end .btn-tg:hover{background:#eef2ff}
+.end .btn-call{background:#234db3;color:#fff}
+.end .btn-call:hover{background:#1c3f95}
+
+footer{padding:30px 0 22px;color:var(--soft);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(245,247,251,.96)}
+.dock .btn{flex:1 1 0;min-width:0;min-height:54px;font-size:15px;padding:0 8px;gap:8px}
+.dock .btn-tg{flex-grow:1.55}
+.dock .btn-call{background:var(--white)}
+
+@media (min-width:860px){
+  body{padding-bottom:0}
+  .dock{display:none}
+  .hero{grid-template-columns:1.1fr .9fr;gap:14px}
+  .say{grid-column:1;grid-row:1}
+  .pic{grid-column:2;grid-row:1;aspect-ratio:auto;place-items:center}
+  .pic svg:last-child{width:100%}
+  .acts .btn{flex:0 0 auto}
+  .dest{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dest li{padding:22px}
+  .bento{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .b1{grid-column:span 2}.b4{grid-column:span 2}
+  .family{grid-template-columns:.7fr 1.3fr;align-items:center}
+  .family .seat{grid-row:1/3;width:100%;max-width:300px}
+  .perks{grid-template-columns:1fr 1fr}
+  .end{grid-template-columns:1fr auto;align-items:center}
+}
+@media (prefers-reduced-motion:reduce){.js .pic .cloud{animation:none}}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-tg" viewBox="0 0 24 24"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.2 1.3-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.4zM9 13.4l9.3-5.9c.4-.3.8-.1.5.2l-7.6 6.9-.3 3.2z"/></symbol>
+  <symbol id="i-call" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-pass" viewBox="0 0 40 40"><g fill="none" stroke="#2a2733" stroke-width="2.4" stroke-linejoin="round"><rect x="9" y="5" width="22" height="30" rx="4"/><circle cx="20" cy="17" r="5"/><path d="M14 28h12"/></g></symbol>
+  <symbol id="i-plane" viewBox="0 0 40 40"><path fill="none" stroke="#2a2733" stroke-width="2.4" stroke-linejoin="round" d="M4 22l32-12-8 22-6-8-8 5 2-9z"/></symbol>
+  <symbol id="i-mount" viewBox="0 0 40 40"><g fill="none" stroke="#2a2733" stroke-width="2.4" stroke-linejoin="round"><path d="M3 33l12-20 8 12 4-6 10 14z"/><path d="M12 18l3 3 3-3"/></g></symbol>
+  <symbol id="i-tree" viewBox="0 0 40 40"><g fill="none" stroke="#2a2733" stroke-width="2.4" stroke-linejoin="round"><path d="M20 4l10 14h-6l8 10H8l8-10h-6z"/><path d="M20 28v8"/></g></symbol>
+  <symbol id="i-fort" viewBox="0 0 40 40"><g fill="none" stroke="#2a2733" stroke-width="2.4" stroke-linejoin="round"><path d="M6 34V14h6v4h4v-8h8v8h4v-4h6v20z"/><path d="M17 34v-7h6v7"/></g></symbol>
+  <symbol id="i-town" viewBox="0 0 40 40"><g fill="none" stroke="#2a2733" stroke-width="2.4" stroke-linejoin="round"><path d="M5 34V18l8-6 8 6v16zM21 34V10h14v24"/><path d="M11 34v-7h4v7M26 16h4M26 22h4M26 28h4"/></g></symbol>
+</svg>
+
+<header class="wrap top">
+  <a class="logo" href="#top" id="top" aria-label="Паровозич">
+    <svg viewBox="0 0 44 30" aria-hidden="true"><circle cx="9" cy="6" r="4" fill="#cdeedd"/><rect x="4" y="12" width="26" height="11" rx="4" fill="#e4553b"/><rect x="24" y="5" width="14" height="18" rx="3" fill="#2a2733"/><rect x="8" y="8" width="5" height="6" rx="1.5" fill="#2a2733"/><circle cx="11" cy="25" r="4" fill="#2a2733"/><circle cx="23" cy="25" r="4" fill="#2a2733"/><circle cx="33" cy="25" r="4" fill="#2a2733"/></svg>
+    Паровозич
+  </a>
+  <small>Нови Сад</small>
+</header>
+
+<main class="wrap">
+  <section class="hero" aria-labelledby="h1">
+    <div class="say">
+      <h1 id="h1"><span class="nw">Семейный водитель</span> в&nbsp;Нови Саде</h1>
+      <p>Визараны, поездки по Сербии, ИКЕА, концерты и перевозка вещей. Забираю от дома и везу спокойно.</p>
+      <ul class="chips"><li>Детские кресла и бустеры</li><li>Забираю от дома</li><li>Всегда на связи</li></ul>
+      <div class="acts">
+        <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+        <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+      </div>
+    </div>
+    <div class="pic" aria-hidden="true">
+      <svg class="cloud" viewBox="0 0 120 40" style="width:28%;left:8%;top:12%"><path d="M20 36a16 16 0 0 1 6-31 22 22 0 0 1 40 6 14 14 0 0 1 36 10 12 12 0 0 1-2 15z"/></svg>
+      <svg class="cloud" viewBox="0 0 120 40" style="width:18%;right:10%;top:22%;animation-delay:-4s"><path d="M20 36a16 16 0 0 1 6-31 22 22 0 0 1 40 6 14 14 0 0 1 36 10 12 12 0 0 1-2 15z"/></svg>
+      <svg viewBox="0 0 520 260">
+        <circle cx="128" cy="46" r="18" fill="#fff"/><circle cx="150" cy="24" r="13" fill="#fff"/><circle cx="104" cy="30" r="11" fill="#fff"/>
+        <rect x="110" y="62" width="40" height="44" rx="8" fill="#2a2733"/>
+        <rect x="60" y="100" width="270" height="86" rx="30" fill="#e4553b"/>
+        <rect x="300" y="52" width="140" height="134" rx="18" fill="#2a2733"/>
+        <rect x="324" y="74" width="40" height="40" rx="10" fill="#d6e6ff"/><rect x="378" y="74" width="40" height="40" rx="10" fill="#d6e6ff"/>
+        <rect x="200" y="82" width="34" height="26" rx="13" fill="#ffe9a8"/>
+        <circle cx="60" cy="143" r="20" fill="#ffe9a8"/>
+        <path d="M30 186l22-30h20v30z" fill="#2a2733"/>
+        <rect x="40" y="182" width="420" height="14" rx="7" fill="#2a2733"/>
+        <circle cx="130" cy="214" r="30" fill="#2a2733"/><circle cx="130" cy="214" r="11" fill="#cdeedd"/>
+        <circle cx="226" cy="214" r="30" fill="#2a2733"/><circle cx="226" cy="214" r="11" fill="#cdeedd"/>
+        <circle cx="380" cy="218" r="26" fill="#2a2733"/><circle cx="380" cy="218" r="10" fill="#cdeedd"/>
+        <rect x="0" y="244" width="520" height="16" fill="#f4d67b"/>
+      </svg>
+    </div>
+  </section>
+
+  <section class="sec" id="routes" aria-labelledby="routes-h">
+    <h2 id="routes-h">Куда поедем?</h2>
+    <p class="lede">Забираю от вашего дома в Нови Саде. Нажмите, чтобы отфильтровать.</p>
+    <div class="filter" role="group" aria-label="Фильтр направлений">
+      <button type="button" aria-pressed="true" data-f="all">Все</button>
+      <button type="button" aria-pressed="false" data-f="visa">Визаран</button>
+      <button type="button" aria-pressed="false" data-f="rest">Отдых</button>
+      <button type="button" aria-pressed="false" data-f="city">Города</button>
+    </div>
+    <ul class="dest" aria-live="polite">
+      <li class="visa"><span class="ic"><svg aria-hidden="true"><use href="#i-pass"/></svg></span><h3>Босния</h3><p>Визаран в группе или индивидуально</p><span class="price">Цена по запросу</span></li>
+      <li class="visa"><span class="ic"><svg aria-hidden="true"><use href="#i-pass"/></svg></span><h3>Черногория</h3><p>Визаран в группе или индивидуально</p><span class="price">Цена по запросу</span></li>
+      <li class="city"><span class="ic"><svg aria-hidden="true"><use href="#i-plane"/></svg></span><h3>Белград и аэропорт</h3><p>Встречу с табличкой, помогу с багажом</p><span class="price">Цена по запросу</span></li>
+      <li class="rest"><span class="ic"><svg aria-hidden="true"><use href="#i-mount"/></svg></span><h3>Златибор</h3><p>Горы и свежий воздух</p><span class="price">Цена по запросу</span></li>
+      <li class="rest"><span class="ic"><svg aria-hidden="true"><use href="#i-tree"/></svg></span><h3>Национальный парк Тара</h3><p>Лес, озёра и смотровые площадки</p><span class="price">Цена по запросу</span></li>
+      <li class="rest"><span class="ic"><svg aria-hidden="true"><use href="#i-mount"/></svg></span><h3>Копаоник</h3><p>Горы, зимой и летом</p><span class="price">Цена по запросу</span></li>
+      <li class="rest"><span class="ic"><svg aria-hidden="true"><use href="#i-fort"/></svg></span><h3>Голубацкая крепость</h3><p>Крепость на Дунае</p><span class="price">Цена по запросу</span></li>
+      <li class="city"><span class="ic"><svg aria-hidden="true"><use href="#i-town"/></svg></span><h3>Лозница</h3><p>Поездка в город</p><span class="price">Цена по запросу</span></li>
+    </ul>
+  </section>
+
+  <section class="sec" aria-labelledby="more-h">
+    <h2 id="more-h">И ещё помогу</h2>
+    <ul class="bento">
+      <li class="b1"><svg viewBox="0 0 52 52" aria-hidden="true"><g fill="none" stroke="#2a2733" stroke-width="2.6" stroke-linejoin="round"><path d="M8 18h36l-4 22H12z"/><path d="M18 18l6-10M34 18l-6-10"/></g></svg><h3>ИКЕА и МЕТРО</h3><p>Поездки за покупками и доставка бытовой техники из магазинов.</p><span class="price">Цена по запросу</span></li>
+      <li class="b2"><svg viewBox="0 0 52 52" aria-hidden="true"><g fill="none" stroke="#2a2733" stroke-width="2.6" stroke-linejoin="round"><path d="M12 40V16l30-6v24"/><circle cx="16" cy="40" r="5"/><circle cx="37" cy="34" r="5"/></g></svg><h3>Концерты</h3><p>Отвезу на концерт или мероприятие.</p><span class="price">Цена по запросу</span></li>
+      <li class="b3"><svg viewBox="0 0 52 52" aria-hidden="true"><g fill="none" stroke="#2a2733" stroke-width="2.6" stroke-linejoin="round"><ellipse cx="26" cy="34" rx="10" ry="8"/><circle cx="14" cy="22" r="4"/><circle cx="22" cy="14" r="4"/><circle cx="30" cy="14" r="4"/><circle cx="38" cy="22" r="4"/></g></svg><h3>Перевозка животных</h3><p>Бережно довезу питомца по Сербии.</p><span class="price">Цена по запросу</span></li>
+      <li class="b4"><svg viewBox="0 0 52 52" aria-hidden="true"><g fill="none" stroke="#2a2733" stroke-width="2.6" stroke-linejoin="round"><path d="M6 14h24v22H6zM30 22h9l6 7v7H30z"/><circle cx="14" cy="38" r="4"/><circle cx="37" cy="38" r="4"/></g></svg><h3>Перевозка вещей</h3><p>По Нови Саду, в Белград, Суботицу и другие города. Помогу с погрузкой и разгрузкой.</p><span class="price">Цена по запросу</span></li>
+    </ul>
+  </section>
+
+  <section class="family" aria-labelledby="fam-h">
+    <svg class="seat" viewBox="0 0 220 220" aria-hidden="true">
+      <rect x="54" y="20" width="112" height="120" rx="40" fill="#fff"/>
+      <rect x="40" y="120" width="140" height="62" rx="26" fill="#fff"/>
+      <rect x="80" y="44" width="60" height="70" rx="22" fill="#d6e6ff"/>
+      <path d="M86 118l24 30 24-30" fill="none" stroke="#e4553b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="98" y="140" width="24" height="16" rx="5" fill="#e4553b"/>
+      <rect x="30" y="196" width="160" height="10" rx="5" fill="#2a2733" opacity=".2"/>
+    </svg>
+    <h2 id="fam-h">С детьми ехать спокойно</h2>
+    <ul class="perks">
+      <li><h3>Детские кресла и бустеры</h3><p>Есть в машине, скажите возраст детей.</p></li>
+      <li><h3>Спокойное вождение</h3><p>Опытный и аккуратный водитель.</p></li>
+      <li><h3>Забираю от дома</h3><p>Не нужно никуда идти с вещами.</p></li>
+      <li><h3>Всегда на связи</h3><p>Отвечаю в Telegram и по телефону.</p></li>
+    </ul>
+  </section>
+
+  <section class="end" aria-labelledby="end-h">
+    <div>
+      <h2 id="end-h">Напишите, куда нужно</h2>
+      <p>Направление и дату, остальное подскажу. Telegram @AfanasijParovozovich, телефон +381 65 470 2380.</p>
+    </div>
+    <div class="acts" style="margin-top:0">
+      <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+      <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+    </div>
+  </section>
+
+  <footer><span>Паровозич · частный водитель, Нови Сад</span><span>Демо-версия сайта, Mercury Studio</span></footer>
+</main>
+
+<nav class="dock" aria-label="Связаться">
+  <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+  <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+</nav>
+
+<script>
+/* filter the destination list */
+(function(){
+  var bs=[].slice.call(document.querySelectorAll(".filter button")),items=[].slice.call(document.querySelectorAll(".dest li"));
+  bs.forEach(function(b){b.addEventListener("click",function(){
+    bs.forEach(function(x){x.setAttribute("aria-pressed",x===b)});
+    items.forEach(function(li){li.hidden=b.dataset.f!=="all"&&!li.classList.contains(b.dataset.f)});
+  })});
+})();
+</script>
+</body>
+</html>

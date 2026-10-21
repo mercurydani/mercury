@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Паровозич · маршруты из Нови Сада</title>
+<meta name="description" content="Частный водитель из Нови Сада: схема маршрутов по Сербии, визараны в Боснию и Черногорию, аэропорт Белграда, перевозка вещей и животных.">
+<meta name="theme-color" content="#f2eee4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Variant 3, "the road map": a route diagram from Novi Sad is the page. Tap a place, its road lights up. */
+:root{
+  --paper:#f2eee4;--card:#fbf9f4;--ink:#1c2733;--soft:#56606b;--red:#c43f17;--red-hi:#a83510;--navy:#2c4f7c;--water:#8fb9d0;--line:#d9d2c3;
+  --sans:"IBM Plex Sans",system-ui,sans-serif;--cond:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --pad:clamp(16px,4vw,48px);--ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-bottom:84px}
+h1,h2,h3,p,ul{margin:0;padding:0}
+ul{list-style:none}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:var(--pad)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 22px;border-radius:10px;font:600 17px/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background-color .2s,transform .15s var(--ease)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn:active{transform:scale(.97)}
+.btn-tg{background:var(--red);color:#fff}
+.btn-tg:hover{background:var(--red-hi)}
+.btn-call{background:var(--ink);color:#fff}
+.btn-call:hover{background:#2c3a49}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:68px}
+.logo{display:flex;align-items:center;gap:10px;font:700 20px/1 var(--sans);text-decoration:none}
+.logo svg{width:34px;height:34px}
+.top a.tel{font:500 16px/1 var(--sans);text-decoration:none;color:var(--soft)}
+
+/* layout */
+.plan{display:grid;gap:24px;padding:8px 0 0}
+.intro h1{font:700 clamp(2.125rem,1.3rem + 3.8vw,3.75rem)/1.04 var(--sans);letter-spacing:-.025em}
+.intro h1 span{color:var(--red)}
+.intro p{color:var(--soft);margin-top:14px;max-width:40ch}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.acts .btn{flex:1 1 200px}
+
+/* the map */
+.map{margin:0;position:relative;background:var(--card);border-radius:20px;padding:10px;align-self:start}
+.map svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:6px 10px 8px;font:500 14px/1.3 var(--sans);color:var(--soft)}
+.legend i{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:8px;background:var(--navy)}
+.legend i.v{background:var(--red)}
+.route{fill:none;stroke-width:3;stroke-linecap:round;transition:opacity .3s,stroke-width .3s}
+.route.visa{stroke:var(--red)}.route.rs{stroke:var(--navy)}
+.map.picked .route{opacity:.18}
+.map.picked .route.on{opacity:1;stroke-width:5}
+.stop circle{fill:#fff;stroke:var(--ink);stroke-width:2.2}
+.stop text,.zone,.river{font-family:var(--cond)}
+.stop text{font-size:16px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:5px;stroke-linejoin:round}
+.stop.on circle{fill:var(--red);stroke:var(--red)}
+.hub circle{fill:var(--red);stroke:#fff;stroke-width:3}
+.hub text{font-size:19px;font-weight:600}
+.zone{font-size:12px;font-weight:600;letter-spacing:.16em;fill:#8d8576}
+.river{font-size:12px;font-style:italic;fill:#5a8aa5}
+.border{fill:none;stroke:#b3a993;stroke-width:1.4;stroke-dasharray:2 5;stroke-linecap:round}
+.water{fill:none;stroke:var(--water);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.stop{cursor:pointer}
+
+/* destination list */
+.places{display:grid;gap:8px;margin-top:4px}
+.places button{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:4px 14px;width:100%;min-height:60px;padding:12px 16px;border:0;border-radius:12px;background:var(--card);text-align:left;cursor:pointer;transition:background-color .2s}
+.places button:hover{background:#fff}
+.places button::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--navy)}
+.places button.visa::before{background:var(--red)}
+.places b{font:600 18px/1.2 var(--sans)}
+.places small{grid-column:2;font-size:15px;color:var(--soft);line-height:1.35}
+.places em{grid-row:1/3;grid-column:3;font:500 13px/1.2 var(--sans);font-style:normal;color:var(--soft);text-align:right}
+.places button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.places button[aria-pressed="true"] small,.places button[aria-pressed="true"] em{color:#c9d1da}
+.places h2{font:700 20px/1.2 var(--sans);color:var(--ink);margin:18px 2px 4px}
+.places h2:first-child{margin-top:0}
+
+/* services */
+.sec{padding-top:72px}
+.sec>h2{font:700 clamp(1.875rem,1.3rem + 2.4vw,2.75rem)/1.1 var(--sans);letter-spacing:-.02em}
+.serv{display:grid;gap:0;margin-top:20px;background:var(--card);border-radius:20px;padding:6px 22px}
+.serv li{display:grid;grid-template-columns:40px 1fr;gap:2px 16px;padding:18px 0}
+.serv li+li{border-top:1px solid var(--line)} /* taste-skill-ignore: rows of one list */
+.serv svg{grid-row:1/4;width:34px;height:34px;color:var(--red)}
+.serv h3{font:600 19px/1.3 var(--sans)}
+.serv p{color:var(--soft)}
+.serv .price{font:600 15px/1.3 var(--sans);color:var(--red-hi)}
+
+.why{display:grid;gap:10px;margin-top:20px}
+.why li{padding:18px 20px;border-radius:16px;background:var(--card)}
+.why h3{font:600 19px/1.3 var(--sans)}
+.why p{color:var(--soft);margin-top:4px}
+
+.end{margin-top:72px;background:var(--ink);color:#fff;border-radius:20px;padding:clamp(24px,4vw,52px);display:grid;gap:20px}
+.end h2{font:700 clamp(1.875rem,1.3rem + 2.4vw,2.75rem)/1.1 var(--sans);letter-spacing:-.02em}
+.end p{color:#c9d1da;margin-top:8px}
+.end .btn-call{background:#33475b}
+.end .btn-call:hover{background:#3f566d}
+
+footer{padding:30px 0 22px;color:var(--soft);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(242,238,228,.97)}
+.dock .btn{flex:1 1 0;min-width:0;min-height:52px;font-size:15px;padding:0 8px;gap:8px}
+.dock .btn-tg{flex-grow:1.55}
+
+@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+.js .route.draw{stroke-dasharray:var(--len);animation:draw 1.4s var(--ease) both}
+
+@media (max-width:600px){.stop text{font-size:19px}.hub text{font-size:22px}.zone{font-size:14px}}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .dock{display:none}
+  .plan{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:40px;align-items:start;padding-top:24px}
+  .intro{grid-column:1}
+  .places{grid-column:1}
+  .map{grid-column:2;grid-row:1/3;position:sticky;top:16px}
+  .acts .btn{flex:0 0 auto}
+  .serv{grid-template-columns:1fr 1fr;column-gap:40px}
+  .serv li:nth-child(2){border-top:0}
+  .why{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .end{grid-template-columns:1fr auto;align-items:center}
+}
+@media (prefers-reduced-motion:reduce){.js .route.draw{animation:none;stroke-dasharray:none}}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-tg" viewBox="0 0 24 24"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.2 1.3-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.4zM9 13.4l9.3-5.9c.4-.3.8-.1.5.2l-7.6 6.9-.3 3.2z"/></symbol>
+  <symbol id="i-call" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+</svg>
+
+<header class="wrap top">
+  <a class="logo" href="#top" id="top" aria-label="Паровозич">
+    <svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#c43f17"/><g fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M8 21h16v-5H13v-4H8zM13 16v-5h4v5M24 21l3 3H8"/><circle cx="11" cy="23" r="2"/><circle cx="20" cy="23" r="2"/></g></svg>
+    Паровозич
+  </a>
+  <a class="tel" href="tel:+381654702380">+381 65 470 2380</a>
+</header>
+
+<main class="wrap">
+  <section class="plan" aria-labelledby="h1">
+    <div class="intro">
+      <h1 id="h1">Из Нови Сада <span>куда нужно</span></h1>
+      <p>Частный водитель: визараны в Боснию и Черногорию, поездки по Сербии и в аэропорт Белграда. Забираю от дома, в машине есть детские кресла.</p>
+      <div class="acts">
+        <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+        <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+      </div>
+    </div>
+
+    <figure class="map" id="map" aria-label="Схема маршрутов из Нови Сада">
+      <svg viewBox="-96 0 500 530" role="img" aria-labelledby="map-t">
+        <title id="map-t">Схема: маршруты из Нови Сада в Белград, Суботицу, Лозницу, на Тару, Златибор, Копаоник, к Голубацкой крепости, в Боснию и Черногорию</title>
+        <!-- borders and rivers, drawn by hand on real coordinates -->
+        <path class="border" d="M-60 24 C 20 30, 120 18, 190 10"/>
+        <path class="border" d="M24 180 C 40 198, 52 214, 46 236 S 40 268, 52 296 S 66 346, 72 372 S 80 420, 82 446 S 110 486, 150 504"/>
+        <path class="border" d="M262 210 C 300 214, 330 240, 400 236"/>
+        <path class="water" d="M-60 96 C -10 120, 40 150, 90 160 S 160 178, 199 232 S 250 238, 300 244 S 360 256, 400 262"/>
+        <path class="water" d="M-60 214 C -10 218, 40 222, 90 226 S 160 236, 199 234" style="stroke-width:3"/>
+        <text class="zone" x="-6" y="14">ВЕНГРИЯ</text>
+        <text class="zone" x="300" y="206">РУМЫНИЯ</text>
+        <text class="zone" x="-62" y="320">БОСНИЯ И</text><text class="zone" x="-62" y="336">ГЕРЦЕГОВИНА</text>
+        <text class="zone" x="-40" y="514">ЧЕРНОГОРИЯ</text>
+        <text class="river" x="40" y="144">Дунай</text>
+        <text class="river" x="-40" y="238">Сава</text>
+
+        <!-- routes from Novi Sad -->
+        <g id="routes">
+          <path class="route rs" data-r="sub" d="M125 163 C 118 120, 108 70, 104 31"/>
+          <path class="route rs" data-r="bg" d="M125 163 C 150 190, 175 210, 199 234"/>
+          <path class="route visa" data-r="ba" d="M125 163 C 100 180, 70 200, 48 225"/>
+          <path class="route rs" data-r="lo" d="M125 163 C 100 200, 70 240, 50 274"/>
+          <path class="route rs" data-r="tara" d="M125 163 C 110 240, 86 310, 76 375"/>
+          <path class="route rs" data-r="zl" d="M125 163 C 150 250, 130 330, 108 398"/>
+          <path class="route visa" data-r="me" d="M125 163 C 170 270, 130 400, 78 473"/>
+          <path class="route rs" data-r="ko" d="M125 163 C 210 250, 240 360, 241 468"/>
+          <path class="route rs" data-r="go" d="M125 163 C 220 170, 290 200, 340 254"/>
+        </g>
+
+        <g class="stop" data-r="sub"><circle cx="104" cy="31" r="6"/><text x="114" y="36">Суботица</text></g>
+        <g class="stop" data-r="bg"><circle cx="199" cy="234" r="6"/><text x="210" y="239">Белград</text><text x="210" y="256" style="font-size:13px;font-weight:500">и аэропорт</text></g>
+        <g class="stop" data-r="ba"><circle cx="48" cy="225" r="6"/><text x="38" y="212" text-anchor="end">Босния</text></g>
+        <g class="stop" data-r="lo"><circle cx="50" cy="274" r="6"/><text x="-6" y="279" text-anchor="end">Лозница</text></g>
+        <g class="stop" data-r="tara"><circle cx="76" cy="375" r="6"/><text x="64" y="380" text-anchor="end">Тара</text></g>
+        <g class="stop" data-r="zl"><circle cx="108" cy="398" r="6"/><text x="120" y="403">Златибор</text></g>
+        <g class="stop" data-r="me"><circle cx="78" cy="473" r="6"/><text x="90" y="478">Черногория</text></g>
+        <g class="stop" data-r="ko"><circle cx="241" cy="468" r="6"/><text x="253" y="473">Копаоник</text></g>
+        <g class="stop" data-r="go"><circle cx="340" cy="254" r="6"/><text x="300" y="282">Голубац</text></g>
+        <g class="stop hub"><circle cx="125" cy="163" r="10"/><text x="140" y="158">Нови Сад</text></g>
+      </svg>
+      <p class="legend"><span><i class="v"></i>визараны</span><span><i></i>по Сербии</span></p>
+    </figure>
+
+    <div class="places" role="group" aria-label="Направления">
+      <h2>Визараны</h2>
+      <button type="button" class="visa" data-r="ba" aria-pressed="false"><b>Босния</b><small>В группе или индивидуально, от дома</small><em>Цена по запросу</em></button>
+      <button type="button" class="visa" data-r="me" aria-pressed="false"><b>Черногория</b><small>В группе или индивидуально, от дома</small><em>Цена по запросу</em></button>
+      <h2>По Сербии</h2>
+      <button type="button" data-r="bg" aria-pressed="false"><b>Белград</b><small>Поездка в город</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="bg" aria-pressed="false"><b>Аэропорт Белграда</b><small>Встречу с табличкой, помогу с багажом</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="zl" aria-pressed="false"><b>Златибор</b><small>Горы</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="tara" aria-pressed="false"><b>Тара</b><small>Национальный парк</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="ko" aria-pressed="false"><b>Копаоник</b><small>Горы</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="go" aria-pressed="false"><b>Голубацкая крепость</b><small>Крепость на Дунае</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="lo" aria-pressed="false"><b>Лозница</b><small>Поездка в город</small><em>Цена по запросу</em></button>
+      <button type="button" data-r="sub" aria-pressed="false"><b>Суботица</b><small>Перевозка вещей и помощь с погрузкой</small><em>Цена по запросу</em></button>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="serv-h">
+    <h2 id="serv-h">Кроме поездок</h2>
+    <ul class="serv">
+      <li><svg viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 12h24l-3 15H8z"/><path d="M12 12l4-7M22 12l-4-7"/></g></svg><h3>ИКЕА и МЕТРО</h3><p>Поездки за покупками и доставка бытовой техники из магазинов.</p><span class="price">Цена по запросу</span></li>
+      <li><svg viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 27V10l21-4v17"/><circle cx="10" cy="27" r="3.5"/><circle cx="24" cy="23" r="3.5"/></g></svg><h3>Концерты и мероприятия</h3><p>Отвезу на концерт или мероприятие и заберу.</p><span class="price">Цена по запросу</span></li>
+      <li><svg viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 9h16v15H4zM20 14h6l5 6v4H20z"/><circle cx="10" cy="26" r="3"/><circle cx="25" cy="26" r="3"/></g></svg><h3>Перевозка вещей</h3><p>По Нови Саду, в Белград, Суботицу и другие города. Помогу с погрузкой и разгрузкой.</p><span class="price">Цена по запросу</span></li>
+      <li><svg viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><ellipse cx="17" cy="23" rx="7" ry="5.5"/><circle cx="9" cy="14" r="2.8"/><circle cx="14" cy="9" r="2.8"/><circle cx="20" cy="9" r="2.8"/><circle cx="25" cy="14" r="2.8"/></g></svg><h3>Перевозка животных</h3><p>По всей Сербии, спокойно и бережно.</p><span class="price">Цена по запросу</span></li>
+    </ul>
+  </section>
+
+  <section class="sec" aria-labelledby="why-h">
+    <h2 id="why-h">В дороге с Паровозичем</h2>
+    <ul class="why">
+      <li><h3>Опытный водитель</h3><p>Аккуратная и спокойная езда.</p></li>
+      <li><h3>Детские кресла и бустеры</h3><p>Есть в машине, скажите возраст детей.</p></li>
+      <li><h3>От двери до двери</h3><p>Забираю от дома, помогаю с багажом.</p></li>
+      <li><h3>Всегда на связи</h3><p>Telegram и телефон.</p></li>
+    </ul>
+  </section>
+
+  <section class="end" aria-labelledby="end-h">
+    <div>
+      <h2 id="end-h">Проложим ваш маршрут</h2>
+      <p>Напишите, куда и когда. Telegram @AfanasijParovozovich, телефон +381 65 470 2380.</p>
+    </div>
+    <div class="acts" style="margin-top:0">
+      <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+      <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+    </div>
+  </section>
+
+  <footer><span>Паровозич · частный водитель, Нови Сад</span><span>Демо-версия сайта, Mercury Studio</span></footer>
+</main>
+
+<nav class="dock" aria-label="Связаться">
+  <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+  <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+</nav>
+
+<script>
+/* pick a place in the list or on the map: its road lights up, the rest step back */
+(function(){
+  var map=document.getElementById("map"),routes=[].slice.call(map.querySelectorAll(".route")),stops=[].slice.call(map.querySelectorAll(".stop[data-r]")),btns=[].slice.call(document.querySelectorAll(".places button"));
+  var cur=null,reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function pick(r){
+    cur=cur===r?null:r;
+    map.classList.toggle("picked",!!cur);
+    routes.forEach(function(p){p.classList.toggle("on",p.dataset.r===cur)});
+    stops.forEach(function(s){s.classList.toggle("on",s.dataset.r===cur)});
+    btns.forEach(function(b){b.setAttribute("aria-pressed",b.dataset.r===cur)});
+  }
+  btns.forEach(function(b){b.addEventListener("click",function(){pick(b.dataset.r);if(innerWidth<900&&cur)map.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"})})});
+  stops.forEach(function(s){s.addEventListener("click",function(){pick(s.dataset.r);var b=btns.filter(function(x){return x.dataset.r===s.dataset.r})[0];if(b&&innerWidth>=900)b.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"})})});
+  // roads draw themselves out of Novi Sad once, when the map is first seen
+  if(reduce||!("IntersectionObserver" in window))return;
+  routes.forEach(function(p,i){var l=Math.ceil(p.getTotalLength());p.style.setProperty("--len",l);p.style.strokeDashoffset=l;p.style.animationDelay=(i*.08)+"s"});
+  new IntersectionObserver(function(es,o){if(es[0].isIntersecting){routes.forEach(function(p){p.classList.add("draw")});o.disconnect()}},{threshold:.3}).observe(map);
+})();
+</script>
+</body>
+</html>

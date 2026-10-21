@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Паровозич · частный водитель из Нови Сада</title>
+<meta name="description" content="Частный водитель из Нови Сада: визараны в Боснию и Черногорию, поездки по Сербии, аэропорт Белграда, ИКЕА и МЕТРО, перевозка вещей и животных. Детские кресла в машине.">
+<meta name="theme-color" content="#0f2a20">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Variant 1, "the railway": deep green and brass, destinations on a departures board. */
+:root{
+  --g9:#0c2219;--g8:#0f2a20;--g7:#163a2c;--g6:#1f4d3b;
+  --brass:#c8a25a;--brass-hi:#e3c47f;--cream:#f1e8d4;--mute:#b8b29c;--board:#09170f;
+  --disp:"Oswald","Arial Narrow",sans-serif;--sans:"Golos Text",system-ui,sans-serif;
+  --pad:clamp(18px,4vw,56px);--ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--g8);color:var(--cream);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-bottom:84px}
+h1,h2,h3,p,ul,ol{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brass-hi);outline-offset:3px}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:var(--pad)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 24px;border-radius:12px;font:600 17px/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background-color .2s,color .2s,transform .15s var(--ease)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn:active{transform:scale(.97)}
+.btn-tg{background:var(--brass);color:var(--g9)}
+.btn-tg:hover{background:var(--brass-hi)}
+.btn-call{background:var(--g6);color:var(--cream)}
+.btn-call:hover{background:#28604a}
+
+/* top */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:72px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:600 22px/1 var(--disp);letter-spacing:.02em;text-transform:uppercase}
+.logo svg{width:40px;height:26px;color:var(--brass)}
+.top .tel{font:500 16px/1 var(--sans);text-decoration:none;color:var(--mute)}
+.top .tel:hover{color:var(--cream)}
+
+/* hero */
+.hero{display:grid;gap:28px;padding:20px 0 48px}
+.hero h1{font:600 clamp(2.5rem,1.4rem + 4.6vw,5rem)/.98 var(--disp);text-transform:uppercase;letter-spacing:.005em}
+.hero h1 .hi{color:var(--brass)}
+.hero h1 .nw{white-space:nowrap}
+.hero p{font-size:clamp(1.0625rem,1rem + .4vw,1.25rem);color:var(--mute);max-width:36ch;margin-top:18px}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.acts .btn{flex:1 1 220px}
+.loco{margin:0;color:var(--brass);width:100%;max-width:560px;justify-self:center}
+.loco .smoke circle{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.55}
+@keyframes puff{0%{transform:translate(0,0) scale(.6);opacity:0}25%{opacity:.6}100%{transform:translate(-14px,-30px) scale(1.5);opacity:0}}
+.js .loco .smoke circle{transform-box:fill-box;transform-origin:center;animation:puff 3.6s ease-out infinite}
+.js .loco .smoke circle:nth-child(2){animation-delay:1.2s}.js .loco .smoke circle:nth-child(3){animation-delay:2.4s}
+.rails{height:10px;margin-top:-6px;background:repeating-linear-gradient(90deg,var(--brass) 0 18px,transparent 18px 30px);opacity:.4;border-radius:2px} /* taste-skill-ignore: sleepers under the engine, a drawing */
+
+/* departures board */
+.sec{padding:64px 0 0}
+.sec h2{font:600 clamp(2rem,1.3rem + 3vw,3.5rem)/1 var(--disp);text-transform:uppercase}
+.sec .lede{color:var(--mute);margin-top:12px;max-width:52ch}
+.board{margin-top:28px;background:var(--board);border-radius:18px;padding:clamp(14px,2.4vw,28px)}
+.board-head{display:none}
+.group{font:600 20px/1 var(--disp);letter-spacing:.04em;text-transform:uppercase;color:var(--brass);padding:20px 4px 10px}
+.group:first-child{padding-top:4px}
+.row{display:grid;grid-template-columns:1fr;gap:8px;padding:14px 4px 16px}
+.row+.row{border-top:1px solid rgba(200,162,90,.18)} /* taste-skill-ignore: rows of a real departures table */
+.flap{display:flex;flex-wrap:wrap;gap:3px}
+.flap b{position:relative;display:inline-grid;place-items:center;min-width:1.05em;height:1.5em;padding:0 .08em;background:var(--g7);border-radius:4px;font:500 clamp(20px,5.4vw,30px)/1 var(--disp);color:var(--cream);text-transform:uppercase}
+.flap b::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.55)} /* taste-skill-ignore: the split of a flap tile */
+.flap b.sp{background:transparent;min-width:.4em}
+.row .what{color:var(--mute);font-size:16px}
+.row .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 14px/1.3 var(--sans)}
+.row .meta span{color:var(--cream)}
+.row .meta .price{color:var(--brass-hi)}
+.board-note{margin-top:14px;color:var(--mute)}
+
+/* more services */
+.more{display:grid;gap:28px;margin-top:28px}
+.more li{display:grid;grid-template-columns:44px 1fr;gap:4px 18px}
+.more svg{grid-row:1/3;width:40px;height:40px;color:var(--brass)}
+.more h3{font:600 20px/1.2 var(--sans)}
+.more p{color:var(--mute)}
+.more .price{color:var(--brass-hi);font-weight:500}
+
+/* why */
+.why{display:grid;gap:22px;margin-top:28px}
+.why li{padding-left:28px;position:relative}
+.why li::before{content:"";position:absolute;left:0;top:.45em;width:12px;height:12px;border-radius:50%;background:var(--brass)}
+.why h3{font:600 20px/1.25 var(--sans)}
+.why p{color:var(--mute);margin-top:4px}
+
+/* ticket */
+.ticket{margin:64px 0 0;background:var(--cream);color:var(--g9);border-radius:20px;padding:clamp(24px,4vw,48px);display:grid;gap:22px}
+.ticket h2{font:600 clamp(2rem,1.3rem + 3vw,3.25rem)/1 var(--disp);text-transform:uppercase}
+.ticket p{color:#4a5a50;margin-top:10px}
+.ticket .btn-call{background:var(--g8);color:var(--cream)}
+.ticket .btn-call:hover{background:var(--g6)}
+.ticket .num{font:500 15px/1.5 var(--sans);color:#4a5a50}
+
+footer{padding:36px 0 24px;color:var(--mute);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+
+/* the dock: both buttons always at hand on a phone */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(12,34,25,.96)}
+.dock .btn{flex:1 1 0;min-width:0;min-height:52px;font-size:15px;padding:0 8px;gap:8px}
+.dock .btn-tg{flex-grow:1.55}
+
+@media (min-width:860px){
+  body{padding-bottom:0}
+  .dock{display:none}
+  .hero{grid-template-columns:1.05fr .95fr;align-items:center;padding:40px 0 80px}
+  .acts .btn{flex:0 0 auto}
+  .sec{padding-top:104px}
+  .board-head{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.7fr);gap:24px;padding:0 4px 12px;font:500 13px/1 var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  .row{grid-template-columns:minmax(0,1.5fr) minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.7fr);gap:24px;align-items:center}
+  .row .meta{display:contents}
+  .flap b{font-size:26px}
+  .more{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 56px}
+  .why{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ticket{grid-template-columns:1fr auto;align-items:center}
+}
+@media (prefers-reduced-motion:reduce){.js .loco .smoke circle{animation:none;opacity:.5}}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-tg" viewBox="0 0 24 24"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.2 1.3-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.4zM9 13.4l9.3-5.9c.4-.3.8-.1.5.2l-7.6 6.9-.3 3.2z"/></symbol>
+  <symbol id="i-call" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+</svg>
+
+<header class="wrap top">
+  <a class="logo" href="#top" id="top" aria-label="Паровозич">
+    <svg viewBox="0 0 40 26" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 18h28v-6H14V7H4z"/><path d="M14 12V5h6v7M24 12V8h4v4M32 18l5 4H4"/><circle cx="9" cy="21" r="3"/><circle cx="20" cy="21" r="3"/><circle cx="28" cy="21" r="3"/></g></svg>
+    Паровозич
+  </a>
+  <a class="tel" href="tel:+381654702380">+381 65 470 2380</a>
+</header>
+
+<main class="wrap">
+  <section class="hero" aria-labelledby="h1">
+    <div>
+      <h1 id="h1"><span class="nw">Частный водитель</span> <span class="hi nw">из Нови Сада</span></h1>
+      <p>Визараны в Боснию и Черногорию, поездки по Сербии и в аэропорт, перевозка вещей и животных. Забираю от дома, в машине есть детские кресла.</p>
+      <div class="acts">
+        <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+        <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+      </div>
+    </div>
+    <figure class="loco" aria-hidden="true">
+      <svg viewBox="0 0 520 300">
+        <g class="smoke"><circle cx="118" cy="62" r="16"/><circle cx="104" cy="44" r="22"/><circle cx="86" cy="22" r="18"/></g>
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M96 96h44l-6 40h-32z"/>
+          <path d="M70 136h250a20 20 0 0 1 20 20v44H70z"/>
+          <path d="M70 156h-26l-26 52h52"/>
+          <path d="M200 136v-22a14 14 0 0 1 28 0v22"/>
+          <path d="M340 92h96v108h-96z"/><path d="M328 92h120M352 108h34v34h-34z"/><path d="M398 108h26v34h-26z"/>
+          <path d="M70 200h378"/>
+          <circle cx="132" cy="232" r="30"/><circle cx="232" cy="232" r="30"/><circle cx="392" cy="236" r="26"/>
+          <path d="M132 232l20-20M232 232l20-20M132 232h100" stroke-width="2.5"/>
+          <path d="M132 202v60M102 232h60M232 202v60M202 232h60M392 210v52M366 236h52" stroke-width="1.5" opacity=".6"/>
+          <path d="M18 270h484" stroke-width="2"/>
+        </g>
+      </svg>
+      <div class="rails"></div>
+    </figure>
+  </section>
+
+  <section class="sec" id="routes" aria-labelledby="routes-h">
+    <h2 id="routes-h">Отправления из Нови Сада</h2>
+    <p class="lede">Посадка от вашего дома. Выберите направление и напишите, когда хотите ехать.</p>
+    <div class="board" role="table" aria-label="Направления">
+      <div class="board-head" role="row"><span role="columnheader">Направление</span><span role="columnheader">Что входит</span><span role="columnheader">Посадка</span><span role="columnheader">Стоимость</span></div>
+      <p class="group">Визараны</p>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Босния"></div><p class="what" role="cell">Визаран в группе или индивидуально</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Черногория"></div><p class="what" role="cell">Визаран в группе или индивидуально</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <p class="group">По Сербии</p>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Белград"></div><p class="what" role="cell">Город и аэропорт: встречу с табличкой, помогу с багажом</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Златибор"></div><p class="what" role="cell">Поездка в горы</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Лозница"></div><p class="what" role="cell">Поездка в город</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Тара"></div><p class="what" role="cell">Национальный парк Тара</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Копаоник"></div><p class="what" role="cell">Поездка в горы</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+      <div class="row" role="row"><div class="flap" role="cell" data-flap="Голубац"></div><p class="what" role="cell">Голубацкая крепость</p><p class="meta"><span role="cell">От вашего дома</span><span class="price" role="cell">Цена по запросу</span></p></div>
+    </div>
+    <p class="board-note">Нет вашего направления в табло? Напишите, обсудим.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="more-h">
+    <h2 id="more-h">Ещё помогу</h2>
+    <ul class="more">
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 14h28l-3 16H9z"/><path d="M14 14l4-8M26 14l-4-8"/><path d="M15 20v5M20 20v5M25 20v5"/></g></svg><h3>ИКЕА и МЕТРО</h3><p>Поездки за покупками и доставка бытовой техники из магазинов. <span class="price">Цена по запросу</span></p></li>
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 30V12l24-5v18"/><circle cx="12" cy="30" r="4"/><circle cx="28" cy="25" r="4"/><path d="M8 17l24-5"/></g></svg><h3>Концерты и мероприятия</h3><p>Отвезу на концерт или мероприятие и заберу обратно. <span class="price">Цена по запросу</span></p></li>
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 12h18v16H6zM24 18h6l4 5v5H24z"/><circle cx="12" cy="30" r="3"/><circle cx="29" cy="30" r="3"/></g></svg><h3>Перевозка вещей</h3><p>По Нови Саду, в Белград, Суботицу и другие города. Помогу с погрузкой и разгрузкой. <span class="price">Цена по запросу</span></p></li>
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><ellipse cx="20" cy="26" rx="8" ry="6"/><circle cx="11" cy="16" r="3"/><circle cx="17" cy="11" r="3"/><circle cx="23" cy="11" r="3"/><circle cx="29" cy="16" r="3"/></g></svg><h3>Перевозка животных</h3><p>Спокойно довезу питомца по всей Сербии. <span class="price">Цена по запросу</span></p></li>
+    </ul>
+  </section>
+
+  <section class="sec" aria-labelledby="why-h">
+    <h2 id="why-h">Почему со мной спокойно</h2>
+    <ul class="why">
+      <li><h3>Опытный водитель</h3><p>Аккуратная и спокойная езда, без резких манёвров.</p></li>
+      <li><h3>Детские кресла и бустеры</h3><p>Есть в машине, просто скажите возраст детей.</p></li>
+      <li><h3>Забираю от дома</h3><p>Не нужно никуда идти с вещами и детьми.</p></li>
+      <li><h3>Всегда на связи</h3><p>Отвечаю в Telegram и по телефону.</p></li>
+    </ul>
+  </section>
+
+  <section class="ticket" aria-labelledby="end-h">
+    <div>
+      <h2 id="end-h">Куда едем?</h2>
+      <p>Напишите направление и дату, я отвечу и назову цену.</p>
+      <p class="num">Telegram @AfanasijParovozovich · +381 65 470 2380</p>
+    </div>
+    <div class="acts" style="margin-top:0">
+      <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+      <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+    </div>
+  </section>
+
+  <footer><span>Паровозич · частный водитель, Нови Сад</span><span>Демо-версия сайта, Mercury Studio</span></footer>
+</main>
+
+<nav class="dock" aria-label="Связаться">
+  <a class="btn btn-tg" href="https://t.me/AfanasijParovozovich"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
+  <a class="btn btn-call" href="tel:+381654702380"><svg aria-hidden="true"><use href="#i-call"/></svg>Позвонить</a>
+</nav>
+
+<script>
+/* the board: every name is set in flap tiles; when the board comes into view the tiles spin and settle */
+(function(){
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,ABC="АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ";
+  var flaps=[].slice.call(document.querySelectorAll("[data-flap]"));
+  flaps.forEach(function(f){
+    var w=f.dataset.flap;f.setAttribute("aria-label",w);
+    f.innerHTML=w.split("").map(function(ch){return ch===" "?'<b class="sp"></b>':'<b aria-hidden="true">'+ch+"</b>"}).join("");
+  });
+  if(reduce||!("IntersectionObserver" in window))return;
+  function spin(f,delay){
+    var tiles=[].slice.call(f.querySelectorAll("b:not(.sp)")),word=f.dataset.flap.replace(/ /g,"").split("");
+    tiles.forEach(function(t,i){
+      var n=6+i*2+Math.floor(Math.random()*4),k=0;t.textContent=ABC[Math.floor(Math.random()*ABC.length)];
+      setTimeout(function tick(){k++;if(k>=n){t.textContent=word[i];return}t.textContent=ABC[Math.floor(Math.random()*ABC.length)];setTimeout(tick,55)},delay);
+    });
+  }
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){spin(e.target,flaps.indexOf(e.target)%4*90);io.unobserve(e.target)}})},{threshold:.6});
+  flaps.forEach(function(f){io.observe(f)});
+})();
+</script>
+</body>
+</html>
