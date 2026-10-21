@@ -66,7 +66,9 @@ FAQ = [("Ребёнок никогда не программировал. Это
        ("Можно выбрать программу не по возрасту?", "Да. Возраст только ориентир. Если девятилетний хочет делать сайты, а двенадцатилетний начать со Scratch, подстроим темп."),
        ("Что будет после полугода?", "Можно продолжить: в Scratch делаем платформеры и игры с уровнями, в веб-программе сайты с JavaScript, в Python игры побольше и основы pygame. Или перейти в другое направление."),
        ("Как родители видят прогресс?", "Каждый месяц ребёнок показывает готовый проект, а я коротко рассказываю, что получилось и над чем поработать."),
-       ("Что нужно для занятий?", "Только ноутбук или компьютер. Все программы бесплатные, помогу установить на первом уроке.")]
+       ("Что нужно для занятий?", "Только ноутбук или компьютер. Все программы бесплатные, помогу установить на первом уроке."),
+       ("Сколько стоит урок?", "Пробный урок бесплатно. Разовый урок 2 800 RSD. По абонементу 2 500 RSD за урок при занятиях раз в неделю и 2 250 RSD при двух уроках в неделю. Мини-группа 6 000 RSD в месяц."),
+       ("Занятия онлайн или вживую?", "Сейчас онлайн через Zoom или Google Meet, из любого города Сербии и не только. Мини-группы в Белграде и выезд к вам домой скоро.")]
 
 e = html.escape
 
@@ -100,20 +102,31 @@ lesson = "".join(f'<li><p class="st">{i + 1}</p><h3>{e(a)}</h3><p>{e(b)}</p></li
 teacher = "".join(f"<div><dt>{e(a)}</dt><dd>{e(b)}</dd></div>" for a, b in TEACHER)
 faq = "".join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in FAQ)
 
+BASE = "https://mercurystudio.pro/education/"
+MIN = {"basics": 45, "scratch": 45, "web": 60, "python": 60}
 ld = {"@context": "https://schema.org", "@graph": [
-    {"@type": "EducationalOrganization", "@id": "#org", "name": "MercuryCode",
+    {"@type": "EducationalOrganization", "@id": BASE + "#org", "name": "MercuryCode", "url": BASE,
      "description": "Курсы программирования для детей 6–15 лет на русском языке, онлайн и в Белграде.",
-     "telephone": PHONE, "sameAs": [TG], "areaServed": ["Beograd", "Srbija"], "knowsLanguage": "ru",
-     "address": {"@type": "PostalAddress", "addressLocality": "Beograd", "addressCountry": "RS"}, "url": "https://mercurystudio.pro/education/", "taxID": "116017500",
+     "image": BASE + "og.jpg", "logo": "https://mercurystudio.pro/favicon-96.png",
+     "telephone": PHONE, "sameAs": [TG], "areaServed": [{"@type": "City", "name": "Beograd"}, {"@type": "Country", "name": "Srbija"}],
+     "knowsLanguage": "ru", "taxID": "116017500",
+     "address": {"@type": "PostalAddress", "addressLocality": "Beograd", "addressCountry": "RS"},
      "parentOrganization": {"@type": "Organization", "name": "Mercury Studio", "url": "https://mercurystudio.pro/"},
-     "founder": {"@type": "Person", "name": "Даниил Помазков", "jobTitle": "Преподаватель программирования"}},
-    *[{"@type": "Course", "name": t["title"], "description": t["lead"], "inLanguage": "ru",
-       "provider": {"@id": "#org"},
-       "hasCourseInstance": {"@type": "CourseInstance", "courseMode": ["online", "onsite"], "courseWorkload": "P6M"},
-       "offers": [{"@type": "Offer", "name": "Разовый урок", "price": 2800, "priceCurrency": "RSD"},
-                  {"@type": "Offer", "name": "1 раз в неделю, месяц", "price": 10000, "priceCurrency": "RSD"},
-                  {"@type": "Offer", "name": "2 раза в неделю, месяц", "price": 18000, "priceCurrency": "RSD"}]} for t in TRACKS],
-    {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ]},
+     "founder": {"@type": "Person", "@id": BASE + "#teacher", "name": "Даниил Помазков", "alternateName": "Daniil Pomazkov", "jobTitle": "Преподаватель программирования"}},
+    {"@type": "WebPage", "@id": BASE + "#page", "url": BASE, "inLanguage": "ru", "name": "Программирование для детей на русском, Белград",
+     "about": {"@id": BASE + "#org"}, "primaryImageOfPage": BASE + "og.jpg",
+     "breadcrumb": {"@type": "BreadcrumbList", "itemListElement": [
+         {"@type": "ListItem", "position": 1, "name": "Mercury Studio", "item": "https://mercurystudio.pro/ru/"},
+         {"@type": "ListItem", "position": 2, "name": "Программирование для детей", "item": BASE}]}},
+    *[{"@type": "Course", "@id": BASE + "#" + t["id"], "name": t["title"], "description": t["lead"], "inLanguage": "ru",
+       "educationalLevel": "Beginner", "typicalAgeRange": {"basics": "6-10", "scratch": "7-9", "web": "10-13", "python": "12-15"}[t["id"]],
+       "teaches": [m[0] for m in t["months"]], "provider": {"@id": BASE + "#org"},
+       "hasCourseInstance": {"@type": "CourseInstance", "courseMode": "online", "inLanguage": "ru", "instructor": {"@id": BASE + "#teacher"},
+                             "courseWorkload": "PT%dH" % (24 * MIN[t["id"]] // 60)},
+       "offers": [{"@type": "Offer", "name": "Разовый урок", "price": 2800, "priceCurrency": "RSD", "category": "Paid"},
+                  {"@type": "Offer", "name": "1 раз в неделю, месяц", "price": 10000, "priceCurrency": "RSD", "category": "Subscription"},
+                  {"@type": "Offer", "name": "2 раза в неделю, месяц", "price": 18000, "priceCurrency": "RSD", "category": "Subscription"}]} for t in TRACKS],
+    {"@type": "FAQPage", "@id": BASE + "#faq", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ]},
 ]}
 
 page = (pathlib.Path(__file__).parent / "template.html").read_text(encoding="utf-8")
