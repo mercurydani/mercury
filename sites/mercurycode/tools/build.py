@@ -110,7 +110,9 @@ ld = {"@context": "https://schema.org", "@graph": [
     *[{"@type": "Course", "name": t["title"], "description": t["lead"], "inLanguage": "ru",
        "provider": {"@id": "#org"},
        "hasCourseInstance": {"@type": "CourseInstance", "courseMode": ["online", "onsite"], "courseWorkload": "P6M"},
-       "offers": {"@type": "Offer", "price": 10000, "priceCurrency": "RSD", "category": "Monthly"}} for t in TRACKS],
+       "offers": [{"@type": "Offer", "name": "Разовый урок", "price": 2800, "priceCurrency": "RSD"},
+                  {"@type": "Offer", "name": "1 раз в неделю, месяц", "price": 10000, "priceCurrency": "RSD"},
+                  {"@type": "Offer", "name": "2 раза в неделю, месяц", "price": 18000, "priceCurrency": "RSD"}]} for t in TRACKS],
     {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ]},
 ]}
 

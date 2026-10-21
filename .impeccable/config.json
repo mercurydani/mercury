@@ -173,6 +173,15 @@
         ],
         "createdAt": "2026-10-20T23:44:50.641Z",
         "reason": "Claude triage: same .end block as index.html, padding clamp(28px,5vw,72px); template is the source of the built page"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/mercury-studio/education/index.html"
+        ],
+        "createdAt": "2026-10-21T01:06:05.412Z",
+        "reason": "Claude triage: copy of sites/mercurycode/index.html; .track and .end pad with clamp() on every side"
       }
     ]
   }
