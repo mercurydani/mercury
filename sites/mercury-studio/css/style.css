@@ -193,6 +193,8 @@ a.work h3::after { content: " ↗"; color: var(--blue-hi); }
 .foot { font-size: 14px; color: var(--mute); padding: 28px var(--pad) 8px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .foot a { color: var(--text); text-decoration: none; }
 .foot a:hover { color: var(--blue-hi); }
+.foot a.edu { color: var(--mute); }
+.foot a.edu:hover { color: var(--text); }
 .foot.foot-legal { padding-top: 0; padding-bottom: 32px; font-size: 13px; color: var(--metal); }
 
 /* works page */

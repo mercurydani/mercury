@@ -104,7 +104,8 @@ ld = {"@context": "https://schema.org", "@graph": [
     {"@type": "EducationalOrganization", "@id": "#org", "name": "MercuryCode",
      "description": "Курсы программирования для детей 6–15 лет на русском языке, онлайн и в Белграде.",
      "telephone": PHONE, "sameAs": [TG], "areaServed": ["Beograd", "Srbija"], "knowsLanguage": "ru",
-     "address": {"@type": "PostalAddress", "addressLocality": "Beograd", "addressCountry": "RS"},
+     "address": {"@type": "PostalAddress", "addressLocality": "Beograd", "addressCountry": "RS"}, "url": "https://mercurystudio.pro/education/", "taxID": "116017500",
+     "parentOrganization": {"@type": "Organization", "name": "Mercury Studio", "url": "https://mercurystudio.pro/"},
      "founder": {"@type": "Person", "name": "Даниил Помазков", "jobTitle": "Преподаватель программирования"}},
     *[{"@type": "Course", "name": t["title"], "description": t["lead"], "inLanguage": "ru",
        "provider": {"@id": "#org"},
@@ -120,3 +121,12 @@ page = (page.replace("{{TABS}}", tabs).replace("{{TRACKS}}", tracks).replace("{{
         .replace("{{TG}}", TG).replace("{{PHONE}}", PHONE).replace("{{PHONE_H}}", PHONE_H))
 OUT.write_text(page, encoding="utf-8")
 print("wrote", OUT, len(page), "bytes")
+
+# the same page lives on the studio site at /education/
+STUDIO = OUT.parent.parent / "mercury-studio" / "education"
+if STUDIO.parent.is_dir():
+    import shutil
+    STUDIO.mkdir(exist_ok=True)
+    (STUDIO / "index.html").write_text(page, encoding="utf-8")
+    shutil.copy(OUT.parent / "og.jpg", STUDIO / "og.jpg")
+    print("wrote", STUDIO / "index.html")
