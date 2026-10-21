@@ -127,6 +127,9 @@ footer{padding:30px 0 22px;color:var(--soft);font-size:13px;display:flex;flex-wr
   .end{grid-template-columns:1fr auto;align-items:center}
 }
 @media (prefers-reduced-motion:reduce){.js .pic .cloud{animation:none}}
+.dock{transition:transform .3s cubic-bezier(.2,.7,.1,1)}
+.dock.away{transform:translateY(110%)}
+@media (prefers-reduced-motion:reduce){.dock{transition:none}}
 </style>
 </head>
 <body>
@@ -258,6 +261,15 @@ footer{padding:30px 0 22px;color:var(--soft);font-size:13px;display:flex;flex-wr
     bs.forEach(function(x){x.setAttribute("aria-pressed",x===b)});
     items.forEach(function(li){li.hidden=b.dataset.f!=="all"&&!li.classList.contains(b.dataset.f)});
   })});
+})();
+</script>
+<script>
+/* the bottom bar shows up only once the first screen's buttons have scrolled away */
+(function(){
+  var dock=document.querySelector(".dock"),acts=document.querySelector("main .acts");
+  if(!dock||!acts||!("IntersectionObserver" in window))return;
+  dock.classList.add("away");
+  new IntersectionObserver(function(es){dock.classList.toggle("away",es[0].isIntersecting||es[0].boundingClientRect.top>0)}).observe(acts);
 })();
 </script>
 </body>

@@ -123,6 +123,9 @@ footer{padding:36px 0 24px;color:var(--mute);font-size:13px;display:flex;flex-wr
   .ticket{grid-template-columns:1fr auto;align-items:center}
 }
 @media (prefers-reduced-motion:reduce){.js .loco .smoke circle{animation:none;opacity:.5}}
+.dock{transition:transform .3s cubic-bezier(.2,.7,.1,1)}
+.dock.away{transform:translateY(110%)}
+@media (prefers-reduced-motion:reduce){.dock{transition:none}}
 </style>
 </head>
 <body>
@@ -248,6 +251,15 @@ footer{padding:36px 0 24px;color:var(--mute);font-size:13px;display:flex;flex-wr
   }
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){spin(e.target,flaps.indexOf(e.target)%4*90);io.unobserve(e.target)}})},{threshold:.6});
   flaps.forEach(function(f){io.observe(f)});
+})();
+</script>
+<script>
+/* the bottom bar shows up only once the first screen's buttons have scrolled away */
+(function(){
+  var dock=document.querySelector(".dock"),acts=document.querySelector("main .acts");
+  if(!dock||!acts||!("IntersectionObserver" in window))return;
+  dock.classList.add("away");
+  new IntersectionObserver(function(es){dock.classList.toggle("away",es[0].isIntersecting||es[0].boundingClientRect.top>0)}).observe(acts);
 })();
 </script>
 </body>
