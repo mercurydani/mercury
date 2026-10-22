@@ -227,6 +227,96 @@
         ],
         "createdAt": "2026-10-21T18:43:18.878Z",
         "reason": "Claude triage: destination icons sit left of the name in a two-column row, not stacked"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/classic/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:44.994Z",
+        "reason": "Claude triage: blocks pad with clamp() on every side"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/classic/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.006Z",
+        "reason": "Client brand: cream ground from their Instagram"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/classic/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.019Z",
+        "reason": "Claude triage: sizes are clamp(); rendered h1 52-136px, h2 36-104px"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/classic/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.032Z",
+        "reason": "Display headings in Lilita One at .9 leading, body text is 1.6"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/bold/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.044Z",
+        "reason": "Claude triage: blocks pad with clamp() on every side"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/bold/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.054Z",
+        "reason": "Client brand: cream ground from their Instagram"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/bold/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.065Z",
+        "reason": "Claude triage: sizes are clamp(); rendered h1 52-136px, h2 36-104px"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/bold/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.075Z",
+        "reason": "Display headings in Lilita One at .9 leading, body text is 1.6"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/classic/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.089Z",
+        "reason": "Claude triage: 'Dumplings Club' under the h1 renders at 13-24px; the static read misses clamp()"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "sites/kodgaline/classic/index.html"
+        ],
+        "createdAt": "2026-10-22T14:40:45.099Z",
+        "reason": "White 'Handmade Dumplings' on the photo orange #e25327 is large text (19px+ Lilita), 3.8:1 meets the 3:1 large-text bar; copied from their own post"
       }
     ]
   }

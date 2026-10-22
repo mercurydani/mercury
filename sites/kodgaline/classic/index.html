@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kod Galine · Handmade Dumplings, Beograd</title>
+<meta name="description" content="Kod Galine, Dumplings Club: ručno pravljeni pelmeni, manti i vareniki. Cara Dušana 14, Beograd. Poručite na Wolt.">
+<meta name="theme-color" content="#f6eee2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Pacifico&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Variant 1, close to their Instagram: cream ground, tomato accents, dish names in script. */
+:root{
+  --cream:#f6eee2;--paper:#fffaf3;--sand:#ecdfcb;--tomato:#c23e17;--tomato-hi:#a3340f;--ink:#3a2a22;--soft:#6e5a4c;--white:#fff;
+  --round:"Lilita One","Arial Rounded MT Bold",sans-serif;--script:"Pacifico",cursive;--sans:"Manrope",system-ui,sans-serif;
+  --pad:clamp(16px,4vw,48px);--r:22px;--ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--cream);color:var(--ink);font:400 17px/1.6 var(--sans);-webkit-font-smoothing:antialiased;padding-bottom:84px}
+h1,h2,h3,p,ul,figure{margin:0;padding:0}
+ul{list-style:none}
+a{color:inherit}
+button{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+:focus-visible{outline:3px solid var(--tomato);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:var(--pad)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 24px;border-radius:999px;font:700 16px/1 var(--sans);text-decoration:none;white-space:nowrap;border:0;cursor:pointer;transition:background-color .2s,transform .15s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn-wolt{background:var(--tomato);color:#fff}
+.btn-wolt:hover{background:var(--tomato-hi)}
+.btn-soft{background:var(--white);color:var(--ink)}
+.btn-soft:hover{background:var(--paper)}
+
+/* top */
+.top{display:flex;align-items:center;gap:16px;min-height:76px}
+.logo{display:block;width:62px;height:62px;flex:none}
+.top nav{display:none;gap:26px;margin-left:auto;font-weight:600}
+.top nav a{text-decoration:none}
+.top nav a:hover{color:var(--tomato)}
+.langs{display:flex;margin-left:auto;background:var(--white);border-radius:999px;padding:4px}
+.langs button{border:0;background:none;padding:8px 12px;border-radius:999px;font:700 13px/1 var(--sans);cursor:pointer;color:var(--soft)}
+.langs button[aria-pressed="true"]{background:var(--tomato);color:#fff}
+
+/* hero */
+.hero{display:grid;gap:20px;padding-top:4px}
+.dish{position:relative;background:#e25327;border-radius:28px;overflow:hidden;color:#fff;text-align:center;padding:26px 18px 0}
+.dish .script{font:400 clamp(2rem,1.4rem + 3vw,3.25rem)/1.2 var(--script)}
+.dish .tag{font:400 19px/1 var(--round);letter-spacing:.12em;text-transform:uppercase;margin-top:8px;opacity:.95}
+.dish img{width:min(100%,420px);margin:6px auto 0}
+.dish .mascot{position:absolute;right:14px;bottom:14px;width:64px;color:#fff}
+.say .open{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--white);font:700 14px/1 var(--sans);color:var(--tomato-hi)}
+.say .open::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--tomato)}
+.say h1{font:400 clamp(2.5rem,1.6rem + 4vw,4.5rem)/1.02 var(--round);color:var(--tomato);margin-top:16px;letter-spacing:.01em}
+.say h1 small{display:block;font-size:.34em;letter-spacing:.2em;color:var(--ink);margin-top:10px}
+.say p.sub{font-size:clamp(1.0625rem,1rem + .4vw,1.25rem);margin-top:16px;max-width:30ch}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.acts .btn{flex:1 1 200px}
+.where{margin-top:16px;color:var(--soft);font-weight:600;font-size:15px}
+
+/* sections */
+.sec{padding-top:72px}
+.sec>h2,.sec .head h2{font:400 clamp(2.25rem,1.6rem + 2.6vw,3.5rem)/1.05 var(--script);color:var(--tomato)}
+
+/* about */
+.about{display:grid;gap:22px;align-items:center}
+.ph{display:grid;place-items:center;align-content:center;gap:10px;background:var(--sand);border-radius:var(--r);color:var(--soft);font:600 15px/1.3 var(--sans);text-align:center;padding:20px}
+.ph svg{width:72px;color:var(--tomato)}
+.about .ph{aspect-ratio:4/5;max-height:520px}
+.about p{margin-top:14px;max-width:46ch}
+.feats{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.feats li{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:var(--white);font-weight:700;font-size:15px}
+.feats svg{width:18px;height:18px;color:var(--tomato)}
+
+/* menu */
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 24px}
+.head p{color:var(--soft);font-size:15px;max-width:40ch}
+#cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+#cats button{flex:none;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--white);font:700 15px/1 var(--sans);cursor:pointer;transition:background-color .2s}
+#cats button[aria-pressed="true"]{background:var(--ink);color:#fff}
+#dishes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.card{background:var(--paper);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.card .pic{aspect-ratio:1;background:var(--sand);overflow:hidden}
+.card .pic img{width:100%;height:100%;object-fit:cover}
+.card .pic.ph{border-radius:0;font-size:13px;padding:12px}
+.card .pic.ph svg{width:46px}
+.card .txt{padding:12px 14px 16px;display:flex;flex-direction:column;gap:2px;flex:1}
+.card h3{font:400 clamp(1.25rem,1.1rem + .5vw,1.6rem)/1.3 var(--script);color:var(--tomato)}
+.card p{color:var(--soft);font-size:15px;line-height:1.4}
+.card b{margin-top:auto;padding-top:8px;font:700 15px/1 var(--sans)}
+
+/* reviews */
+.revs{display:grid;gap:12px;margin-top:22px}
+.revs li{background:var(--paper);border-radius:var(--r);padding:22px}
+.revs .tag{display:inline-block;font:700 13px/1 var(--sans);padding:6px 10px;border-radius:999px;background:var(--sand);color:var(--soft)}
+.revs p{margin-top:12px;font-size:17px}
+.revs small{display:block;margin-top:12px;color:var(--soft);font-weight:600}
+
+/* find us */
+.find{display:grid;gap:12px;margin-top:22px}
+.info{background:var(--paper);border-radius:var(--r);padding:22px;display:grid;gap:16px}
+.info dl{margin:0;display:grid;gap:12px}
+.info dt{font:700 13px/1.2 var(--sans);color:var(--soft)}
+.info dd{margin:2px 0 0;font-weight:700;font-size:18px}
+.info .acts{margin-top:4px}
+.shop{border-radius:var(--r);overflow:hidden;aspect-ratio:4/3;background:var(--sand)}
+.shop img{width:100%;height:100%;object-fit:cover}
+.map{position:relative;border-radius:var(--r);overflow:hidden;min-height:280px;background:var(--sand)}
+.map span{position:absolute;inset:0;display:grid;place-items:center;color:var(--soft);font-weight:600;padding:20px;text-align:center}
+.map iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+footer{margin-top:72px;background:var(--tomato);color:#fff}
+footer .wrap{display:grid;gap:18px;padding-block:36px 28px}
+footer .logo{width:74px;height:74px}
+footer p{font-size:15px}
+footer a{font-weight:700}
+footer small{display:block;opacity:.9;font-size:13px}
+
+.wolt-bar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(246,238,226,.96)}
+.wolt-bar .btn{width:100%;min-height:56px;font-size:17px}
+
+@media (min-width:880px){
+  body{padding-bottom:0}
+  .wolt-bar{left:auto;right:24px;bottom:24px;background:none;padding:0}
+  .wolt-bar .btn{width:auto;box-shadow:0 10px 30px rgba(58,42,34,.25)} /* taste-skill-ignore: a floating order button sits over the page */
+  .top nav{display:flex}
+  .langs{margin-left:0}
+  .hero{grid-template-columns:1fr 1fr;align-items:center;gap:40px;padding-top:24px}
+  .say{grid-column:1;grid-row:1}
+  .dish{grid-column:2;grid-row:1}
+  .acts .btn{flex:0 0 auto}
+  .about{grid-template-columns:.8fr 1.2fr;gap:56px}
+  #dishes{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .revs{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .find{grid-template-columns:1fr 1fr 1.2fr}
+  footer .wrap{grid-template-columns:auto 1fr auto;align-items:center;gap:32px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="#fffaf3"/><circle cx="60" cy="60" r="58" fill="none" stroke="#c23e17" stroke-width="3"/><text x="60" y="44" text-anchor="middle" font-family="Lilita One" font-size="15" fill="#c23e17" letter-spacing="2">KOD</text><text x="60" y="72" text-anchor="middle" font-family="Lilita One" font-size="27" fill="#c23e17" letter-spacing="1">GALINE</text><text x="60" y="88" text-anchor="middle" font-family="Lilita One" font-size="8" fill="#c23e17" letter-spacing="1.6">DUMPLINGS CLUB</text></symbol>
+  <symbol id="mascot" viewBox="0 0 120 104"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M44 16c-2-6 2-10 0-14M60 14c-2-6 2-10 0-14M76 16c-2-6 2-10 0-14" opacity=".6"/><path d="M10 74C10 46 34 28 60 28s50 18 50 46c0 14-16 20-50 20S10 88 10 74z"/><path d="M26 44q5-10 10-1q5-11 10-2q5-11 10-2q5-11 10-2q5-11 10 2q5-10 9 3"/><path d="M42 66q5-6 10 0M68 66q5-6 10 0M54 76q6 6 12 0"/></g><circle cx="38" cy="76" r="5" fill="currentColor" opacity=".25"/><circle cx="82" cy="76" r="5" fill="currentColor" opacity=".25"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 13V5a1.5 1.5 0 0 1 3 0v6M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V6a1.5 1.5 0 0 1 3 0v8c0 4-3 7-7 7-3 0-5-2-6-4l-2-4a1.5 1.5 0 0 1 2.6-1.5L8 13"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 19c0-9 6-14 15-14 0 9-5 15-14 15M5 19l7-7"/></symbol>
+  <symbol id="i-fresh" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 4c-1 2 1 3 0 5M12 3c-1 2 1 3 0 5M16 4c-1 2 1 3 0 5M4 12h16a8 8 0 0 1-16 0z"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9l-1-3H7M15 9h3"/></g></symbol>
+</svg>
+
+<header class="wrap top">
+  <a href="#top" id="top" aria-label="Kod Galine"><svg class="logo" aria-hidden="true"><use href="#logo"/></svg></a>
+  <nav aria-label="Navigacija"><a href="#meni" data-i="nav_menu">Meni</a><a href="#o-nama" data-i="nav_about">O nama</a><a href="#kontakt" data-i="nav_find">Kontakt</a></nav>
+  <div class="langs" role="group" aria-label="Jezik"><button type="button" data-lang="sr" aria-pressed="true">SR</button><button type="button" data-lang="en" aria-pressed="false">EN</button><button type="button" data-lang="ru" aria-pressed="false">RU</button></div>
+</header>
+
+<main class="wrap">
+  <section class="hero" aria-labelledby="h1">
+    <div class="say">
+      <span class="open" data-i="open">Novo mesto · We are open</span>
+      <h1 id="h1">Kod Galine<small>Dumplings Club</small></h1>
+      <p class="sub" data-i="hero_sub">Ručno pravljeni pelmeni, manti i vareniki u centru Beograda.</p>
+      <div class="acts">
+        <a class="btn btn-wolt" href="https://wolt.com/sr/srb/belgrade/restaurant/kod-galine" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-bike"/></svg><span data-i="wolt">Naruči na Wolt</span></a>
+        <a class="btn btn-soft" href="#meni" data-i="see_menu">Pogledaj meni</a>
+      </div>
+      <p class="where" data-i="hero_where">Cara Dušana 14 · pon–pet 11:00–20:00</p>
+    </div>
+    <figure class="dish">
+      <p class="script">Soul in every bite</p>
+      <p class="tag">Handmade Dumplings</p>
+      <img src="../img/pelmeni-bowl.jpg" alt="Pelmeni u činiji, Kod Galine" width="346" height="317">
+      <svg class="mascot" aria-hidden="true"><use href="#mascot"/></svg>
+    </figure>
+  </section>
+
+  <section class="sec about" id="o-nama" aria-labelledby="about-h">
+    <div class="ph"><svg viewBox="0 0 120 104" aria-hidden="true"><use href="#mascot"/></svg><span data-i="ph_galina">Ovde ide fotografija Galine</span></div>
+    <div>
+      <h2 id="about-h" data-i="about_h" style="font:400 clamp(2.25rem,1.6rem + 2.6vw,3.5rem)/1.05 var(--script);color:var(--tomato)">Kao kod bake</h2>
+      <p data-i="about_p1">Kod Galine znači „kod Galine“. Mesto gde se jede kao kod kuće.</p>
+      <p data-i="about_p2">Samo prirodni sastojci, testo i fil spremamo sveže.</p>
+      <ul class="feats"><li><svg aria-hidden="true"><use href="#i-hand"/></svg><span data-i="f1">Ručna izrada</span></li><li><svg aria-hidden="true"><use href="#i-leaf"/></svg><span data-i="f2">Prirodni sastojci</span></li><li><svg aria-hidden="true"><use href="#i-fresh"/></svg><span data-i="f3">Uvek sveže</span></li></ul>
+    </div>
+  </section>
+
+  <section class="sec" id="meni" aria-labelledby="menu-h">
+    <div class="head"><h2 id="menu-h" data-i="menu_h">Meni</h2><p data-i="menu_note">Cene su primer, prave cene dodajemo zajedno sa vama.</p></div>
+    <div id="cats" role="group" aria-label="Kategorije"></div>
+    <ul id="dishes" aria-live="polite"></ul>
+  </section>
+
+  <section class="sec" aria-labelledby="rev-h">
+    <h2 id="rev-h" data-i="rev_h">Šta kažu gosti</h2>
+    <ul class="revs">
+      <li><span class="tag" data-i="rev_tag">Primer recenzije</span><p data-i="rev_text">Ovde će stajati prava recenzija gosta.</p><small data-i="rev_name">Ime gosta</small></li>
+      <li><span class="tag" data-i="rev_tag">Primer recenzije</span><p data-i="rev_text">Ovde će stajati prava recenzija gosta.</p><small data-i="rev_name">Ime gosta</small></li>
+      <li><span class="tag" data-i="rev_tag">Primer recenzije</span><p data-i="rev_text">Ovde će stajati prava recenzija gosta.</p><small data-i="rev_name">Ime gosta</small></li>
+    </ul>
+  </section>
+
+  <section class="sec" id="kontakt" aria-labelledby="find-h">
+    <h2 id="find-h" data-i="find_h">Gde smo</h2>
+    <div class="find">
+      <div class="info">
+        <dl>
+          <div><dt data-i="addr_l">Adresa</dt><dd>Cara Dušana 14, Beograd</dd></div>
+          <div><dt data-i="hours_l">Radno vreme</dt><dd data-i="hours">Ponedeljak–petak, 11:00–20:00</dd></div>
+          <div><dt data-i="phone_l">Telefon</dt><dd data-i="phone">[broj telefona]</dd></div>
+        </dl>
+        <div class="acts">
+          <a class="btn btn-soft" href="tel:" data-i="call">Pozovi</a>
+          <a class="btn btn-wolt" href="https://wolt.com/sr/srb/belgrade/restaurant/kod-galine" target="_blank" rel="noopener" data-i="wolt">Naruči na Wolt</a>
+        </div>
+      </div>
+      <figure class="shop"><img src="../img/izlog.jpg" alt="Izlog Kod Galine u ulici Cara Dušana" width="346" height="388" loading="lazy"></figure>
+      <div class="map"><span data-i="map_ph">Mapa: Cara Dušana 14, Beograd</span><iframe title="Mapa" loading="lazy" src="https://maps.google.com/maps?q=Cara%20Du%C5%A1ana%2014%2C%20Beograd&amp;z=16&amp;output=embed"></iframe></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <svg class="logo" aria-hidden="true"><use href="#logo"/></svg>
+    <div>
+      <p>Cara Dušana 14, Beograd · <span data-i="hours">Ponedeljak–petak, 11:00–20:00</span></p>
+      <p>Instagram <a href="https://www.instagram.com/kod_galine_pelmeni/" target="_blank" rel="noopener">@kod_galine_pelmeni</a></p>
+    </div>
+    <small data-i="foot_demo">Demo verzija sajta, Mercury Studio</small>
+  </div>
+</footer>
+
+<div class="wolt-bar"><a class="btn btn-wolt" href="https://wolt.com/sr/srb/belgrade/restaurant/kod-galine" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-bike"/></svg><span data-i="wolt">Naruči na Wolt</span></a></div>
+
+<script src="../shared/site.js"></script>
+<script>
+KG.init({card:function(d){
+  var pic=d.img?'<div class="pic"><img src="'+d.img+'" alt="'+d.name+'" loading="lazy"></div>'
+               :'<div class="pic ph"><svg viewBox="0 0 120 104" aria-hidden="true"><use href="#mascot"/></svg><span>'+d.ph+'</span></div>';
+  return '<li class="card">'+pic+'<div class="txt"><h3>'+d.name+'</h3><p>'+d.desc+'</p><b>'+d.price+'</b></div></li>';
+}});
+</script>
+</body>
+</html>
