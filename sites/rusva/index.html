@@ -145,6 +145,39 @@ button{font:inherit;color:inherit}
 .msg.me{justify-self:end;background:#e3f5d5;border-bottom-right-radius:4px}
 .msg.them{border-bottom-left-radius:4px}
 
+/* request form: sends to the shop's email through a form service */
+.req{display:grid;gap:20px;background:var(--navy);color:#fff;border-radius:18px;padding:clamp(22px,4vw,48px);position:relative;overflow:hidden}
+.req h2{font:italic 800 clamp(2rem,1.3rem + 2.8vw,3.4rem)/.98 var(--cond);text-transform:uppercase}
+.req h2 span{display:block;color:var(--sky)}
+.req .lead{color:#d3deeb;margin-top:12px;max-width:36ch}
+.req .lead b{color:#fff}
+.form{display:grid;grid-template-columns:1fr;gap:14px;background:#fff;color:var(--ink);border-radius:14px;padding:clamp(18px,3vw,28px)}
+.f{display:grid;gap:6px}
+.f label{font:600 14px/1.2 var(--cond);text-transform:uppercase;letter-spacing:.03em}
+.f label i{font-style:normal;color:var(--blue)}
+.f input,.f select,.f textarea{width:100%;font:400 17px/1.4 var(--sans);color:var(--ink);background:var(--concrete);border:2px solid transparent;border-radius:10px;padding:13px 14px;transition:border-color .2s,background-color .2s}
+.f textarea{min-height:110px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+.f input[aria-invalid="true"],.f textarea[aria-invalid="true"]{border-color:var(--red);background:#fff5f3}
+.f .err{display:none;font-size:14px;color:#b3321d}
+.f input[aria-invalid="true"]~.err,.f textarea[aria-invalid="true"]~.err{display:block}
+.form .btn{width:100%;border:0;cursor:pointer}
+.form .note{font-size:14px;color:var(--mute)}
+.form .note a{color:var(--blue)}
+.done{display:none;gap:10px;align-content:start;background:#fff;color:var(--ink);border-radius:14px;padding:clamp(22px,3vw,32px)}
+.done .ok{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--sky),var(--blue));color:#fff} /* taste-skill-ignore: the logo's blue gradient */
+.done .ok svg{width:30px;height:30px}
+.done h3{font:italic 800 26px/1.1 var(--cond);text-transform:uppercase}
+.done p{color:var(--ink-2)}
+.req.sent .form{display:none}
+.req.sent .done{display:grid}
+.demo-flag{margin-top:16px;font:500 13px/1.4 var(--mono);color:#a9bcd3}
+@media (min-width:920px){
+  .req{grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}
+  .form{grid-template-columns:1fr 1fr}
+  .form .wide{grid-column:1/-1}
+}
+
 /* contacts */
 .contact{display:grid;gap:16px}
 .place .plate{justify-self:start;background:#fff;border-radius:12px;padding:10px 14px;line-height:0}
@@ -210,7 +243,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-ite
 
 <header class="wrap top">
   <a class="logo" href="#top" id="top"><img src="img/logo.png" alt="Auto Servis Rusva" width="562" height="312"></a>
-  <nav aria-label="Разделы"><a href="#simptomy">Симптомы</a><a href="#ceny">Цены</a><a href="#zapis">Запись</a><a href="#kontakty">Контакты</a></nav>
+  <nav aria-label="Разделы"><a href="#simptomy">Симптомы</a><a href="#ceny">Цены</a><a href="#zapis">Запись</a><a href="#zayavka">Заявка</a><a href="#kontakty">Контакты</a></nav>
   <a class="tel" href="tel:+381604868000">+381 60 48 68 000</a>
   <div class="langs" role="group" aria-label="Язык"><button type="button" aria-pressed="true">RU</button><button type="button" aria-pressed="false">SR</button></div>
 </header>
@@ -315,6 +348,32 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-ite
     </div>
   </section>
 
+  <section class="wrap sec" id="zayavka" aria-labelledby="req-h">
+    <div class="req">
+      <div>
+        <h2 id="req-h">Оставьте заявку <span>на почту</span></h2>
+        <p class="lead">Нет Telegram или удобнее письмом? Заполните форму, <b>мы свяжемся с вами</b> и предложим время для диагностики.</p>
+        <p class="demo-flag" id="demo-flag" hidden>Демо: форма проверяет поля, но письма пока не отправляет. Подключим к почте сервиса.</p>
+      </div>
+      <form class="form" id="req-form" novalidate>
+        <input type="hidden" name="subject" value="Новая заявка с сайта Autoservis Rusva">
+        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" style="display:none">
+        <div class="f"><label for="r-name">Имя <i>*</i></label><input id="r-name" name="name" autocomplete="name" required><span class="err">Напишите, как к вам обращаться</span></div>
+        <div class="f"><label for="r-phone">Телефон или Telegram <i>*</i></label><input id="r-phone" name="phone" autocomplete="tel" required placeholder="+381 … или @ник"><span class="err">Нужен телефон или Telegram, чтобы мы ответили</span></div>
+        <div class="f"><label for="r-car">Марка и модель</label><input id="r-car" name="car" placeholder="Например, Škoda Octavia 2015"></div>
+        <div class="f"><label for="r-day">Когда удобно</label><select id="r-day" name="when"><option>Как можно скорее</option><option>На этой неделе</option><option>На следующей неделе</option><option>Обсудим</option></select></div>
+        <div class="f wide"><label for="r-msg">Что беспокоит <i>*</i></label><textarea id="r-msg" name="message" required placeholder="Горит лампа, стучит, свистит, нужна подготовка к поездке…"></textarea><span class="err">Опишите в двух словах, что случилось</span></div>
+        <div class="wide"><button class="btn btn-tg" type="submit" id="r-send">Отправить заявку</button></div>
+        <p class="note wide">Отвечаем в рабочее время. Срочно? Лучше <a href="tel:+381604868000">позвоните</a> или напишите в <a href="https://t.me/RusvaServisNS">Telegram</a>.</p>
+      </form>
+      <div class="done" role="status" aria-live="polite">
+        <span class="ok"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+        <h3>Заявка отправлена</h3>
+        <p>Спасибо! Мы свяжемся с вами и предложим время для диагностики.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="wrap sec" id="kontakty" aria-labelledby="ct-h">
     <div class="contact">
       <div class="place">
@@ -367,6 +426,26 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-ite
 })();
 /* RU/SR: the Serbian copy is not filled yet, the switch only shows state */
 document.querySelectorAll(".langs button").forEach(function(b,i,all){b.addEventListener("click",function(){all.forEach(function(x){x.setAttribute("aria-pressed",x===b)})})});
+/* request form. To go live: put the Web3Forms access key (free, tied to the shop's email) into FORM_KEY. */
+(function(){
+  var FORM_KEY="", form=document.getElementById("req-form"), box=form&&form.closest(".req");
+  if(!form)return;
+  if(!FORM_KEY)document.getElementById("demo-flag").hidden=false;
+  function check(el){var bad=el.required&&!el.value.trim();el.setAttribute("aria-invalid",bad?"true":"false");return !bad}
+  form.querySelectorAll("[required]").forEach(function(el){el.addEventListener("input",function(){if(el.getAttribute("aria-invalid")==="true")check(el)})});
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    var req=[].slice.call(form.querySelectorAll("[required]")),ok=req.map(check).every(Boolean);
+    if(!ok){req.filter(function(el){return el.getAttribute("aria-invalid")==="true"})[0].focus();return}
+    var btn=document.getElementById("r-send");btn.disabled=true;btn.textContent="Отправляем…";
+    function done(){box.classList.add("sent");box.querySelector(".done").focus&&box.querySelector(".done").setAttribute("tabindex","-1");box.querySelector(".done").focus()}
+    if(!FORM_KEY){setTimeout(done,500);return}
+    var data=new FormData(form);data.append("access_key",FORM_KEY);
+    fetch("https://api.web3forms.com/submit",{method:"POST",body:data}).then(function(r){return r.json()}).then(function(j){
+      if(j.success)done();else throw 0;
+    }).catch(function(){btn.disabled=false;btn.textContent="Отправить заявку";alert("Не получилось отправить. Позвоните или напишите в Telegram.")});
+  });
+})();
 /* phone: the bottom bar appears once the first-screen buttons scroll away */
 (function(){
   var dock=document.querySelector(".dock"),acts=document.querySelector(".hero .acts");
