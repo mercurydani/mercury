@@ -326,6 +326,15 @@
         ],
         "createdAt": "2026-10-30T20:14:38.902Z",
         "reason": "Claude triage: .trust strip items sit inside .wrap padding and 22-26px block padding"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "sites/rusva/index.html"
+        ],
+        "createdAt": "2026-10-30T20:24:52.466Z",
+        "reason": "Brief asks for light concrete; #e7e5e0 is cool grey concrete"
       }
     ]
   }
