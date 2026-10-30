@@ -335,6 +335,15 @@
         ],
         "createdAt": "2026-10-30T20:24:52.466Z",
         "reason": "Brief asks for light concrete; #e7e5e0 is cool grey concrete"
+      },
+      {
+        "rule": "icon-tile-stack",
+        "value": "*",
+        "files": [
+          "sites/rusva/index.html"
+        ],
+        "createdAt": "2026-10-30T21:32:13.268Z",
+        "reason": "Claude triage: symptom icons sit beside the h3 in a 58px|1fr grid, not stacked; confirmed on render"
       }
     ]
   }

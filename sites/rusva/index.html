@@ -11,8 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,600;0,700;0,800;1,700;1,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"><!-- taste-skill-ignore: mono only for work-order labels, as the brief asks -->
 <style>
 /* Autoservis Rusva. The idea: the site explains a car the way the shop does.
-   First screen is a dashboard whose warning lamps you can press; the repair write-up is a real paper work order;
-   prices hang on the wall as a price list. Concrete grey, the logo's blue, the amber of a check-engine lamp. */
+   First screen is a dashboard whose warning lamps you can press, then the six things people usually drive in with;
+   prices hang on the wall as a price list. Colours and type come from the client's logo; amber only on the lamps. */
 :root{
   --concrete:#f3f6f9;--slab:#e2e9f0;--paper:#ffffff;--ink:#0d1117;--ink-2:#262c35;--mute:#56606c;--navy:#0c2340;--sky:#3aa0e0;
   --blue:#1a64b0;--blue-dk:#124e8c;--amber:#f2a20c;--amber-ink:#1d1402;--red:#d8432b;--dash:#101215;
@@ -40,9 +40,9 @@ button{font:inherit;color:inherit}
 .btn-call:hover{background:var(--ink-2)}
 
 /* top */
-.top{display:flex;align-items:center;gap:20px;min-height:76px}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto;font:italic 800 15px/1 var(--cond);letter-spacing:.14em;text-transform:uppercase}
-.logo svg{width:40px;height:40px;flex:none}
+.top{display:flex;align-items:center;gap:20px;min-height:92px}
+.logo{display:block;margin-right:auto;line-height:0;font:italic 800 15px/1 var(--cond);letter-spacing:.14em;text-transform:uppercase}
+.logo img{height:clamp(52px,9vw,76px);width:auto}
 .logo b{display:block;font-size:24px;letter-spacing:.1em;color:var(--blue);margin-top:3px}
 .top nav{display:none;gap:26px;font:600 16px/1 var(--cond);letter-spacing:.04em;text-transform:uppercase}
 .top nav a{text-decoration:none}
@@ -53,10 +53,20 @@ button{font:inherit;color:inherit}
 .langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
 
 /* hero */
-.hero{display:grid;gap:28px;padding-block:12px 56px}
+.hero-bg{position:relative;overflow:hidden;background:var(--navy);color:#fff}
+.hero-bg::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 48px),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px 48px)} /* taste-skill-ignore: a blueprint grid behind the hero */
+.hero-bg .big-gear{position:absolute;right:-180px;top:-140px;width:620px;height:620px;opacity:.16;color:var(--sky)}
+@keyframes turn{to{transform:rotate(360deg)}}
+.hero-bg .big-gear{animation:turn 80s linear infinite}
+.hero{position:relative;display:grid;gap:28px;padding-block:40px 64px}
 .hero h1{font:italic 800 clamp(2.3rem,1.1rem + 3.6vw,4.4rem)/.98 var(--cond);letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance}
-.hero h1 span{display:block;color:var(--blue);font-size:.8em;margin-top:.12em}
-.hero .sub{margin-top:18px;font-size:clamp(1.0625rem,1rem + .35vw,1.25rem);max-width:34ch;color:var(--ink-2)}
+.hero h1 span{display:block;color:var(--sky);font-size:.8em;margin-top:.12em}
+.hero .sub{margin-top:18px;font-size:clamp(1.0625rem,1rem + .35vw,1.25rem);max-width:34ch;color:#d3deeb}
+.hero .btn-tg{background:var(--sky);color:var(--navy)}
+.hero .btn-tg:hover{background:#5cb4ea}
+.hero .btn-call{background:#fff;color:var(--navy)}
+.hero .btn-call:hover{background:#e6eef6}
+.hero .addr{color:#a9bcd3}
 .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .acts .btn{flex:1 1 230px}
 .addr{margin-top:16px;font:500 14px/1.5 var(--mono);color:var(--mute)}
@@ -80,14 +90,14 @@ button{font:inherit;color:inherit}
 .explain .h{font:700 22px/1.15 var(--cond);margin-top:6px;text-transform:uppercase}
 .explain p{margin-top:6px;font-size:16px;line-height:1.5}
 .explain p.do{color:var(--blue-dk);font-weight:600}
-.dash-hint{margin-top:10px;font:500 13px/1.4 var(--mono);color:var(--mute);text-align:center}
+.dash-hint{margin-top:10px;font:500 13px/1.4 var(--mono);color:#a9bcd3;text-align:center}
 
 /* black band */
-.band{background:var(--navy);color:#fff}
+.band{background:var(--blue);color:#fff}
 .band ul{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.band li{padding:20px 0;font:600 clamp(18px,1.2rem + .5vw,24px)/1.15 var(--cond);text-transform:uppercase;letter-spacing:.02em;border-top:1px solid #1d3a5f} /* taste-skill-ignore: rows of the band */
+.band li{padding:20px 0;font:600 clamp(18px,1.2rem + .5vw,24px)/1.15 var(--cond);text-transform:uppercase;letter-spacing:.02em;border-top:1px solid #3a7cc2} /* taste-skill-ignore: rows of the band */
 .band li:nth-child(odd){padding-right:16px}
-.band li em{display:block;font:500 13px/1.3 var(--mono);text-transform:none;color:var(--sky);font-style:normal;margin-bottom:6px;letter-spacing:0}
+.band li em{display:block;font:500 13px/1.3 var(--mono);text-transform:none;color:#cfe6fa;font-style:normal;margin-bottom:6px;letter-spacing:0}
 
 /* sections */
 .sec{padding-top:clamp(72px,9vw,128px)}
@@ -95,32 +105,18 @@ button{font:inherit;color:inherit}
 .sec-top{display:grid;gap:14px;margin-bottom:34px}
 .sec-top p{max-width:46ch;color:var(--ink-2);font-size:18px}
 
-/* work order: paper slip with a perforated edge and a stamp */
-.desk{position:relative;display:grid;gap:18px}
-.slip{position:relative;background:var(--paper);border-radius:4px 4px 0 0;padding:26px clamp(18px,3vw,40px) 34px;box-shadow:0 1px 0 #d5dde6,0 18px 40px -24px rgba(21,23,26,.45)} /* taste-skill-ignore: a sheet of paper lying on the desk */
-.slip::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;background:radial-gradient(circle at 10px 0,transparent 6px,var(--paper) 6.5px) 0 0/20px 10px repeat-x} /* taste-skill-ignore: torn perforation of the slip */
-.slip-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 20px;padding-bottom:14px;border-bottom:2px solid var(--ink);font:600 13px/1.4 var(--mono);text-transform:uppercase;letter-spacing:.03em}
-.slip-head span{color:var(--mute)}
-.slip-head b{color:var(--ink)}
-.slip h3{margin-top:18px;font:700 clamp(1.8rem,1.3rem + 2vw,2.8rem)/1 var(--cond);text-transform:uppercase}
-.slip h3 small{display:block;font:600 14px/1.3 var(--mono);color:var(--blue);margin-bottom:8px;letter-spacing:.04em}
-.stamp{display:inline-block;margin-top:18px;transform:rotate(-6deg);padding:8px 14px;border:3px solid var(--blue);border-radius:6px;color:var(--blue);font:700 20px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;opacity:.85}
-.stamp small{display:block;font:600 10px/1.2 var(--mono);letter-spacing:.06em;margin-top:4px;text-align:center}
-.lines{margin-top:22px;display:grid;gap:0}
-.line{display:grid;grid-template-columns:34px 1fr;gap:4px 14px;padding:16px 0;border-top:1px dashed #cdd6e0} /* taste-skill-ignore: dotted rows of a printed form */
-.line .k{grid-row:1/3;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;font:600 14px/1 var(--mono)}
-.line.fin .k{background:var(--blue)}
-.line .lbl{font:600 13px/1.3 var(--mono);text-transform:uppercase;color:var(--mute);letter-spacing:.04em;padding-top:7px}
-.line p{font-size:17px}
-.line .hl{background:#d6eafb;padding:0 4px}
-.ticks{display:grid;gap:6px}
-.ticks li{display:flex;gap:10px;font-size:17px}
-.ticks svg{width:20px;height:20px;flex:none;color:var(--blue);margin-top:3px}
-.stack{display:grid;gap:12px}
-.ghost{position:relative;background:var(--slab);border-radius:4px;padding:20px 22px;color:var(--mute);font:600 13px/1.5 var(--mono);text-transform:uppercase}
-.ghost b{display:block;margin-top:10px;font:700 22px/1.1 var(--cond);color:var(--ink-2)}
-.ghost i{display:block;height:8px;border-radius:2px;background:#c9d4df;margin-top:10px}
-.ghost i+i{width:70%}
+/* what people come with: six symptoms */
+.sym{display:grid;gap:12px}
+.sym li{position:relative;display:grid;grid-template-columns:58px 1fr;align-items:center;gap:12px 16px;align-content:start;background:var(--paper);border-radius:14px;padding:22px 22px 20px;overflow:hidden}
+.sym li::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:linear-gradient(90deg,var(--sky),var(--blue))} /* taste-skill-ignore: the logo's blue gradient as a card edge */
+.sym .ic{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,var(--sky),var(--blue));color:#fff} /* taste-skill-ignore: the logo's blue gradient */
+.sym .ic svg{width:32px;height:32px}
+.sym h3{font:italic 800 23px/1.1 var(--cond);text-transform:uppercase}
+.sym p{grid-column:1/-1;color:var(--ink-2);font-size:16px}
+.sym p b{color:var(--ink)}
+.sym a{grid-column:1/-1;justify-self:start;margin-top:4px;font:600 16px/1 var(--cond);color:var(--blue);text-decoration:none;padding:10px 14px;border-radius:8px;background:#e6f1fb}
+.sym a:hover{background:#d6e8f8}
+.sym-note{margin-top:14px;font:500 13px/1.4 var(--mono);color:var(--mute)}
 
 /* price list on the wall */
 .board{background:var(--paper);border-radius:4px;padding:clamp(18px,3vw,36px);box-shadow:0 18px 40px -26px rgba(21,23,26,.45)} /* taste-skill-ignore: a sheet pinned to the wall */
@@ -151,6 +147,8 @@ button{font:inherit;color:inherit}
 
 /* contacts */
 .contact{display:grid;gap:16px}
+.place .plate{justify-self:start;background:#fff;border-radius:12px;padding:10px 14px;line-height:0}
+.place .plate img{height:64px;width:auto}
 .place{background:var(--navy);color:#fff;border-radius:4px;padding:clamp(22px,3vw,40px);display:grid;gap:20px}
 .place .big{font:italic 800 clamp(2rem,1.3rem + 2.6vw,3.4rem)/.95 var(--cond);text-transform:uppercase}
 .place .big span{display:block;color:var(--sky)}
@@ -166,8 +164,10 @@ button{font:inherit;color:inherit}
 .map span{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;font:600 14px/1.4 var(--mono);color:var(--mute)}
 .map iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:grayscale(.5)}
 
-footer{margin-top:80px;border-top:2px solid var(--ink)}
-footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding-block:22px 28px;font:500 13px/1.4 var(--mono);color:var(--mute)}
+footer{margin-top:80px;background:var(--navy);color:#fff}
+footer .flogo{background:#fff;border-radius:10px;padding:8px 12px;line-height:0}
+footer .flogo img{height:44px;width:auto}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px 24px;padding-block:26px 30px;font:500 13px/1.4 var(--mono);color:#a9bcd3}
 
 .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(243,246,249,.97);transition:transform .3s var(--ease)}
 .dock.away{transform:translateY(110%)}
@@ -177,19 +177,18 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
 @media (min-width:920px){
   .dock{display:none}
   .top nav,.top .tel{display:flex}
-  .hero{grid-template-columns:1.15fr .85fr;align-items:center;gap:56px;padding-block:20px 80px}
+  .hero{grid-template-columns:1.15fr .85fr;align-items:center;gap:56px;padding-block:56px 88px}
+  .sym li{padding:26px}
   .acts .btn{flex:0 0 auto}
   .band ul{grid-template-columns:repeat(4,1fr)}
   .band li{border-top:0;padding:26px 20px 26px 0}
-  .band li+li{border-left:1px solid #1d3a5f;padding-left:20px} /* taste-skill-ignore: dividers of the band */
+  .band li+li{border-left:1px solid #3a7cc2;padding-left:20px} /* taste-skill-ignore: dividers of the band */
   .sec-top{grid-template-columns:1fr 1fr;align-items:end}
-  .desk{grid-template-columns:1.8fr 1fr;align-items:start;gap:28px}
-  .lines{grid-template-columns:1fr 1fr;column-gap:36px}
-  .stamp{position:absolute;right:40px;bottom:30px;margin:0;transform:rotate(-12deg)}
+  .sym{grid-template-columns:repeat(3,1fr);gap:16px}
   .book{grid-template-columns:1fr .9fr;gap:56px}
   .contact{grid-template-columns:.9fr 1.1fr}
 }
-@media (prefers-reduced-motion:reduce){.lamp.on svg{animation:none!important}.dock{transition:none}}
+@media (prefers-reduced-motion:reduce){.hero-bg .big-gear{animation:none}.lamp.on svg{animation:none!important}.dock{transition:none}}
 </style>
 </head>
 <body>
@@ -199,6 +198,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
   <symbol id="i-call" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="M4 12.5l5 5L20 6.5"/></symbol>
   <!-- dashboard lamps -->
+  <symbol id="i-bump" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="11" r="6"/><circle cx="16" cy="11" r="2"/><path d="M16 17v3M11 20l2.5 3h5L21 20M3 28c3 0 4-4 7-4s4 4 6 4 3-4 6-4 4 4 7 4"/></g></symbol>
+  <symbol id="i-road" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4L5 28M21 4l6 24M16 6v3M16 13v3M16 20v4"/></g></symbol>
   <symbol id="l-engine" viewBox="0 0 32 32"><path fill="currentColor" d="M7 11h3V9h8v2h3l3 3h3v-2h2v9h-2v-2h-3v5H11l-3-3H5v3H3v-9h2v3h2z"/></symbol>
   <symbol id="l-batt" viewBox="0 0 32 32"><path fill="currentColor" d="M5 10h4V8h4v2h6V8h4v2h4v15H5zm3 5v2h5v-2zm11 0v-2h-2v2h-2v2h2v2h2v-2h2v-2z"/></symbol>
   <symbol id="l-oil" viewBox="0 0 32 32"><path fill="currentColor" d="M3 13l4 2h3l2-3h6l9-3 2 2-8 9H9v-3H7l-4-2zm24 5c0 2-1.5 3-1.5 3S24 20 24 18c0-1 1.5-3 1.5-3S27 17 27 18z"/></symbol>
@@ -208,13 +209,15 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
 </svg>
 
 <header class="wrap top">
-  <a class="logo" href="#top" id="top" aria-label="Autoservis Rusva"><svg aria-hidden="true"><use href="#gear"/></svg><span>Auto servis<b>Rusva</b></span></a>
-  <nav aria-label="Разделы"><a href="#razbor">Разбор</a><a href="#ceny">Цены</a><a href="#zapis">Запись</a><a href="#kontakty">Контакты</a></nav>
+  <a class="logo" href="#top" id="top"><img src="img/logo.png" alt="Auto Servis Rusva" width="562" height="312"></a>
+  <nav aria-label="Разделы"><a href="#simptomy">Симптомы</a><a href="#ceny">Цены</a><a href="#zapis">Запись</a><a href="#kontakty">Контакты</a></nav>
   <a class="tel" href="tel:+381604868000">+381 60 48 68 000</a>
   <div class="langs" role="group" aria-label="Язык"><button type="button" aria-pressed="true">RU</button><button type="button" aria-pressed="false">SR</button></div>
 </header>
 
 <main>
+  <div class="hero-bg">
+  <svg class="big-gear" viewBox="0 0 40 40" aria-hidden="true"><path fill="currentColor" d="M17 2h6l1 5 3 1.3 4.3-2.8 4.2 4.2-2.8 4.3L34 17l5 1v6l-5 1-1.3 3 2.8 4.3-4.2 4.2-4.3-2.8L24 34l-1 5h-6l-1-5-3-1.3-4.3 2.8-4.2-4.2 2.8-4.3L6 23l-5-1v-6l5-1 1.3-3-2.8-4.3 4.2-4.2 4.3 2.8L16 7zM20 13a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg>
   <section class="wrap hero" aria-labelledby="h1">
     <div>
       <h1 id="h1">Ремонт авто в&nbsp;Нови Саде <span>Объясняем, что сломалось и&nbsp;почему</span></h1>
@@ -247,6 +250,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
     </figure>
   </section>
 
+  </div>
+
   <section class="band" aria-label="Почему к нам">
     <ul class="wrap">
       <li><em>01 / диагностика</em>Объясняем, что нашли</li>
@@ -256,28 +261,20 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
     </ul>
   </section>
 
-  <section class="wrap sec" id="razbor" aria-labelledby="case-h">
+  <section class="wrap sec" id="simptomy" aria-labelledby="sym-h">
     <div class="sec-top">
-      <h2 id="case-h">Разборы ремонтов</h2>
-      <p>Каждую поломку описываем по шагам: что было, что нашли, что сделали. Так владелец понимает, за что платит.</p>
+      <h2 id="sym-h">С чем к нам приезжают</h2>
+      <p>Узнали свой случай? Напишите, что беспокоит, и приезжайте на диагностику. Точную причину скажем после проверки.</p>
     </div>
-    <div class="desk">
-      <article class="slip" aria-labelledby="c1">
-        <div class="slip-head"><span>Заказ-наряд <b>· разбор №1</b></span><span>авто <b>Nissan Juke</b></span><span>Autoservis Rusva</span></div>
-        <h3 id="c1"><small>NISSAN JUKE</small>Подготовка к&nbsp;дальней поездке</h3>
-        <ol class="lines">
-          <li class="line"><span class="k">1</span><span class="lbl">Проблема</span><p>На панели ошибка <span class="hl">«System Fault»</span> и звенящий звук под капотом. Через 2 дня владелец ехал в Будапешт.</p></li>
-          <li class="line"><span class="k">2</span><span class="lbl">Диагностика</span><p>После замены стекла в другом сервисе не сбросили ошибку. Ремень Stretch Fit поставили без специнструмента, из-за этого повредилась помпа.</p></li>
-          <li class="line"><span class="k">3</span><span class="lbl">Сделали</span><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg>Заменили помпу</li><li><svg aria-hidden="true"><use href="#i-check"/></svg>Правильно установили ремень специнструментом</li><li><svg aria-hidden="true"><use href="#i-check"/></svg>Сбросили ошибку и провели диагностику</li></ul></li>
-          <li class="line fin"><span class="k">4</span><span class="lbl">Результат</span><p><b>Владелец спокойно уехал в поездку.</b></p></li>
-        </ol>
-        <div class="stamp" aria-hidden="true">Выдан<small>RUSVA · VETERNIK</small></div>
-      </article>
-      <div class="stack">
-        <div class="ghost">Заказ-наряд · разбор №2<b>Скоро новый разбор</b><i></i><i></i></div>
-        <div class="ghost">Заказ-наряд · разбор №3<b>Скоро новый разбор</b><i></i><i></i></div>
-      </div>
-    </div>
+    <ul class="sym">
+      <li><span class="ic"><svg aria-hidden="true"><use href="#l-belt"/></svg></span><h3>Свистит или звенит под капотом</h3><p><b>Часто причина:</b> ремень, натяжитель или помпа.</p><a href="#ceny">Ремни и ГРМ →</a></li>
+      <li><span class="ic"><svg aria-hidden="true"><use href="#l-temp"/></svg></span><h3>Растёт температура</h3><p><b>Часто причина:</b> помпа, термостат, радиатор или течь антифриза.</p><a href="#ceny">Система охлаждения →</a></li>
+      <li><span class="ic"><svg aria-hidden="true"><use href="#l-engine"/></svg></span><h3>Горит лампа на панели</h3><p><b>Часто причина:</b> ошибка в блоке управления. Считываем код и объясняем.</p><a href="#ceny">Компьютерная диагностика →</a></li>
+      <li><span class="ic"><svg aria-hidden="true"><use href="#i-bump"/></svg></span><h3>Стучит на кочках</h3><p><b>Часто причина:</b> амортизаторы, стойки стабилизатора, рычаги.</p><a href="#ceny">Подвеска →</a></li>
+      <li><span class="ic"><svg aria-hidden="true"><use href="#l-brake"/></svg></span><h3>Скрипит при торможении</h3><p><b>Часто причина:</b> износ колодок или дисков.</p><a href="#ceny">Тормоза →</a></li>
+      <li><span class="ic"><svg aria-hidden="true"><use href="#i-road"/></svg></span><h3>Скоро дальняя дорога</h3><p>Проверяем всё важное до поездки, чтобы не встать на трассе.</p><a href="#ceny">Подготовка к поездке →</a></li>
+    </ul>
+    <p class="sym-note">Причины указаны как самые частые. Что именно с вашей машиной, покажет диагностика.</p>
   </section>
 
   <section class="wrap sec" id="ceny" aria-labelledby="price-h">
@@ -311,7 +308,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
       <div class="chat" aria-label="Пример переписки">
         <div class="bar"><svg aria-hidden="true"><use href="#gear"/></svg><span>Autoservis Rusva<small>@RusvaServisNS</small></span></div>
         <span class="tag">пример переписки</span>
-        <p class="msg me">Здравствуйте! Juke, горит «System Fault» и что-то звенит под капотом. Через 2 дня еду в Будапешт</p>
+        <p class="msg me">Здравствуйте! Что-то звенит под капотом, через пару дней еду в Будапешт. Можно посмотреть?</p>
         <p class="msg them">Здравствуйте! Приезжайте завтра на диагностику, посмотрим и объясним, что это. Удобно в 10:00?</p>
         <p class="msg me">Да, буду</p>
       </div>
@@ -321,6 +318,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
   <section class="wrap sec" id="kontakty" aria-labelledby="ct-h">
     <div class="contact">
       <div class="place">
+        <span class="plate"><img src="img/logo.png" alt="" width="562" height="312"></span>
         <h2 class="big" id="ct-h">Ветерник <span>Danila Lazovića 4</span></h2>
         <dl>
           <div><dt>Телефон</dt><dd><a href="tel:+381604868000">+381 60 48 68 000</a></dd></div>
@@ -337,7 +335,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
   </section>
 </main>
 
-<footer><div class="wrap"><span>Autoservis Rusva · Ветерник, Нови Сад</span><span>Демо-версия сайта · Mercury Studio</span></div></footer>
+<footer><div class="wrap"><span class="flogo"><img src="img/logo.png" alt="Auto Servis Rusva" width="562" height="312"></span><span>Danila Lazovića 4, Ветерник, Нови Сад · +381 60 48 68 000</span><span>Демо-версия сайта · Mercury Studio</span></div></footer>
 
 <nav class="dock away" aria-label="Связаться">
   <a class="btn btn-tg" href="https://t.me/RusvaServisNS"><svg aria-hidden="true"><use href="#i-tg"/></svg>Записаться в Telegram</a>
