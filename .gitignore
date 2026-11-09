@@ -18,3 +18,7 @@ local.properties
 __pycache__/
 *.pyc
 .venv/
+
+# Сборка
+/mercurytoonz/build/
+/mercurytoonz/dist/

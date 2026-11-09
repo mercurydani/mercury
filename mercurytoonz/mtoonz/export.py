@@ -107,27 +107,67 @@ def needs_even(fmt: str, transparent: bool) -> bool:
     return fmt in ("mp4", "avi") or (fmt == "mov" and not transparent)
 
 
-def audio_inputs(project: Project, s: ExportSettings):
-    """Клипы, которые попадают в диапазон экспорта: (путь, задержка мс, обрезка начала с, громкость)."""
+@dataclass
+class AudioPart:
+    """Кусок звукового клипа, попавший в диапазон экспорта."""
+    path: str
+    delay: float        # с какой секунды результата звучит
+    src_start: float    # откуда брать в исходнике, секунды
+    src_len: float      # сколько брать в исходнике, секунды
+    speed: float
+    volume: float
+    fade_in: float
+    fade_out: float
+    duration: float     # длительность всего клипа на таймлайне
+    local0: float       # с какого места клипа начинается кусок
+
+
+def audio_inputs(project: Project, s: ExportSettings) -> list[AudioPart]:
     out = []
     fps = project.fps
+    r0, r1 = s.first / fps, (s.last + 1) / fps
     for _track, clip in project.audio_clips():
         path = project.media.get(clip.media_id)
         if not path or not os.path.exists(path):
             continue
-        if clip.end_frame(fps) <= s.first or clip.start > s.last:
+        tl0 = clip.start / fps
+        tl1 = tl0 + clip.duration
+        a, b = max(tl0, r0), min(tl1, r1)
+        if b <= a + 1e-6 or clip.volume <= 0:
             continue
-        offset = (clip.start - s.first) / fps
-        out.append((path, max(0.0, offset) * 1000, max(0.0, -offset), clip.volume))
+        out.append(AudioPart(path, a - r0, clip.offset + (a - tl0) * clip.speed, (b - a) * clip.speed, clip.speed,
+                             clip.volume, clip.fade_in, clip.fade_out, clip.duration, a - tl0))
     return out
 
 
-def _audio_filter(inputs, first_index: int) -> str:
+def _atempo(speed: float) -> list[str]:
+    """atempo умеет 0.5..2 за раз — для больших изменений ставим цепочку."""
+    out, x = [], speed
+    while x > 2.0:
+        out.append("atempo=2.0")
+        x /= 2.0
+    while x < 0.5:
+        out.append("atempo=0.5")
+        x /= 0.5
+    if abs(x - 1.0) > 1e-4:
+        out.append(f"atempo={x:.5f}")
+    return out
+
+
+def _audio_filter(inputs: list[AudioPart], first_index: int) -> str:
     parts, labels = [], []
-    for i, (_path, delay_ms, trim, vol) in enumerate(inputs):
+    for i, a in enumerate(inputs):
         idx = first_index + i
-        parts.append(f"[{idx}:a]atrim=start={trim:.4f},asetpts=PTS-STARTPTS,volume={vol:.3f},"
-                     f"adelay=delays={int(round(delay_ms))}:all=1[a{i}]")
+        chain = [f"atrim=start={a.src_start:.4f}:duration={a.src_len:.4f}", "asetpts=PTS-STARTPTS"]
+        chain += _atempo(a.speed)
+        gain = f"{a.volume:.4f}"
+        if a.fade_in > 0:
+            gain += f"*min(1,max(0,(t+{a.local0:.4f})/{a.fade_in:.4f}))"
+        if a.fade_out > 0:
+            gain += f"*min(1,max(0,({a.duration:.4f}-(t+{a.local0:.4f}))/{a.fade_out:.4f}))"
+        chain.append(f"volume='{gain}':eval=frame" if (a.fade_in > 0 or a.fade_out > 0) else f"volume={gain}")
+        chain.append(f"adelay=delays={int(round(a.delay * 1000))}:all=1")
+        parts.append(f"[{idx}:a]" + ",".join(chain) + f"[a{i}]")
         labels.append(f"[a{i}]")
     if len(labels) == 1:
         parts.append(f"{labels[0]}anull[aout]")
@@ -146,15 +186,15 @@ def build_command(ffmpeg: str, project: Project, s: ExportSettings) -> list[str]
         if not ainputs:
             raise ExportError("В выбранном диапазоне нет звука. Добавьте звук на звуковую дорожку "
                               "или включите выключенные дорожки.")
-        for path, *_ in ainputs:
-            cmd += ["-i", path]
+        for part in ainputs:
+            cmd += ["-i", part.path]
         cmd += ["-filter_complex", _audio_filter(ainputs, 0), "-map", "[aout]",
                 "-t", f"{s.duration:.4f}", "-c:a", "libmp3lame", "-b:a", QUALITY["mp3"][q], s.path]
         return cmd
 
     cmd += ["-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{s.width}x{s.height}", "-r", str(s.fps), "-i", "-"]
-    for path, *_ in ainputs:
-        cmd += ["-i", path]
+    for part in ainputs:
+        cmd += ["-i", part.path]
     filters = []
     maps = []
     if fmt == "gif":

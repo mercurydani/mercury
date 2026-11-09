@@ -99,16 +99,37 @@ class AudioClip:
     media_id: str
     name: str
     start: int = 0             # первый кадр
-    duration: float = 0.0      # секунды
+    duration: float = 0.0      # сколько звучит на таймлайне, секунды
     volume: float = 1.0
     peaks: list = field(default_factory=list, repr=False, compare=False)  # волна, 100 значений в секунду
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+    offset: float = 0.0        # с какой секунды исходника начинается
+    speed: float = 1.0
+    fade_in: float = 0.0       # плавное нарастание, секунды
+    fade_out: float = 0.0      # плавное затухание, секунды
+    source_duration: float = 0.0
+    link: str = ""             # id связанного видеоклипа (звук из видео)
 
     def end_frame(self, fps: int) -> int:
         return self.start + max(1, round(self.duration * fps))
 
     def copy(self) -> "AudioClip":
         return replace(self)
+
+    def max_duration(self) -> float:
+        """Сколько секунд таймлайна осталось до конца исходника."""
+        if self.source_duration <= 0:
+            return self.duration
+        return max(0.01, (self.source_duration - self.offset) / max(0.01, self.speed))
+
+    def gain_at(self, t: float) -> float:
+        """Громкость в момент t (секунды от начала клипа) с учётом нарастания и затухания."""
+        g = self.volume
+        if self.fade_in > 0:
+            g *= max(0.0, min(1.0, t / self.fade_in))
+        if self.fade_out > 0:
+            g *= max(0.0, min(1.0, (self.duration - t) / self.fade_out))
+        return g
 
 
 @dataclass
@@ -127,6 +148,8 @@ class VisualClip:
     source_duration: float = 0.0
     transform: Transform = field(default_factory=Transform)
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+    crop: tuple = (0.0, 0.0, 0.0, 0.0)  # кадрирование: доли слева, сверху, справа, снизу
+    link: str = ""                     # id связанного звукового клипа
 
     def end_frame(self, fps: int = 0) -> int:
         return self.start + max(1, self.length)
@@ -531,6 +554,7 @@ class Project(QObject):
     def add_audio_clip(self, name: str, media_id: str, path: str, start: int, duration: float, peaks) -> AudioClip:
         self.media[media_id] = path
         clip = AudioClip(media_id, name, start, duration, 1.0, peaks)
+        clip.source_duration = duration
 
         def do():
             track = self._audio_track_for(start, clip.end_frame(self.fps))
@@ -542,6 +566,99 @@ class Project(QObject):
 
         self.edit("Добавить звук", do)
         return clip
+
+    # ---------- связь видео и звука ----------
+    def linked(self, clip) -> tuple | None:
+        """(дорожка, клип) связанного партнёра или None."""
+        if not getattr(clip, "link", ""):
+            return None
+        found = self.find_clip(clip.link)
+        if found is None or getattr(found[1], "link", "") != clip.id:
+            return None
+        return found
+
+    def _sync_partner(self, clip):
+        """Подгоняет связанный клип под clip: то же начало, длина, место в исходнике и скорость."""
+        found = self.linked(clip)
+        if found is None:
+            return
+        ptrack, partner = found
+        fps = self.fps
+        if isinstance(clip, VisualClip):
+            partner.start, partner.offset, partner.speed = clip.start, clip.offset, clip.speed
+            partner.duration = clip.length / fps
+        else:
+            partner.start, partner.offset, partner.speed = clip.start, clip.offset, clip.speed
+            partner.length = max(1, round(clip.duration * fps))
+        # партнёру некуда встать — переносим на свободную дорожку того же вида
+        if not ptrack.is_free(partner.start, partner.end_frame(fps), fps, ignore=partner):
+            ptrack.clips.remove(partner)
+            end = partner.end_frame(fps)
+            dst = self._audio_track_for(partner.start, end) if ptrack.kind == "audio" \
+                else self._video_track_for(partner.start, end)
+            dst.clips.append(partner)
+
+    def track_free_for(self, clip_id: str, start: int, length: int) -> bool:
+        found = self.find_clip(clip_id)
+        return found is not None and found[0].is_free(start, start + length, self.fps, ignore=found[1])
+
+    def unlink(self, clip_id: str):
+        found = self.find_clip(clip_id)
+        if found is None or self.linked(found[1]) is None:
+            return
+
+        def do():
+            c = self.find_clip(clip_id)[1]
+            p = self.linked(c)[1]
+            c.link = p.link = ""
+
+        self.edit("Отвязать звук", do)
+
+    def link_clips(self, a_id: str, b_id: str):
+        def do():
+            a, b = self.find_clip(a_id)[1], self.find_clip(b_id)[1]
+            a.link, b.link = b.id, a.id
+        self.edit("Связать звук", do)
+
+    def set_clip_attrs(self, clip_id: str, text: str = "Свойства клипа", **attrs) -> bool:
+        """Меняет поля клипа (имя, громкость, скорость, кадрирование…) одной правкой; партнёр подстраивается."""
+        found = self.find_clip(clip_id)
+        if found is None:
+            return False
+
+        def do():
+            _t, c = self.find_clip(clip_id)
+            for k, v in attrs.items():
+                setattr(c, k, v)
+            if {"start", "offset", "speed", "length", "duration"} & set(attrs):
+                self._sync_partner(c)
+            end = c.end_frame(self.fps)
+            if end > self.frame_count:
+                self.frame_count = end
+
+        self.edit(text, do)
+        return True
+
+    def set_speed(self, clip_id: str, speed: float) -> bool:
+        """Меняет скорость, сохраняя тот же кусок исходника: клип сжимается или растягивается по времени."""
+        found = self.find_clip(clip_id)
+        if found is None:
+            return False
+        track, c = found
+        speed = max(0.05, min(20.0, speed))
+        if isinstance(c, VisualClip):
+            new_len = max(1, round(c.length * c.speed / speed))
+            if not track.is_free(c.start, c.start + new_len, self.fps, ignore=c):
+                return False
+            return self.set_clip_attrs(clip_id, "Скорость клипа", speed=speed, length=new_len)
+        new_dur = c.duration * c.speed / speed
+        if not track.is_free(c.start, c.start + max(1, round(new_dur * self.fps)), self.fps, ignore=c):
+            return False
+        return self.set_clip_attrs(clip_id, "Скорость звука", speed=speed, duration=new_dur)
+
+    def rename_clip(self, clip_id: str, name: str):
+        if name:
+            self.set_clip_attrs(clip_id, "Переименовать клип", name=name)
 
     def find_clip(self, clip_id: str) -> tuple[Track, AudioClip] | None:
         for t in self.tracks:
@@ -572,6 +689,7 @@ class Project(QObject):
                 t.clips.remove(c)
                 dst.clips.append(c)
                 self.current_track = self.tracks.index(dst)
+            self._sync_partner(c)
 
         self.edit("Сдвинуть звук", do)
         return True
@@ -583,9 +701,15 @@ class Project(QObject):
 
         def do():
             t, c = self.find_clip(clip_id)
+            partner = self.linked(c)
             t.clips.remove(c)
+            if partner is not None:
+                partner[0].clips.remove(partner[1])
+            if self.selection and self.selection[1] == clip_id:
+                self.selection = None
 
-        self.edit("Удалить звук", do)
+        self.edit("Удалить клип", do)
+        self.selectionChanged.emit()
 
     def audio_clips(self):
         """Все слышимые клипы: (дорожка, клип)."""
@@ -630,6 +754,7 @@ class Project(QObject):
         return clip
 
     def trim_clip(self, clip_id: str, start: int, length: int, offset: float | None = None) -> bool:
+        """Обрезка за край: новое начало и длина (в кадрах), offset — новое начало в исходнике (секунды)."""
         found = self.find_clip(clip_id)
         if found is None:
             return False
@@ -640,44 +765,32 @@ class Project(QObject):
 
         def do():
             _t, c = self.find_clip(clip_id)
+            if offset is not None:
+                c.offset = max(0.0, offset)
             if isinstance(c, VisualClip):
                 c.transform.shift_keys(c.start - start)  # ключи привязаны к началу клипа
-                if offset is not None:
-                    c.offset = max(0.0, offset)
                 c.length = length
+            else:
+                c.duration = length / self.fps
             c.start = start
+            self._sync_partner(c)
             if c.end_frame(self.fps) > self.frame_count:
                 self.frame_count = c.end_frame(self.fps)
 
         self.edit("Обрезать клип", do)
         return True
 
-    def split_clip(self, clip_id: str | None = None, frame: int | None = None) -> bool:
-        """Разрезает клип на кадре: получается два клипа подряд (ключи переносятся во вторую часть)."""
-        frame = self.current_frame if frame is None else frame
-        if clip_id is None:
-            sel = self.selection
-            clip_id = sel[1] if sel and sel[0] == "clip" else None
-        if clip_id is None:
-            t = self.track()
-            c = t.clip_at(frame, self.fps) if t is not None and not t.animation else None
-            clip_id = c.id if c is not None and isinstance(c, VisualClip) else None
-        found = self.find_clip(clip_id) if clip_id else None
-        if found is None or not isinstance(found[1], VisualClip):
-            return False
-        _track, clip = found
-        cut = frame - clip.start
-        if not (0 < cut < clip.length):
-            return False
-
-        def do():
-            t, c = self.find_clip(clip_id)
-            second = c.copy()
-            second.id = uuid.uuid4().hex[:12]
-            second.start = frame
+    def _split_one(self, track, c, frame: int):
+        """Режет клип c на кадре frame; возвращает вторую часть (уже на дорожке)."""
+        cut = frame - c.start
+        second = c.copy()
+        second.id = uuid.uuid4().hex[:12]
+        second.start = frame
+        second.offset = c.offset + cut / self.fps * c.speed
+        if isinstance(c, VisualClip):
             second.length = c.length - cut
-            if c.kind == "video":
-                second.offset = c.offset + cut / self.fps * c.speed
+            if c.kind != "video":
+                second.offset = c.offset
             # значения свойств в момент разреза сохраняются в обеих частях
             vals = c.transform.values(cut)
             second.transform.shift_keys(-cut)
@@ -691,7 +804,40 @@ class Project(QObject):
                 if tail:
                     ks.append(Key(cut, vals[p], "smooth"))
             c.length = cut
-            t.clips.append(second)
+        else:
+            second.duration = c.duration - cut / self.fps
+            second.fade_in = 0.0
+            c.duration = cut / self.fps
+            c.fade_out = 0.0
+        track.clips.append(second)
+        return second
+
+    def split_clip(self, clip_id: str | None = None, frame: int | None = None) -> bool:
+        """Разрезает клип на кадре (связанный звук режется вместе с видео)."""
+        frame = self.current_frame if frame is None else frame
+        if clip_id is None:
+            sel = self.selection
+            clip_id = sel[1] if sel and sel[0] == "clip" else None
+        if clip_id is None:
+            t = self.track()
+            c = t.clip_at(frame, self.fps) if t is not None and not t.animation else None
+            clip_id = c.id if c is not None else None
+        found = self.find_clip(clip_id) if clip_id else None
+        if found is None:
+            return False
+        _track, clip = found
+        if not (clip.start < frame < clip.end_frame(self.fps)):
+            return False
+
+        def do():
+            t, c = self.find_clip(clip_id)
+            partner = self.linked(c)
+            second = self._split_one(t, c, frame)
+            if partner is not None:
+                pt, pc = partner
+                if pc.start < frame < pc.end_frame(self.fps):
+                    second_p = self._split_one(pt, pc, frame)
+                    second.link, second_p.link = second_p.id, second.id
 
         self.edit("Разрезать клип", do)
         return True

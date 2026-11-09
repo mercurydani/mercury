@@ -381,7 +381,7 @@ class MainWindow(QMainWindow):
         self.left_tabs = QTabWidget()
         self.left_tabs.setDocumentMode(True)
         self.left_tabs.addTab(tool_scroll, "Инструмент")
-        self.left_tabs.addTab(insp_scroll, "Элемент")
+        self.left_tabs.addTab(insp_scroll, "Свойства")
         self.left_tabs.setStyleSheet("QTabWidget::pane { border: none; padding: 0; }")
         self.dock_tool = self._dock("Инструмент и элемент", self.left_tabs, Qt.LeftDockWidgetArea, "dockTool")
         self.dock_tool.setTitleBarWidget(QWidget())
@@ -723,7 +723,7 @@ class MainWindow(QMainWindow):
 
     def _on_selection(self):
         sel = self.project.selection
-        if sel and sel[0] == "clip":
+        if sel and sel[0] in ("clip", "track"):
             self.left_tabs.setCurrentIndex(1)
 
     def import_media(self):
@@ -789,7 +789,11 @@ class MainWindow(QMainWindow):
                 media.extract_audio(dst, apath)
                 duration, peaks = audio.analyze_wav(apath)
                 if duration > 0:
-                    self.project.add_audio_clip(f"{name} · звук", amid, apath, at, duration, peaks)
+                    aclip = self.project.add_audio_clip(f"{name} · звук", amid, apath, at, duration, peaks)
+                    # звук и картинка двигаются, режутся и обрезаются вместе
+                    self.project.link_clips(clip.id, aclip.id)
+                    if abs(duration - length / fps) > 0.5 / fps:
+                        self.project.set_clip_attrs(aclip.id, "Длина звука", duration=length / fps)
             except (OSError, Exception) as e:  # noqa: BLE001 — видео без читаемого звука тоже годится
                 self.statusBar().showMessage(f"Звук из видео не извлечён: {e}", 5000)
         return at + length

@@ -64,7 +64,14 @@ def draw_clip(p: QPainter, project: Project, pool, clip, frame: int, media_w: in
     p.setTransform(t, True)
     p.setOpacity(p.opacity() * max(0.0, min(1.0, op)))
     p.setRenderHint(QPainter.SmoothPixmapTransform)
-    p.drawImage(QRectF(0, 0, w, h), img)
+    cl, ct, cr, cb = clip.crop
+    if cl or ct or cr or cb:  # кадрирование: края скрыты, сама картинка остаётся на месте
+        iw, ih = img.width(), img.height()
+        fw, fh = max(0.0, 1 - cl - cr), max(0.0, 1 - ct - cb)
+        if fw > 0 and fh > 0:
+            p.drawImage(QRectF(cl * w, ct * h, fw * w, fh * h), img, QRectF(cl * iw, ct * ih, fw * iw, fh * ih))
+    else:
+        p.drawImage(QRectF(0, 0, w, h), img)
     p.restore()
     return True
 

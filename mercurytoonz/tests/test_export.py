@@ -126,9 +126,9 @@ class ExportTest(unittest.TestCase):
     def test_range_trims_audio_start(self):
         # диапазон с 9-го кадра: клип начался раньше — его начало обрезается, а не сдвигается
         s = self.settings("mp4", first=9, last=23)
-        (path, delay, trim, _vol), = export.audio_inputs(self.p, s)
-        self.assertEqual(delay, 0)
-        self.assertAlmostEqual(trim, 0.25)
+        (part,) = export.audio_inputs(self.p, s)
+        self.assertEqual(part.delay, 0)
+        self.assertAlmostEqual(part.src_start, 0.25)
 
     def test_cancel_removes_file(self):
         s = self.settings("mp4")

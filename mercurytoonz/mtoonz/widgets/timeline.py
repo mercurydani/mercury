@@ -155,7 +155,7 @@ class TimelineCanvas(QWidget):
                 if hasattr(clip, "transform"):
                     self._paint_vclip(p, clip, start, length, self.row_y(self._drag_row), True, True)
                 else:
-                    self._paint_clip(p, clip, start, self.row_y(self._drag_row), True, True)
+                    self._paint_clip(p, clip, start, self.row_y(self._drag_row), True, True, length)
         cx = self.frame_x(proj.current_frame)
         p.fillRect(QRectF(cx, HEADER_H, cw, self.height()), QColor(255, 90, 79, 24))
         p.restore()
@@ -232,20 +232,45 @@ class TimelineCanvas(QWidget):
         p.setOpacity(1.0)
         p.setRenderHint(QPainter.Antialiasing, False)
 
+    def _clip_near(self, track, x: float):
+        """Клип под курсором; у самых краёв клипа (±7 px) — тоже он, чтобы удобно хвататься за край."""
+        fps = self.project.fps
+        f = self.frame_at(x)
+        clip = track.clip_at(f, fps)
+        if clip is not None:
+            return clip
+        for c in track.clips:
+            if abs(x - self.frame_x(c.end_frame(fps))) <= 7 or abs(x - self.frame_x(c.start)) <= 7:
+                return c
+        return None
+
+    def _clip_len(self, clip) -> int:
+        return clip.end_frame(self.project.fps) - clip.start
+
     def _drag_geometry(self, clip):
-        """Начало и длина клипа с учётом перетаскивания или обрезки."""
+        """Начало и длина клипа (кадры) с учётом перетаскивания, обрезки или растяжения."""
         mode = self._drag[3]
         d = self._drag_delta
+        fps = self.project.fps
+        length = self._clip_len(clip)
+        trims_source = getattr(clip, "kind", "audio") in ("video", "audio")
         if mode == "left":
-            d = max(-clip.start, min(d, clip.length - 1))
-            if clip.kind == "video":
-                d = max(d, -int(clip.offset * self.project.fps / max(0.01, clip.speed)))
-            return clip.start + d, clip.length - d
+            d = max(-clip.start, min(d, length - 1))
+            if trims_source:  # нельзя открыть раньше начала исходника
+                d = max(d, -int(clip.offset * fps / max(0.01, clip.speed)))
+            return clip.start + d, length - d
         if mode == "right":
-            length = max(1, clip.length + d)
-            cap = clip.max_length(self.project.fps)
-            return clip.start, min(length, cap) if cap else length
-        length = clip.length if hasattr(clip, "length") else None
+            new = max(1, length + d)
+            if hasattr(clip, "max_length"):
+                cap = clip.max_length(fps)
+            else:
+                cap = int(round(clip.max_duration() * fps)) if clip.source_duration > 0 else None
+            return clip.start, min(new, cap) if cap else new
+        if mode == "sright":  # растяжение/сжатие: меняется скорость
+            return clip.start, max(1, length + d)
+        if mode == "sleft":
+            d = max(-clip.start, min(d, length - 1))
+            return clip.start + d, length - d
         return max(0, clip.start + d), length
 
     def _thumb(self, clip):
@@ -283,7 +308,10 @@ class TimelineCanvas(QWidget):
         f = QFont(self.font())
         f.setPixelSize(11)
         p.setFont(f)
-        label = clip.name + ("" if abs(clip.speed - 1) < 1e-6 else f"  ·  {round(clip.speed * 100)}%")
+        if clip.link:
+            p.drawPixmap(QPointF(tx, rect.top() + 4), icons.pixmap("link", "#e6ecff", 12))
+            tx += 15
+        label = clip.name + ("" if abs(clip.speed - 1) < 1e-6 else f"  ·  ×{clip.speed:g}")
         p.drawText(QRectF(tx, rect.top(), rect.right() - tx, rect.height() - 8), Qt.AlignLeft | Qt.AlignVCenter, label)
         # ключевые кадры элемента — ромбики внизу клипа
         p.setPen(Qt.NoPen)
@@ -303,18 +331,23 @@ class TimelineCanvas(QWidget):
             p.drawRoundedRect(QRectF(rect.right() - 3, rect.top() + 6, 3, rect.height() - 12), 1.5, 1.5)
         p.setRenderHint(QPainter.Antialiasing, False)
 
-    def _paint_clip(self, p: QPainter, clip, start, y, cur, enabled):
+    def _paint_clip(self, p: QPainter, clip, start, y, cur, enabled, length=None):
         fps = max(1, self.project.fps)
-        end = start + max(1, round(clip.duration * fps))
+        end = start + (length if length is not None else max(1, round(clip.duration * fps)))
         x0, x1 = self.frame_x(start), self.frame_x(end)
         if x1 < HEAD_W or x0 > self.width():
             return
         rect = QRectF(x0 + 1, y + 3, x1 - x0 - 2, ROW_H - 6)
         p.setRenderHint(QPainter.Antialiasing)
         base = QColor("#2a6b4d" if cur else "#24563f") if enabled else QColor("#3a3f47")
-        p.setPen(QPen(C_AUDIO, 1) if cur else Qt.NoPen)
+        selected = self.project.selection == ("clip", clip.id)
+        p.setPen(QPen(QColor("#ffffff") if selected else C_AUDIO, 2 if selected else 1) if (cur or selected)
+                 else Qt.NoPen)
         p.setBrush(base)
         p.drawRoundedRect(rect, 4, 4)
+        trim_shift = 0.0
+        if self._drag is not None and self._drag[0] == clip.id and self._drag[3] == "left":
+            trim_shift = (start - clip.start) / fps * clip.speed  # при обрезке слева волна не «едет»
         if clip.peaks:
             mid = rect.center().y() + 4
             half = rect.height() / 2 - 6
@@ -323,20 +356,41 @@ class TimelineCanvas(QWidget):
             p.setPen(QPen(QColor("#9be3bf" if enabled else "#6b7280"), 1))
             xi = int(vis0)
             while xi < vis1:
-                t0 = (xi - rect.left()) / px_per_sec
+                t0 = clip.offset + trim_shift + (xi - rect.left()) / px_per_sec * clip.speed
                 i0 = int(t0 * PEAKS_PER_SECOND)
-                i1 = max(i0 + 1, int((t0 + 1 / px_per_sec) * PEAKS_PER_SECOND))
-                chunk = clip.peaks[i0:i1]
+                i1 = max(i0 + 1, int((t0 + clip.speed / px_per_sec) * PEAKS_PER_SECOND))
+                chunk = clip.peaks[max(0, i0):i1]
                 if chunk:
                     h = max(0.5, max(chunk) * half)
                     p.drawLine(QPointF(xi + 0.5, mid - h), QPointF(xi + 0.5, mid + h))
                 xi += 1
+        # нарастание и затухание — светлые «уголки»
+        p.setPen(QPen(QColor(255, 255, 255, 150), 1))
+        if clip.fade_in > 0:
+            fx = min(rect.right(), rect.left() + clip.fade_in * fps * self.cell_w)
+            p.drawLine(QPointF(rect.left(), rect.bottom()), QPointF(fx, rect.top()))
+        if clip.fade_out > 0:
+            fx = max(rect.left(), rect.right() - clip.fade_out * fps * self.cell_w)
+            p.drawLine(QPointF(fx, rect.top()), QPointF(rect.right(), rect.bottom()))
         p.setPen(QColor("#e6fff2"))
         f = QFont(self.font())
         f.setPixelSize(11)
         p.setFont(f)
-        p.drawText(QRectF(max(rect.left(), HEAD_W) + 6, rect.top(), rect.width(), 14),
-                   Qt.AlignLeft | Qt.AlignVCenter, clip.name)
+        tx = max(rect.left(), HEAD_W) + 6
+        if clip.link:
+            p.drawPixmap(QPointF(tx, rect.top() + 1), icons.pixmap("link", "#e6fff2", 12))
+            tx += 15
+        label = clip.name
+        if abs(clip.volume - 1) > 1e-3:
+            label += f"  ·  {round(clip.volume * 100)}%"
+        if abs(clip.speed - 1) > 1e-3:
+            label += f"  ·  ×{clip.speed:g}"
+        p.drawText(QRectF(tx, rect.top(), rect.right() - tx, 14), Qt.AlignLeft | Qt.AlignVCenter, label)
+        if selected:
+            p.setBrush(QColor("#ffffff"))
+            p.setPen(Qt.NoPen)
+            p.drawRoundedRect(QRectF(rect.left(), rect.top() + 6, 3, rect.height() - 12), 1.5, 1.5)
+            p.drawRoundedRect(QRectF(rect.right() - 3, rect.top() + 6, 3, rect.height() - 12), 1.5, 1.5)
         p.setRenderHint(QPainter.Antialiasing, False)
 
     def _paint_ruler(self, p: QPainter, first, last):
@@ -455,6 +509,7 @@ class TimelineCanvas(QWidget):
                 self.update()
             else:
                 proj.set_track(r)
+                proj.select(("track", track.id))
                 if e.button() == Qt.RightButton:
                     self._menu([("Переименовать…", lambda: self._rename(r)), None,
                                 "track_add_video", "track_add_audio", None, "track_delete"],
@@ -474,19 +529,22 @@ class TimelineCanvas(QWidget):
             return
         proj.set_track(r)
         track = proj.tracks[r]
-        clip = track.clip_at(f, proj.fps) if not track.animation else None
-        if clip is not None and hasattr(clip, "transform"):
+        clip = self._clip_near(track, x) if not track.animation else None
+        if clip is not None:
             proj.select(("clip", clip.id))
         elif track.animation and proj.draw_layer() is not None:
             proj.select(("layer", proj.draw_layer().id))
         if clip is not None and e.button() == Qt.LeftButton and not track.locked:
             mode = "move"
-            if hasattr(clip, "transform"):
-                xl, xr = self.frame_x(clip.start), self.frame_x(clip.end_frame())
-                if abs(x - xl) <= 7:
-                    mode = "left"
-                elif abs(x - xr) <= 7:
-                    mode = "right"
+            xl, xr = self.frame_x(clip.start), self.frame_x(clip.end_frame(proj.fps))
+            alt = bool(e.modifiers() & Qt.AltModifier)
+            if abs(x - xl) <= 7:
+                mode = "sleft" if alt else "left"
+            elif abs(x - xr) <= 7:
+                mode = "sright" if alt else "right"
+            if mode != "move":
+                self.window().statusBar().showMessage(
+                    "Alt + край — сжать/растянуть (меняется скорость)" if not alt else "Сжатие/растяжение клипа", 2500)
             self._drag = (clip.id, f, track, mode)
             self._drag_delta = 0
             self._drag_row = r
@@ -544,13 +602,30 @@ class TimelineCanvas(QWidget):
             self._drag = None
             self._drag_delta = 0
             self.unsetCursor()
-            if found is not None and mode != "move":
+            if found is not None and mode in ("sleft", "sright"):
+                clip = found[1]
+                start, length = geom
+                old = self._clip_len(clip)
+                if length != old:
+                    speed = clip.speed * old / length
+                    attrs = {"start": start, "speed": speed}
+                    if hasattr(clip, "length"):
+                        attrs["length"] = length
+                    else:
+                        attrs["duration"] = length / proj.fps
+                    if getattr(clip, "kind", "audio") == "image":
+                        attrs.pop("speed")
+                    if not proj.track_free_for(clip_id, start, length):
+                        self.window().statusBar().showMessage("Клип упирается в соседний на дорожке", 3000)
+                    else:
+                        proj.set_clip_attrs(clip_id, "Сжать/растянуть клип", **attrs)
+            elif found is not None and mode != "move":
                 clip = found[1]
                 start, length = geom
                 offset = None
-                if mode == "left" and clip.kind == "video":
+                if mode == "left" and getattr(clip, "kind", "audio") in ("video", "audio"):
                     offset = clip.offset + (start - clip.start) / proj.fps * clip.speed
-                if (start, length) != (clip.start, clip.length):
+                if (start, length) != (clip.start, self._clip_len(clip)):
                     proj.trim_clip(clip_id, start, length, offset)
             elif found is not None:
                 clip = found[1]

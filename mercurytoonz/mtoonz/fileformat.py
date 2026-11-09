@@ -92,12 +92,23 @@ def _clip_to_dict(c) -> dict:
         d = {"id": c.id, "type": c.kind, "media": c.media_id, "name": c.name, "start": c.start,
              "length": c.length, "offset": round(c.offset, 4), "speed": c.speed, "src_w": c.src_w,
              "src_h": c.src_h, "source_duration": round(c.source_duration, 4)}
+        if any(c.crop):
+            d["crop"] = [round(v, 4) for v in c.crop]
+        if c.link:
+            d["link"] = c.link
         tr = c.transform.to_dict()
         if tr:
             d["transform"] = tr
         return d
-    return {"id": c.id, "type": "audio", "media": c.media_id, "name": c.name, "start": c.start,
-            "duration": round(c.duration, 4), "volume": c.volume}
+    d = {"id": c.id, "type": "audio", "media": c.media_id, "name": c.name, "start": c.start,
+         "duration": round(c.duration, 4), "volume": c.volume}
+    for k in ("offset", "speed", "fade_in", "fade_out", "source_duration"):
+        v = getattr(c, k)
+        if v != (1.0 if k == "speed" else 0.0):
+            d[k] = round(v, 4)
+    if c.link:
+        d["link"] = c.link
+    return d
 
 
 def _clip_from_dict(d: dict, media: dict) -> AudioClip:
@@ -105,10 +116,18 @@ def _clip_from_dict(d: dict, media: dict) -> AudioClip:
                   float(d.get("volume", 1.0)))
     if d.get("id"):
         c.id = d["id"]
+    c.offset = float(d.get("offset", 0.0))
+    c.speed = float(d.get("speed", 1.0))
+    c.fade_in = float(d.get("fade_in", 0.0))
+    c.fade_out = float(d.get("fade_out", 0.0))
+    c.link = str(d.get("link", ""))
     try:
-        c.duration, c.peaks = audio.analyze_wav(media[c.media_id])
+        full, c.peaks = audio.analyze_wav(media[c.media_id])
+        c.source_duration = full
+        if c.duration <= 0:  # старые проекты: длина клипа = длина файла
+            c.duration = full
     except Exception:  # файл не читается — оставим длительность из проекта
-        pass
+        c.source_duration = float(d.get("source_duration", c.duration))
     return c
 
 
@@ -137,6 +156,10 @@ def _track_from_dict(d: dict, media: dict) -> Track | None:
                            float(cd.get("source_duration", 0)), Transform.from_dict(cd.get("transform")))
             if cd.get("id"):
                 c.id = cd["id"]
+            crop = cd.get("crop")
+            if isinstance(crop, list) and len(crop) == 4:
+                c.crop = tuple(float(v) for v in crop)
+            c.link = str(cd.get("link", ""))
             t.clips.append(c)
         else:
             t.raw_clips.append(cd)

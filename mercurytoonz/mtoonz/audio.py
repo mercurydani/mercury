@@ -146,11 +146,14 @@ class AudioPlayback:
                 if item is None:
                     continue
                 player, out = item
-                out.setVolume(clip.volume if clip.id in audible else 0.0)
+                local = (frame - clip.start) / fps                 # секунды от начала клипа
+                out.setVolume(clip.gain_at(local) if clip.id in audible else 0.0)
                 inside = clip.start <= frame < clip.end_frame(fps)
                 playing = player.playbackState() == player.PlaybackState.PlayingState
+                if abs(player.playbackRate() - clip.speed) > 1e-3:
+                    player.setPlaybackRate(clip.speed)
                 if inside and (jumped or not playing):
-                    player.setPosition(int((frame - clip.start) / fps * 1000))
+                    player.setPosition(int((clip.offset + local * clip.speed) * 1000))
                     player.play()
                 elif not inside and playing:
                     player.pause()

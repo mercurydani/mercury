@@ -131,6 +131,7 @@ class LayerList(QWidget):
             self.update()
             return
         proj.set_layer(r)
+        proj.select(("layer", layer.id))
         if e.button() == Qt.LeftButton:
             self._press_row = r
         elif e.button() == Qt.RightButton:

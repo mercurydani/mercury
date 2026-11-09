@@ -1,0 +1,70 @@
+name: MercuryToonz — сборка для Windows
+
+on:
+  push:
+    paths:
+      - "mercurytoonz/**"
+      - ".github/workflows/mercurytoonz-windows.yml"
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: mercurytoonz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller==6.22.3
+
+      - name: Тесты
+        continue-on-error: true
+        env:
+          QT_QPA_PLATFORM: offscreen
+          PYTHONUTF8: "1"
+        run: python -m unittest discover -s tests
+
+      - name: Сборка .exe
+        run: pyinstaller --noconfirm --clean MercuryToonz.spec
+
+      - name: Самопроверка собранной программы
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $p = Start-Process -FilePath "dist/MercuryToonz/MercuryToonz.exe" -ArgumentList "--self-test", "selftest.txt" -Wait -PassThru
+          Get-Content -Encoding utf8 selftest.txt
+          if ($p.ExitCode -ne 0) { throw "Самопроверка не прошла (код $($p.ExitCode))" }
+
+      - name: Подготовка папки программы
+        shell: pwsh
+        run: |
+          $ver = (Select-String -Path mtoonz/__init__.py -Pattern 'APP_VERSION = "(.+)"').Matches[0].Groups[1].Value
+          Copy-Item README.md dist/MercuryToonz/
+          Copy-Item selftest.txt dist/MercuryToonz/"самопроверка.txt"
+          Set-Content -Encoding utf8 dist/MercuryToonz/"ЗАПУСК.txt" @"
+          MercuryToonz $ver — Mercury Studio (mercurystudio.pro)
+
+          1. Распакуйте архив в любую папку (например, «Документы\MercuryToonz»).
+          2. Запустите MercuryToonz.exe.
+          3. Если Windows покажет «Система Windows защитила ваш компьютер» — нажмите
+             «Подробнее» → «Выполнить в любом случае»: программа пока не подписана сертификатом.
+
+          Проекты сохраняются в «Документы\MercuryToonz». Ошибки и идеи: pomazkovdaniil42@gmail.com
+          "@
+          "VER=$ver" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MercuryToonz-${{ env.VER }}-windows
+          path: mercurytoonz/dist/MercuryToonz
+          retention-days: 30
