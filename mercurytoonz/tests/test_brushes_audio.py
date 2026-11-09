@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from mtoonz import audio, fileformat  # noqa: E402
 from mtoonz.brushes import ERASER_PRESETS, PRESETS, BrushParams, draw_brush_stroke, preview_points  # noqa: E402
-from mtoonz.model import AudioLayer, Project, Stroke  # noqa: E402
+from mtoonz.model import Project, Stroke  # noqa: E402
 
 app = QApplication.instance() or QApplication(sys.argv)
 
@@ -63,37 +63,66 @@ class AudioTest(unittest.TestCase):
         self.assertEqual(len(peaks), 150)
         self.assertAlmostEqual(max(peaks), 12000 / 32768, places=2)
 
-    def test_audio_layer_saved_inside_project(self):
+    def test_audio_clip_saved_inside_project(self):
         wav = os.path.join(self.dir.name, "voice.wav")
         sine_wav(wav, 2.0)
         p = Project()
         p.reset(name="Звук", fps=24, frame_count=24)
+        self.assertEqual([t.kind for t in p.tracks], ["video", "audio"])
         dur, peaks = audio.analyze_wav(wav)
-        p.add_audio_layer("Голос", "m1", wav, 10, dur, peaks)
+        clip = p.add_audio_clip("Голос", "m1", wav, 10, dur, peaks)
         self.assertEqual(p.frame_count, 10 + 48)  # сцена удлинилась под звук
-        layer = p.layers[-1]
-        self.assertIsInstance(layer, AudioLayer)
-        p.move_audio(layer, 4)
-        self.assertEqual(layer.start, 4)
+        self.assertIs(p.tracks[1].clips[0], clip)
+        self.assertTrue(p.move_clip(clip.id, 4))
+        self.assertEqual(p.tracks[1].clips[0].start, 4)
         p.undo_stack.undo()
-        self.assertEqual(layer.start, 10)
-        # на звуковом слое нельзя ставить ключи и рисовать
-        p.set_layer(len(p.layers) - 1)
-        p.insert_keyframe()
-        p.add_stroke(Stroke(((0, 0, 1), (5, 5, 1)), QColor("red"), 3))
-        self.assertEqual(layer.keys, {})
+        self.assertEqual(p.tracks[1].clips[0].start, 10)
+        # второй клип в то же место уходит на новую дорожку, а не поверх первого
+        p.add_audio_clip("Музыка", "m2", wav, 12, dur, peaks)
+        self.assertEqual([len(t.clips) for t in p.tracks if t.kind == "audio"], [1, 1])
+        # перенос между дорожками и запрет наложения
+        a1, a2 = [t for t in p.tracks if t.kind == "audio"]
+        self.assertFalse(p.move_clip(a2.clips[0].id, 12, a1))
+        self.assertTrue(p.move_clip(a2.clips[0].id, 60, a1))
+        self.assertEqual((len(a1.clips), len(a2.clips)), (2, 0))
+        # видеодорожки добавляются над звуком; «Анимацию» удалить нельзя
+        p.add_track("video")
+        self.assertEqual([t.kind for t in p.tracks], ["video", "video", "audio", "audio"])
+        p.set_track(0)
+        p.delete_track()
+        self.assertTrue(p.tracks[0].animation)
 
         path = os.path.join(self.dir.name, "p.mtoonz")
         fileformat.save_project(p, path)
         os.remove(wav)  # исходник удалён — звук должен быть внутри проекта
         q = Project()
         fileformat.load_project(path, q)
-        a = q.layers[-1]
-        self.assertIsInstance(a, AudioLayer)
-        self.assertEqual((a.name, a.start, a.media_id), ("Голос", 10, "m1"))
-        self.assertAlmostEqual(a.duration, 2.0, places=3)
+        self.assertEqual([t.kind for t in q.tracks], ["video", "video", "audio", "audio"])
+        clips = q.tracks[2].clips
+        self.assertEqual(sorted((c.name, c.start) for c in clips), [("Голос", 10), ("Музыка", 60)])
+        self.assertAlmostEqual(clips[0].duration, 2.0, places=3)
         self.assertTrue(os.path.exists(q.media["m1"]))
-        self.assertEqual(len(a.peaks), 200)
+        self.assertEqual(len(clips[0].peaks), 200)
+
+    def test_v1_audio_layers_become_tracks(self):
+        import json
+        import zipfile
+        wav = os.path.join(self.dir.name, "v.wav")
+        sine_wav(wav, 1.0)
+        path = os.path.join(self.dir.name, "old.mtoonz")
+        data = {"format": "mercurytoonz", "version": 1, "name": "Старый",
+                "scene": {"width": 640, "height": 360, "fps": 12, "frames": 24},
+                "layers": [{"id": "a", "type": "drawing", "name": "Слой 1", "keys": {"0": {"strokes": []}}},
+                           {"id": "b", "type": "audio", "name": "Запись 1", "media": "m1", "start": 3}],
+                "media": [{"id": "m1", "file": "media/m1.wav"}]}
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr("project.json", json.dumps(data))
+            z.write(wav, "media/m1.wav")
+        q = Project()
+        fileformat.load_project(path, q)
+        self.assertEqual([l.name for l in q.layers], ["Слой 1"])
+        self.assertEqual([t.kind for t in q.tracks], ["video", "audio"])
+        self.assertEqual((q.tracks[1].clips[0].name, q.tracks[1].clips[0].start), ("Запись 1", 3))
 
     def test_brush_saved(self):
         p = Project()
@@ -151,7 +180,7 @@ class UiTest(unittest.TestCase):
         self.assertLess(abs(top - c.to_scene(QPoint(450, 380).toPointF()).y()), 2)
         p.undo_stack.setClean()
 
-    def test_timeline_paints_audio_layer(self):
+    def test_timeline_and_layers_panel_paint(self):
         from mtoonz.app import MainWindow
         w = MainWindow()
         w.resize(1200, 800)
@@ -160,12 +189,18 @@ class UiTest(unittest.TestCase):
         wav = os.path.join(d, "a.wav")
         sine_wav(wav, 1.0)
         dur, peaks = audio.analyze_wav(wav)
-        w.project.add_audio_layer("Звук", "m", wav, 2, dur, peaks)
-        for cur in (0, 1):  # звуковой слой выбран и не выбран
-            w.project.set_layer(cur)
+        w.project.add_audio_clip("Звук", "m", wav, 2, dur, peaks)
+        w.project.add_track("video")
+        w.project.add_layer()
+        for cur in range(len(w.project.tracks)):  # звуковая дорожка выбрана и не выбрана
+            w.project.set_track(cur)
             self.assertFalse(w.timeline.canvas.grab().isNull())
+        self.assertFalse(w.layers_panel.grab().isNull())
+        # перетаскивание слоя в панели меняет порядок
+        names = [l.name for l in w.project.layers]
+        w.project.move_layer_to(0, 1)
+        self.assertEqual([l.name for l in w.project.layers], names[::-1])
         w.project.undo_stack.setClean()
-
 
 if __name__ == "__main__":
     unittest.main()

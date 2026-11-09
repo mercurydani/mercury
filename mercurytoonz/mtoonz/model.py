@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QColor, QUndoCommand, QUndoStack
@@ -89,28 +89,61 @@ class Layer:
         self.keys = {k: d.copy() for k, d in keys.items()}
 
 
-class AudioLayer(Layer):
-    """Звуковая дорожка: один звуковой клип, начинающийся с кадра `start`."""
+@dataclass
+class AudioClip:
+    """Звуковой клип на звуковой дорожке."""
 
-    type = "audio"
-
-    def __init__(self, name: str, media_id: str, layer_id: str | None = None):
-        super().__init__(name, layer_id)
-        self.tag = "#3fbf7f"
-        self.media_id = media_id
-        self.start = 0           # первый кадр клипа
-        self.volume = 1.0
-        self.duration = 0.0      # длительность звука, секунды
-        self.peaks: list[float] = []   # уровни громкости (100 значений в секунду) для волны
+    media_id: str
+    name: str
+    start: int = 0             # первый кадр
+    duration: float = 0.0      # секунды
+    volume: float = 1.0
+    peaks: list = field(default_factory=list, repr=False, compare=False)  # волна, 100 значений в секунду
+    id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
 
     def end_frame(self, fps: int) -> int:
         return self.start + max(1, round(self.duration * fps))
 
+    def copy(self) -> "AudioClip":
+        return replace(self)
+
+
+class Track:
+    """Дорожка таймлайна: видео ("video") или звук ("audio").
+
+    Первая видеодорожка с animation=True показывает нарисованную анимацию (все рисованные слои).
+    В остальные видеодорожки на следующих шагах будут попадать видео, картинки и GIF.
+    """
+
+    def __init__(self, kind: str, name: str, track_id: str | None = None, animation: bool = False):
+        self.id = track_id or uuid.uuid4().hex[:12]
+        self.kind = kind
+        self.name = name
+        self.animation = animation
+        self.enabled = True   # видимость видео / звук включён
+        self.locked = False
+        self.clips: list[AudioClip] = []
+        self.raw_clips: list = []   # клипы незнакомого типа из более новых версий — храним как есть
+
     def get_state(self):
-        return (self.name, self.start, self.volume)
+        return (self.name, [c.copy() for c in self.clips])
 
     def set_state(self, state):
-        self.name, self.start, self.volume = state
+        self.name, clips = state
+        self.clips = [c.copy() for c in clips]
+
+    def clip_at(self, frame: int, fps: int) -> AudioClip | None:
+        for c in self.clips:
+            if c.start <= frame < c.end_frame(fps):
+                return c
+        return None
+
+    def is_free(self, start: int, end: int, fps: int, ignore: AudioClip | None = None) -> bool:
+        return all(c is ignore or c.end_frame(fps) <= start or c.start >= end for c in self.clips)
+
+
+def default_tracks() -> list[Track]:
+    return [Track("video", "Анимация", animation=True), Track("audio", "Звук 1")]
 
 
 class Project(QObject):
@@ -131,7 +164,9 @@ class Project(QObject):
         self.fps = 24
         self.frame_count = 48
         self.background = QColor("#ffffff")
-        self.layers: list[Layer] = []  # индекс 0 — верхний слой
+        self.layers: list[Layer] = []  # рисованные слои, индекс 0 — верхний
+        self.tracks: list[Track] = []  # дорожки таймлайна сверху вниз
+        self.current_track = 0
         self.media: dict[str, str] = {}  # id медиафайла -> путь к файлу на диске
         self.current_frame = 0
         self.current_layer = 0
@@ -149,6 +184,7 @@ class Project(QObject):
         self.width, self.height, self.fps, self.frame_count = width, height, fps, frame_count
         self.layers = [Layer("Слой 1")]
         self.layers[0].keys[0] = Drawing()
+        self.tracks = default_tracks()
         self.media = {}
         self._after_load()
 
@@ -156,6 +192,7 @@ class Project(QObject):
         """Сбрасывает историю и оповещает интерфейс после создания или загрузки проекта."""
         self.current_frame = 0
         self.current_layer = 0
+        self.current_track = 0
         self.undo_stack.clear()
         self.undo_stack.setClean()
         self._extra_dirty = False
@@ -209,6 +246,7 @@ class Project(QObject):
     def _snapshot(self):
         return {
             "layers": [(l, l.get_state()) for l in self.layers],
+            "tracks": [(t, t.get_state()) for t in self.tracks],
             "frame_count": self.frame_count,
             "scene": (self.width, self.height, self.fps, QColor(self.background)),
             "current_layer": self.current_layer,
@@ -219,6 +257,11 @@ class Project(QObject):
         for layer, state in snap["layers"]:
             layer.set_state(state)
             self.layers.append(layer)
+        self.tracks = []
+        for track, state in snap["tracks"]:
+            track.set_state(state)
+            self.tracks.append(track)
+        self.current_track = min(self.current_track, len(self.tracks) - 1)
         self.frame_count = snap["frame_count"]
         scene = (self.width, self.height)
         self.width, self.height, self.fps, self.background = snap["scene"]
@@ -368,33 +411,148 @@ class Project(QObject):
 
         self.edit("Переместить слой", do)
 
+    def move_layer_to(self, src: int, dst: int):
+        """Перетаскивание слоя в панели «Слои»."""
+        n = len(self.layers)
+        if not (0 <= src < n) or not (0 <= dst < n) or src == dst:
+            return
+
+        def do():
+            layer = self.layers.pop(src)
+            self.layers.insert(dst, layer)
+            self.current_layer = dst
+
+        self.edit("Переместить слой", do)
+
     def rename_layer(self, index: int, name: str):
         layer = self.layers[index]
         if name and name != layer.name:
             self.edit("Переименовать слой", lambda: setattr(layer, "name", name))
 
-    # ---------- звук ----------
-    def add_audio_layer(self, name: str, media_id: str, path: str, start: int, duration: float, peaks):
-        self.media[media_id] = path
+    # ---------- дорожки ----------
+    def track(self) -> Track | None:
+        if 0 <= self.current_track < len(self.tracks):
+            return self.tracks[self.current_track]
+        return None
+
+    def set_track(self, index: int):
+        index = max(0, min(index, len(self.tracks) - 1))
+        if index != self.current_track:
+            self.current_track = index
+            self.structureChanged.emit()
+
+    def add_track(self, kind: str):
+        n = sum(1 for t in self.tracks if t.kind == kind) + 1
+        if kind == "video":
+            n = sum(1 for t in self.tracks if t.kind == "video" and not t.animation) + 1
 
         def do():
-            layer = AudioLayer(name, media_id)
-            layer.start = start
-            layer.duration = duration
-            layer.peaks = peaks
-            # звук кладём под рисованные слои
-            self.layers.append(layer)
-            self.current_layer = len(self.layers) - 1
-            end = layer.end_frame(self.fps)
+            track = Track(kind, f"Видео {n}" if kind == "video" else f"Звук {n}")
+            if kind == "video":
+                # видео — над звуком: после последней видеодорожки
+                idx = max((i for i, t in enumerate(self.tracks) if t.kind == "video"), default=-1) + 1
+            else:
+                idx = len(self.tracks)
+            self.tracks.insert(idx, track)
+            self.current_track = idx
+
+        self.edit("Новая видеодорожка" if kind == "video" else "Новая звуковая дорожка", do)
+
+    def delete_track(self):
+        track = self.track()
+        if track is None or track.animation:
+            return
+
+        def do():
+            self.tracks.remove(track)
+            self.current_track = min(self.current_track, len(self.tracks) - 1)
+
+        self.edit("Удалить дорожку", do)
+
+    def rename_track(self, index: int, name: str):
+        track = self.tracks[index]
+        if name and name != track.name:
+            self.edit("Переименовать дорожку", lambda: setattr(track, "name", name))
+
+    def _audio_track_for(self, start: int, end: int) -> Track:
+        """Текущая звуковая дорожка, если на ней свободно, иначе первая свободная, иначе новая."""
+        cur = self.track()
+        order = ([cur] if cur is not None and cur.kind == "audio" else []) + \
+                [t for t in self.tracks if t.kind == "audio" and t is not cur]
+        for t in order:
+            if not t.locked and t.is_free(start, end, self.fps):
+                return t
+        n = sum(1 for t in self.tracks if t.kind == "audio") + 1
+        t = Track("audio", f"Звук {n}")
+        self.tracks.append(t)
+        return t
+
+    # ---------- звук ----------
+    def add_audio_clip(self, name: str, media_id: str, path: str, start: int, duration: float, peaks) -> AudioClip:
+        self.media[media_id] = path
+        clip = AudioClip(media_id, name, start, duration, 1.0, peaks)
+
+        def do():
+            track = self._audio_track_for(start, clip.end_frame(self.fps))
+            track.clips.append(clip)
+            self.current_track = self.tracks.index(track)
+            end = clip.end_frame(self.fps)
             if end > self.frame_count:
                 self.frame_count = end
 
         self.edit("Добавить звук", do)
+        return clip
 
-    def move_audio(self, layer: "AudioLayer", start: int):
+    def find_clip(self, clip_id: str) -> tuple[Track, AudioClip] | None:
+        for t in self.tracks:
+            for c in t.clips:
+                if c.id == clip_id:
+                    return t, c
+        return None
+
+    def move_clip(self, clip_id: str, start: int, to_track: Track | None = None) -> bool:
+        found = self.find_clip(clip_id)
+        if found is None:
+            return False
+        src, clip = found
+        dst = to_track or src
         start = max(0, start)
-        if start != layer.start:
-            self.edit("Сдвинуть звук", lambda: setattr(layer, "start", start))
+        if dst.kind != "audio" or dst.locked:
+            return False
+        if start == clip.start and dst is src:
+            return False
+        if not dst.is_free(start, start + clip.end_frame(self.fps) - clip.start, self.fps, ignore=clip):
+            return False
+
+        def do():
+            f = self.find_clip(clip_id)
+            t, c = f
+            c.start = start
+            if dst is not t:
+                t.clips.remove(c)
+                dst.clips.append(c)
+                self.current_track = self.tracks.index(dst)
+
+        self.edit("Сдвинуть звук", do)
+        return True
+
+    def delete_clip(self, clip_id: str):
+        found = self.find_clip(clip_id)
+        if found is None:
+            return
+
+        def do():
+            t, c = self.find_clip(clip_id)
+            t.clips.remove(c)
+
+        self.edit("Удалить звук", do)
+
+    def audio_clips(self):
+        """Все слышимые клипы: (дорожка, клип)."""
+        return [(t, c) for t in self.tracks if t.kind == "audio" and t.enabled for c in t.clips]
+
+    def animation_enabled(self) -> bool:
+        return any(t.enabled for t in self.tracks if t.animation) or not any(t.animation for t in self.tracks)
 
     def set_scene(self, width: int, height: int, fps: int, frame_count: int):
         if (width, height, fps, frame_count) == (self.width, self.height, self.fps, self.frame_count):

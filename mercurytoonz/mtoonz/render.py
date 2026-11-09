@@ -25,14 +25,22 @@ def draw_drawing(p: QPainter, drawing: Drawing | None):
 
 
 def render_frame(project: Project, frame: int, max_width: int | None = None,
-                 background: bool = True) -> QImage:
-    """Кадр сцены целиком (все видимые слои). max_width — уменьшить для превью."""
-    scale = 1.0
-    if max_width and project.width > max_width:
-        scale = max_width / project.width
-    w, h = max(1, round(project.width * scale)), max(1, round(project.height * scale))
+                 background: bool = True, size: tuple[int, int] | None = None) -> QImage:
+    """Кадр сцены целиком (все видимые слои).
+    max_width — уменьшить для превью; size — точный размер результата (для экспорта)."""
+    if size is not None:
+        w, h = size
+        sx, sy = w / project.width, h / project.height
+    else:
+        scale = 1.0
+        if max_width and project.width > max_width:
+            scale = max_width / project.width
+        w, h = max(1, round(project.width * scale)), max(1, round(project.height * scale))
+        sx = sy = scale
     out = QImage(w, h, QImage.Format_ARGB32_Premultiplied)
     out.fill(project.background if background else QColor(0, 0, 0, 0))
+    if not project.animation_enabled():
+        return out
     p = QPainter(out)
     for layer in reversed(project.layers):
         if not layer.visible:
@@ -44,7 +52,7 @@ def render_frame(project: Project, frame: int, max_width: int | None = None,
         buf.fill(Qt.transparent)
         bp = QPainter(buf)
         bp.setRenderHint(QPainter.Antialiasing)
-        bp.scale(scale, scale)
+        bp.scale(sx, sy)
         bp.setClipRect(QRectF(0, 0, project.width, project.height))
         draw_drawing(bp, drawing)
         bp.end()
@@ -62,3 +70,21 @@ def first_drawn_frame(project: Project) -> int:
             if not d.is_empty() and (best is None or k < best):
                 best = k
     return best or 0
+
+
+def render_thumb(project: Project, drawing: Drawing | None, w: int, h: int, dpr: float = 2.0) -> QImage:
+    """Миниатюра рисунка для панели слоёв (на прозрачном фоне)."""
+    img = QImage(int(w * dpr), int(h * dpr), QImage.Format_ARGB32_Premultiplied)
+    img.setDevicePixelRatio(dpr)
+    img.fill(Qt.transparent)
+    if drawing is None or drawing.is_empty():
+        return img
+    s = min(w / project.width, h / project.height)
+    p = QPainter(img)
+    p.setRenderHint(QPainter.Antialiasing)
+    p.translate((w - project.width * s) / 2, (h - project.height * s) / 2)
+    p.scale(s, s)
+    p.setClipRect(QRectF(0, 0, project.width, project.height))
+    draw_drawing(p, drawing)
+    p.end()
+    return img

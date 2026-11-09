@@ -39,14 +39,15 @@ def about_html() -> str:
 <h3>Сведения о сборке</h3>
 <table>
 <tr><td class=muted>Версия программы</td><td>{APP_VERSION}</td></tr>
-<tr><td class=muted>Формат проекта</td><td>.mtoonz, версия 1</td></tr>
+<tr><td class=muted>Формат проекта</td><td>.mtoonz, версия 2</td></tr>
 <tr><td class=muted>Python</td><td>{platform.python_version()}</td></tr>
 <tr><td class=muted>Qt / PySide6</td><td>{qVersion()} / {PYSIDE_VERSION}</td></tr>
 <tr><td class=muted>Система</td><td>{platform.system()} {platform.release()} ({platform.machine()})</td></tr>
 </table>
 <h3>Сторонние компоненты</h3>
 <p>Интерфейс построен на <a href="https://www.qt.io/qt-for-python">Qt for Python (PySide6)</a>,
-лицензия LGPL v3. Работа со звуком использует Qt Multimedia и FFmpeg (LGPL v2.1+).</p>
+лицензия LGPL v3. Работа со звуком использует Qt Multimedia, экспорт — FFmpeg из пакета imageio-ffmpeg
+(LGPL/GPL, в зависимости от сборки).</p>
 """
 
 
@@ -78,6 +79,8 @@ def privacy_html() -> str:
 <li><b>Микрофон.</b> Программа обращается к микрофону только во время записи в окне «Запись звука»
 — после нажатия кнопки «Записать». Запись сохраняется во временный файл на вашем компьютере,
 а после сохранения проекта — внутри файла проекта.</li>
+<li><b>Экспорт.</b> Видео, GIF, картинки и звук создаются на вашем компьютере с помощью встроенного
+FFmpeg и сохраняются туда, куда вы укажете.</li>
 <li><b>Временные файлы.</b> Звук открытых проектов распаковывается во временную папку системы.</li>
 </ul>
 

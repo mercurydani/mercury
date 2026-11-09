@@ -116,16 +116,16 @@ class AudioPlayback:
         self.players: dict[str, tuple] = {}  # id слоя -> (QMediaPlayer, QAudioOutput)
         self._last_frame = -1
 
-    def _player(self, layer):
+    def _player(self, clip):
         from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-        item = self.players.get(layer.id)
-        path = self.project.media.get(layer.media_id)
+        item = self.players.get(clip.id)
+        path = self.project.media.get(clip.media_id)
         if item is None and path:
             player, out = QMediaPlayer(), QAudioOutput()
             player.setAudioOutput(out)
             player.setSource(QUrl.fromLocalFile(path))
             item = (player, out)
-            self.players[layer.id] = item
+            self.players[clip.id] = item
         return item
 
     def start(self, frame: int):
@@ -137,21 +137,23 @@ class AudioPlayback:
         jumped = force or frame != self._last_frame + 1
         self._last_frame = frame
         fps = max(1, self.project.fps)
-        for layer in self.project.layers:
-            if layer.type != "audio":
+        audible = {c.id for _t, c in self.project.audio_clips()}
+        for track in self.project.tracks:
+            if track.kind != "audio":
                 continue
-            item = self._player(layer)
-            if item is None:
-                continue
-            player, out = item
-            out.setVolume(layer.volume if layer.visible else 0.0)
-            inside = layer.start <= frame < layer.end_frame(fps)
-            playing = player.playbackState() == player.PlaybackState.PlayingState
-            if inside and (jumped or not playing):
-                player.setPosition(int((frame - layer.start) / fps * 1000))
-                player.play()
-            elif not inside and playing:
-                player.pause()
+            for clip in track.clips:
+                item = self._player(clip)
+                if item is None:
+                    continue
+                player, out = item
+                out.setVolume(clip.volume if clip.id in audible else 0.0)
+                inside = clip.start <= frame < clip.end_frame(fps)
+                playing = player.playbackState() == player.PlaybackState.PlayingState
+                if inside and (jumped or not playing):
+                    player.setPosition(int((frame - clip.start) / fps * 1000))
+                    player.play()
+                elif not inside and playing:
+                    player.pause()
 
     def stop(self):
         for player, _out in self.players.values():

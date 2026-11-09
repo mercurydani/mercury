@@ -21,6 +21,8 @@ from .render import first_drawn_frame, render_frame
 from .state import TOOL_GROUP_STARTS, TOOLS, EditorState
 from .widgets.canvas import Canvas
 from .widgets.color_panel import ColorPanel
+from .widgets.export_dialog import ExportDialog
+from .widgets.layers_panel import LayersPanel
 from .widgets import project_browser as pb
 from .widgets.timeline import Timeline
 from .widgets.tool_options import ToolOptions
@@ -47,6 +49,7 @@ SHORTCUTS_HELP = """
 <table cellspacing=4>
 <tr><td><b>Ctrl+Shift+O</b></td><td>Проекты</td><td width=24></td><td><b>Ctrl+N</b></td><td>Новый проект</td></tr>
 <tr><td><b>Ctrl+S</b></td><td>Сохранить</td><td></td><td><b>Ctrl+Shift+S</b></td><td>Сохранить как</td></tr>
+<tr><td><b>Ctrl+E</b></td><td>Экспорт</td><td></td><td></td><td></td></tr>
 </table>
 <h3>Звук</h3>
 <table cellspacing=4>
@@ -102,8 +105,8 @@ class MainWindow(QMainWindow):
         self.resize(1480, 920)
         self.setWindowIcon(icons.icon("logo", theme.ACCENT))
         self.setDockNestingEnabled(True)
-        self.setCorner(Qt.BottomRightCorner, Qt.BottomDockWidgetArea)
-        self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
+        self.setCorner(Qt.BottomRightCorner, Qt.RightDockWidgetArea)  # слои — на всю высоту
+        self.setCorner(Qt.BottomLeftCorner, Qt.BottomDockWidgetArea)
 
         self.playback = audio.AudioPlayback(self.project)
         self.project.fileChanged.connect(self.playback.reset)
@@ -166,9 +169,12 @@ class MainWindow(QMainWindow):
         A("save", "Сохранить", "save", QKeySequence.Save, self.save)
         A("save_as", "Сохранить как…", None, QKeySequence.SaveAs, self.save_as)
         A("rename_project", "Переименовать проект…", None, None, self.rename_project)
-        A("export_video", "Видео (MP4)…", "export", None, self._soon("Экспорт видео"))
-        A("export_gif", "Анимированный GIF…", None, None, self._soon("Экспорт GIF"))
-        A("export_png", "Последовательность PNG…", None, None, self._soon("Экспорт PNG"))
+        A("export", "Экспорт…", "export", "Ctrl+E", lambda: self.export_dialog(),
+          tip="Экспорт в MP4, MOV, AVI, GIF, PNG или MP3")
+        for key, title in (("mp4", "Видео MP4…"), ("mov", "Видео MOV…"), ("avi", "Видео AVI…"),
+                           ("gif", "Анимированный GIF…"), ("png", "Последовательность PNG…"),
+                           ("mp3", "Только звук MP3…")):
+            A(f"export_{key}", title, None, None, lambda _=False, k=key: self.export_dialog(k))
         A("quit", "Выход", None, QKeySequence.Quit, self.close)
         # правка
         undo = p.undo_stack.createUndoAction(self, "Отменить")
@@ -214,8 +220,13 @@ class MainWindow(QMainWindow):
         A("layer_duplicate", "Дублировать слой", "duplicate", "Ctrl+Shift+D", p.duplicate_layer)
         A("layer_delete", "Удалить слой", "trash", None, p.delete_layer)
         A("layer_rename", "Переименовать слой…", None, "F2", self.rename_layer)
-        A("layer_up", "Слой выше", None, "Ctrl+Shift+Up", lambda: p.move_layer(-1))
-        A("layer_down", "Слой ниже", None, "Ctrl+Shift+Down", lambda: p.move_layer(1))
+        A("layer_up", "Слой выше", "up", "Ctrl+Shift+Up", lambda: p.move_layer(-1))
+        A("layer_down", "Слой ниже", "down", "Ctrl+Shift+Down", lambda: p.move_layer(1))
+        # дорожки
+        A("track_add_video", "Новая видеодорожка", "film", None, lambda: p.add_track("video"),
+          tip="Новая видеодорожка — для видео, картинок и GIF")
+        A("track_add_audio", "Новая звуковая дорожка", "audio-track", None, lambda: p.add_track("audio"))
+        A("track_delete", "Удалить дорожку", "trash", None, self.delete_track)
         # анимация
         A("play", "Воспроизвести", "play", ["Return", "Enter"], self.toggle_play,
           tip="Воспроизвести / пауза")
@@ -286,7 +297,7 @@ class MainWindow(QMainWindow):
         for k in ("undo", "redo"):
             tb.addAction(self.actions[k])
         tb.addSeparator()
-        tb.addAction(self.actions["export_video"])
+        tb.addAction(self.actions["export"])
         tb.addSeparator()
         tb.addAction(self.actions["record_audio"])
         tb.addAction(self.actions["import_audio"])
@@ -312,6 +323,7 @@ class MainWindow(QMainWindow):
         self.tool_options = ToolOptions(self.state)
         self.color_panel = ColorPanel(self.state)
         self.timeline = Timeline(self.project, self.state, self.actions)
+        self.layers_panel = LayersPanel(self.project, self.actions)
         tool_scroll = QScrollArea()
         tool_scroll.setWidget(self.tool_options)
         tool_scroll.setWidgetResizable(True)
@@ -334,20 +346,22 @@ class MainWindow(QMainWindow):
             lay.addWidget(body, 1)
             return box
 
-        # правая колонка: инструмент и цвет, граница между ними перетаскивается
+        # слева — настройки инструмента рядом с панелью инструментов
+        self.dock_tool = self._dock("Инструмент", tool_scroll, Qt.LeftDockWidgetArea, "dockTool")
+        # справа — цвет и под ним слои; граница перетаскивается
         self.props_split = QSplitter(Qt.Vertical)
         self.props_split.setHandleWidth(5)
         self.props_split.setChildrenCollapsible(False)
-        self.props_split.addWidget(section("Инструмент", tool_scroll))
         self.props_split.addWidget(section("Цвет", self.color_panel))
-        self.props_split.setStretchFactor(0, 3)
-        self.props_split.setStretchFactor(1, 2)
-        self.props_split.setSizes([620, 300])
-        self.dock_props = self._dock("Свойства", self.props_split, Qt.RightDockWidgetArea, "dockProps")
+        self.props_split.addWidget(section("Слои", self.layers_panel))
+        self.props_split.setStretchFactor(0, 0)
+        self.props_split.setStretchFactor(1, 1)
+        self.props_split.setSizes([320, 400])
+        self.dock_props = self._dock("Цвет и слои", self.props_split, Qt.RightDockWidgetArea, "dockProps")
         self.dock_props.setTitleBarWidget(QWidget())  # заголовки у секций свои
         self.dock_timeline = self._dock("Таймлайн", self.timeline, Qt.BottomDockWidgetArea, "dockTimeline")
-        self.resizeDocks([self.dock_props], [310], Qt.Horizontal)
-        self.resizeDocks([self.dock_timeline], [190], Qt.Vertical)
+        self.resizeDocks([self.dock_tool, self.dock_props], [270, 290], Qt.Horizontal)
+        self.resizeDocks([self.dock_timeline], [240], Qt.Vertical)
 
     def _create_menus(self):
         mb = self.menuBar()
@@ -361,7 +375,10 @@ class MainWindow(QMainWindow):
                 elif isinstance(it, tuple):
                     sub = m.addMenu(it[0])
                     for k in it[1]:
-                        sub.addAction(a[k])
+                        if k is None:
+                            sub.addSeparator()
+                        else:
+                            sub.addAction(a[k])
                 elif isinstance(it, QAction):
                     m.addAction(it)
                 else:
@@ -369,7 +386,8 @@ class MainWindow(QMainWindow):
             return m
 
         file_menu = menu("Файл", ["projects", None, "new", "open", None, "save", "save_as", "rename_project", None,
-                      ("Экспорт", ["export_video", "export_gif", "export_png"]), None, "quit"])
+                      "export", ("Экспорт в формат", ["export_mp4", "export_mov", "export_avi", None, "export_gif",
+                                                  "export_png", None, "export_mp3"]), None, "quit"])
         self.recent_menu = QMenu("Недавние", self)
         file_menu.insertMenu(a["save"], self.recent_menu)
         file_menu.insertSeparator(a["save"])
@@ -377,7 +395,7 @@ class MainWindow(QMainWindow):
         menu("Правка", ["undo", "redo", None, "cut", "copy", "paste", "clear", None,
                         "swap_colors", "size_up", "size_down"])
         menu("Вид", ["zoom_in", "zoom_out", "zoom_fit", "zoom_100", None, "onion", None,
-                     self.dock_props.toggleViewAction(),
+                     self.dock_tool.toggleViewAction(), self.dock_props.toggleViewAction(),
                      self.dock_timeline.toggleViewAction()])
         tools = mb.addMenu("Инструменты")
         for t in TOOLS:
@@ -385,8 +403,9 @@ class MainWindow(QMainWindow):
         menu("Кадр", ["key", "key_blank", "key_remove", None, "frame_insert", "frame_remove", None,
                       "first", "prev", "next", "last", None, "prev_key", "next_key"])
         menu("Слой", ["layer_add", "layer_duplicate", "layer_delete", "layer_rename", None,
-                      "record_audio", "import_audio", None,
                       "layer_up", "layer_down"])
+        menu("Дорожка", ["track_add_video", "track_add_audio", "track_delete", None,
+                         "record_audio", "import_audio"])
         menu("Анимация", ["play", "loop", None, "tween", None, "scene"])
         menu("Справка", ["shortcuts", "changelog", None, "privacy", "contacts", None, "about"])
 
@@ -606,6 +625,27 @@ class MainWindow(QMainWindow):
         if dlg.exec() == QDialog.Accepted:
             self.project.set_scene(dlg.w.value(), dlg.h.value(), dlg.fps.value(), dlg.frames.value())
 
+    def export_dialog(self, fmt: str = ""):
+        self._stop_playback()
+        last = pb.settings().value("export/format", "mp4")
+        dlg = ExportDialog(self.project, fmt or last, self)
+        if dlg.exec() == QDialog.Accepted and dlg.result_path:
+            pb.settings().setValue("export/format", dlg.fmt.key)
+            self.statusBar().showMessage(f"Готово: {dlg.result_path}", 6000)
+
+    def delete_track(self):
+        t = self.project.track()
+        if t is None:
+            return
+        if t.animation:
+            self.statusBar().showMessage("Дорожку «Анимация» удалить нельзя — на ней ваш рисунок", 3000)
+            return
+        if t.clips:
+            r = QMessageBox.question(self, APP_NAME, f"Удалить дорожку «{t.name}» вместе с клипами ({len(t.clips)})?")
+            if r != QMessageBox.Yes:
+                return
+        self.project.delete_track()
+
     def show_help(self, section: str = "about"):
         HelpDialog(SHORTCUTS_HELP, section, self).exec()
 
@@ -620,7 +660,7 @@ class MainWindow(QMainWindow):
         self._stop_playback()
         self.project.set_frame(start)
         if ok and dlg.result_path:
-            n = sum(1 for l in self.project.layers if l.type == "audio") + 1
+            n = sum(len(t.clips) for t in self.project.tracks if t.kind == "audio") + 1
             self._add_audio(f"Запись {n}", dlg.result_id, dlg.result_path, start)
 
     def import_audio(self):
@@ -657,7 +697,7 @@ class MainWindow(QMainWindow):
         if duration <= 0:
             self.statusBar().showMessage("Пустая запись — ничего не добавлено", 3000)
             return
-        self.project.add_audio_layer(name, media_id, path, start, duration, peaks)
+        self.project.add_audio_clip(name, media_id, path, start, duration, peaks)
         self.statusBar().showMessage(f"Добавлен звук «{name}», {duration:.1f} с", 3000)
 
     def closeEvent(self, e):

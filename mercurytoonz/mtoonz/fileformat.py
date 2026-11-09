@@ -27,11 +27,11 @@ from PySide6.QtGui import QColor, QImage
 
 from . import APP_VERSION, audio
 from .brushes import BrushParams
-from .model import AudioLayer, Drawing, Layer, Project, Stroke
+from .model import AudioClip, Drawing, Layer, Project, Stroke, Track
 
 EXTENSION = ".mtoonz"
 FORMAT_ID = "mercurytoonz"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2  # 2: дорожки таймлайна (tracks) отдельно от рисованных слоёв
 
 
 class ProjectFileError(Exception):
@@ -72,19 +72,6 @@ def _layer_to_dict(layer: Layer) -> dict:
     raw = getattr(layer, "raw", None)
     if raw is not None:  # слой незнакомого типа — возвращаем без изменений
         return raw
-    if isinstance(layer, AudioLayer):
-        return {
-            "id": layer.id,
-            "type": "audio",
-            "name": layer.name,
-            "visible": layer.visible,
-            "locked": layer.locked,
-            "tag": layer.tag,
-            "media": layer.media_id,
-            "start": layer.start,
-            "volume": layer.volume,
-            "duration": round(layer.duration, 4),
-        }
     return {
         "id": layer.id,
         "type": layer.type,
@@ -98,19 +85,47 @@ def _layer_to_dict(layer: Layer) -> dict:
     }
 
 
+def _clip_to_dict(c: AudioClip) -> dict:
+    return {"id": c.id, "type": "audio", "media": c.media_id, "name": c.name, "start": c.start,
+            "duration": round(c.duration, 4), "volume": c.volume}
+
+
+def _clip_from_dict(d: dict, media: dict) -> AudioClip:
+    c = AudioClip(d["media"], d.get("name", "Звук"), int(d.get("start", 0)), float(d.get("duration", 0)),
+                  float(d.get("volume", 1.0)))
+    if d.get("id"):
+        c.id = d["id"]
+    try:
+        c.duration, c.peaks = audio.analyze_wav(media[c.media_id])
+    except Exception:  # файл не читается — оставим длительность из проекта
+        pass
+    return c
+
+
+def _track_to_dict(t: Track) -> dict:
+    d = {"id": t.id, "type": t.kind, "name": t.name, "enabled": t.enabled, "locked": t.locked,
+         "clips": [_clip_to_dict(c) for c in t.clips] + t.raw_clips}
+    if t.animation:
+        d["animation"] = True
+    return d
+
+
+def _track_from_dict(d: dict, media: dict) -> Track | None:
+    kind = d.get("type")
+    if kind not in ("video", "audio"):
+        return None
+    t = Track(kind, d.get("name", "Дорожка"), d.get("id"), bool(d.get("animation", False)))
+    t.enabled = bool(d.get("enabled", True))
+    t.locked = bool(d.get("locked", False))
+    for cd in d.get("clips", []):
+        if cd.get("type") == "audio" and kind == "audio" and cd.get("media") in media:
+            t.clips.append(_clip_from_dict(cd, media))
+        else:
+            t.raw_clips.append(cd)
+    return t
+
+
 def _layer_from_dict(d: dict, media: dict) -> Layer:
-    if d.get("type") == "audio" and d.get("media") in media:
-        layer = AudioLayer(d.get("name", "Звук"), d["media"], d.get("id"))
-        layer.visible = bool(d.get("visible", True))
-        layer.locked = bool(d.get("locked", False))
-        layer.tag = d.get("tag", layer.tag)
-        layer.start = int(d.get("start", 0))
-        layer.volume = float(d.get("volume", 1.0))
-        try:
-            layer.duration, layer.peaks = audio.analyze_wav(media[layer.media_id])
-        except Exception:  # файл не читается — оставим длительность из проекта
-            layer.duration = float(d.get("duration", 0))
-        return layer
     layer = Layer(d.get("name", "Слой"), d.get("id"))
     layer.visible = bool(d.get("visible", True))
     layer.locked = bool(d.get("locked", False))
@@ -141,6 +156,7 @@ def project_to_dict(project: Project) -> dict:
             "background": _color(project.background),
         },
         "layers": [_layer_to_dict(l) for l in project.layers],
+        "tracks": [_track_to_dict(t) for t in project.tracks],
         "media": [{"id": mid, "file": _media_entry(mid, path)} for mid, path in sorted(project.media.items())],
     }
 
@@ -234,7 +250,26 @@ def load_project(path: str, project: Project):
                 media[mid] = target
     scene = data.get("scene", {})
     Layer._counter = 0
-    layers = [_layer_from_dict(d, media) for d in data.get("layers", [])]
+    layers, tracks = [], []
+    for d in data.get("tracks", []):
+        t = _track_from_dict(d, media)
+        if t is not None:
+            tracks.append(t)
+    if not any(t.animation for t in tracks):
+        tracks.insert(0, Track("video", "Анимация", animation=True))
+    old_audio = []
+    for d in data.get("layers", []):
+        if d.get("type") == "audio":  # версия 1: звук был слоем — переносим на звуковую дорожку
+            if d.get("media") in media:
+                old_audio.append(_clip_from_dict(d, media))
+            continue
+        layers.append(_layer_from_dict(d, media))
+    for i, clip in enumerate(old_audio):
+        t = Track("audio", f"Звук {i + 1}")
+        t.clips.append(clip)
+        tracks.append(t)
+    if not any(t.kind == "audio" for t in tracks):
+        tracks.append(Track("audio", "Звук 1"))
     if not layers:
         layers = [Layer("Слой 1")]
         layers[0].keys[0] = Drawing()
@@ -245,6 +280,7 @@ def load_project(path: str, project: Project):
     project.frame_count = max(1, int(scene.get("frames", 48)))
     project.background = QColor(scene.get("background", "#ffffff"))
     project.layers = layers
+    project.tracks = tracks
     project.media = media
     project.file_path = path
     project._after_load()
