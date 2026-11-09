@@ -6,25 +6,27 @@ from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QDialog, QDialogButtonBox, QDockWidget, QFileDialog, QFormLayout, QInputDialog, QLabel,
-    QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QSpinBox, QSplitter, QToolBar,
+    QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QSpinBox, QSplitter, QTabWidget, QToolBar,
     QVBoxLayout, QWidget,
 )
 
 import os
 import shutil
 
-from . import APP_NAME, APP_VERSION, audio, brand, fileformat, icons, theme
+from . import APP_NAME, APP_VERSION, audio, brand, fileformat, icons, media, theme
 from .prefs import prefs
 from .audio import RecordDialog
 from .widgets.help_dialog import HelpDialog
-from .model import Project
+from .model import Project, VisualClip
 from .render import first_drawn_frame, render_frame
-from .state import TOOL_GROUP_STARTS, TOOLS, EditorState
+from .state import BRUSH_TOOLS, TOOL_GROUP_STARTS, TOOLS, EditorState
 from .widgets.canvas import Canvas
 from .widgets.color_panel import ColorPanel
 from .widgets.export_dialog import ExportDialog
 from .widgets.layers_panel import LayersPanel
 from .widgets.preferences import PreferencesDialog
+from .widgets.inspector import Inspector
+from .widgets.tutorial import TutorialOverlay
 from .widgets.splash import SplashScreen
 from .widgets import project_browser as pb
 from .widgets.timeline import Timeline
@@ -36,7 +38,8 @@ SHORTCUTS_HELP = """
 <tr><td><b>V</b></td><td>Выделение</td><td width=24></td><td><b>Q</b></td><td>Трансформация</td></tr>
 <tr><td><b>B</b></td><td>Кисть</td><td></td><td><b>P</b></td><td>Карандаш</td></tr>
 <tr><td><b>E</b></td><td>Ластик</td><td></td><td><b>G</b></td><td>Заливка</td></tr>
-<tr><td><b>U</b></td><td>Фигуры: линия, кривая, прямоугольник, эллипс</td><td></td><td><b>I</b></td><td>Пипетка</td></tr>
+<tr><td><b>U</b></td><td>Фигуры: линия, дуга, прямоугольник, эллипс</td><td></td><td><b>I</b></td><td>Пипетка</td></tr>
+<tr><td><b>C</b></td><td>Кривая (как в SAI): щелчки — точки, Enter — готово</td><td></td><td><b>Q</b></td><td>Трансформация</td></tr>
 <tr><td><b>Shift</b> + рисование</td><td>Прямая линия</td><td></td><td><b>Esc</b></td><td>Отменить кривую</td></tr>
 <tr><td><b>H</b> / Пробел</td><td>Рука</td><td></td><td><b>Z</b></td><td>Масштаб</td></tr>
 <tr><td><b>[ ]</b></td><td>Размер кисти</td><td></td><td><b>X</b></td><td>Поменять цвета</td></tr>
@@ -54,9 +57,14 @@ SHORTCUTS_HELP = """
 <tr><td><b>Ctrl+S</b></td><td>Сохранить</td><td></td><td><b>Ctrl+Shift+S</b></td><td>Сохранить как</td></tr>
 <tr><td><b>Ctrl+E</b></td><td>Экспорт</td><td></td><td></td><td></td></tr>
 </table>
+<h3>Монтаж</h3>
+<table cellspacing=4>
+<tr><td><b>Ctrl+I</b></td><td>Импорт видео, картинок, GIF, звука</td><td width=24></td><td><b>Ctrl+K</b></td><td>Разрезать клип</td></tr>
+<tr><td><b>Ctrl</b> + угол рамки</td><td>Деформация</td><td></td><td><b>Alt</b> + край рамки</td><td>Наклон</td></tr>
+</table>
 <h3>Звук</h3>
 <table cellspacing=4>
-<tr><td><b>Ctrl+R</b></td><td>Записать с микрофона</td><td width=24></td><td><b>Ctrl+I</b></td><td>Импорт звука</td></tr>
+<tr><td><b>Ctrl+R</b></td><td>Записать с микрофона</td><td width=24></td><td></td><td></td></tr>
 </table>
 <h3>Вид</h3>
 <table cellspacing=4>
@@ -113,6 +121,9 @@ class MainWindow(QMainWindow):
 
         self.playback = audio.AudioPlayback(self.project)
         self.project.fileChanged.connect(self.playback.reset)
+        self.project.fileChanged.connect(self._reset_media)
+        self.project.selectionChanged.connect(self._on_selection)
+        self.setAcceptDrops(True)
         self.play_timer = QTimer(self)
         self.play_timer.timeout.connect(self._tick)
 
@@ -243,9 +254,15 @@ class MainWindow(QMainWindow):
         # справка
         A("record_audio", "Записать звук с микрофона…", "mic", "Ctrl+R", self.record_audio,
           tip="Записать голос с микрофона")
-        A("import_audio", "Импорт звука…", "music", "Ctrl+I", self.import_audio,
+        A("import_media", "Импорт…", "import", "Ctrl+I", self.import_media,
+          tip="Импорт видео, картинок, GIF и звука — или перетащите файлы в окно")
+        A("split_clip", "Разрезать клип", None, "Ctrl+K", self.split_clip,
+          tip="Разрезать выбранный клип на текущем кадре")
+        A("import_audio", "Импорт звука…", "music", None, self.import_audio,
           tip="Добавить звуковой файл (WAV, MP3, OGG, M4A…)")
         # справка
+        A("tutorial", "Обучение", "school", None, self.show_tutorial,
+          tip="Короткий тур по программе")
         A("shortcuts", "Горячие клавиши", "keyboard", "F1", lambda: self.show_help("shortcuts"))
         A("changelog", "Что нового", "history", None, lambda: self.show_help("changelog"))
         A("privacy", "Политика конфиденциальности", "shield", None, lambda: self.show_help("privacy"))
@@ -307,7 +324,7 @@ class MainWindow(QMainWindow):
         tb.addAction(self.actions["export"])
         tb.addSeparator()
         tb.addAction(self.actions["record_audio"])
-        tb.addAction(self.actions["import_audio"])
+        tb.addAction(self.actions["import_media"])
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         tb.addWidget(spacer)
@@ -331,6 +348,7 @@ class MainWindow(QMainWindow):
         self.color_panel = ColorPanel(self.state)
         self.timeline = Timeline(self.project, self.state, self.actions)
         self.layers_panel = LayersPanel(self.project, self.actions)
+        self.inspector = Inspector(self.project)
         tool_scroll = QScrollArea()
         tool_scroll.setWidget(self.tool_options)
         tool_scroll.setWidgetResizable(True)
@@ -354,7 +372,19 @@ class MainWindow(QMainWindow):
             return box
 
         # слева — настройки инструмента рядом с панелью инструментов
-        self.dock_tool = self._dock("Инструмент", tool_scroll, Qt.LeftDockWidgetArea, "dockTool")
+        insp_scroll = QScrollArea()
+        insp_scroll.setWidget(self.inspector)
+        insp_scroll.setWidgetResizable(True)
+        insp_scroll.setFrameShape(QScrollArea.NoFrame)
+        insp_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        insp_scroll.setStyleSheet(tool_scroll.styleSheet())
+        self.left_tabs = QTabWidget()
+        self.left_tabs.setDocumentMode(True)
+        self.left_tabs.addTab(tool_scroll, "Инструмент")
+        self.left_tabs.addTab(insp_scroll, "Элемент")
+        self.left_tabs.setStyleSheet("QTabWidget::pane { border: none; padding: 0; }")
+        self.dock_tool = self._dock("Инструмент и элемент", self.left_tabs, Qt.LeftDockWidgetArea, "dockTool")
+        self.dock_tool.setTitleBarWidget(QWidget())
         # справа — цвет и под ним слои; граница перетаскивается
         self.props_split = QSplitter(Qt.Vertical)
         self.props_split.setHandleWidth(5)
@@ -367,7 +397,7 @@ class MainWindow(QMainWindow):
         self.dock_props = self._dock("Цвет и слои", self.props_split, Qt.RightDockWidgetArea, "dockProps")
         self.dock_props.setTitleBarWidget(QWidget())  # заголовки у секций свои
         self.dock_timeline = self._dock("Таймлайн", self.timeline, Qt.BottomDockWidgetArea, "dockTimeline")
-        self.resizeDocks([self.dock_tool, self.dock_props], [270, 290], Qt.Horizontal)
+        self.resizeDocks([self.dock_tool, self.dock_props], [330, 290], Qt.Horizontal)
         self.resizeDocks([self.dock_timeline], [240], Qt.Vertical)
 
     def _create_menus(self):
@@ -411,10 +441,10 @@ class MainWindow(QMainWindow):
                       "first", "prev", "next", "last", None, "prev_key", "next_key"])
         menu("Слой", ["layer_add", "layer_duplicate", "layer_delete", "layer_rename", None,
                       "layer_up", "layer_down"])
-        menu("Дорожка", ["track_add_video", "track_add_audio", "track_delete", None,
-                         "record_audio", "import_audio"])
+        menu("Дорожка", ["import_media", "split_clip", None, "track_add_video", "track_add_audio", "track_delete",
+                         None, "record_audio", "import_audio"])
         menu("Анимация", ["play", "loop", None, "tween", None, "scene"])
-        menu("Справка", ["shortcuts", "changelog", None, "privacy", "contacts", None, "splash", "about"])
+        menu("Справка", ["tutorial", "shortcuts", "changelog", None, "privacy", "contacts", None, "splash", "about"])
 
     def _create_statusbar(self):
         sb = self.statusBar()
@@ -433,6 +463,11 @@ class MainWindow(QMainWindow):
         a = self.actions.get(f"tool_{tool}")
         if a and not a.isChecked():
             a.setChecked(True)
+        if hasattr(self, "left_tabs"):
+            if tool == "transform":
+                self.left_tabs.setCurrentIndex(1)
+            elif tool in BRUSH_TOOLS or tool == "shapes":
+                self.left_tabs.setCurrentIndex(0)
         self._update_status()
 
     def _update_status(self):
@@ -680,6 +715,123 @@ class MainWindow(QMainWindow):
             n = sum(len(t.clips) for t in self.project.tracks if t.kind == "audio") + 1
             self._add_audio(f"Запись {n}", dlg.result_id, dlg.result_path, start)
 
+    # ------------------------------------------------------------------ монтаж: импорт и клипы
+    def _reset_media(self):
+        self.canvas.pool.close()
+        self.timeline.canvas.pool.close()
+        self.timeline.canvas._thumbs.clear()
+
+    def _on_selection(self):
+        sel = self.project.selection
+        if sel and sel[0] == "clip":
+            self.left_tabs.setCurrentIndex(1)
+
+    def import_media(self):
+        self._stop_playback()
+        exts = " ".join(f"*{e}" for e in sorted(media.VIDEO_EXT | media.IMAGE_EXT | media.GIF_EXT | media.AUDIO_EXT))
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "Импорт: видео, картинки, GIF, звук", pb.settings().value("import/folder", os.path.expanduser("~")),
+            f"Медиафайлы ({exts});;Все файлы (*)")
+        if paths:
+            pb.settings().setValue("import/folder", os.path.dirname(paths[0]))
+            self.import_files(paths)
+
+    def import_files(self, paths: list[str], frame: int | None = None) -> int:
+        """Добавляет файлы на таймлайн подряд, начиная с кадра frame. Возвращает число добавленных."""
+        p = self.project
+        at = p.current_frame if frame is None else frame
+        added = 0
+        errors = []
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            for path in paths:
+                kind = media.kind_of(path)
+                name = os.path.splitext(os.path.basename(path))[0]
+                self.statusBar().showMessage(f"Импорт «{name}»…")
+                QApplication.processEvents()
+                try:
+                    if kind == "audio":
+                        end = self._import_audio_file(path, at)
+                    elif kind in ("video", "image", "gif"):
+                        end = self._import_visual(path, kind, name, at)
+                    else:
+                        errors.append(f"{os.path.basename(path)}: этот тип файла не поддерживается")
+                        continue
+                except OSError as e:
+                    errors.append(f"{os.path.basename(path)}: {e}")
+                    continue
+                if end is not None:
+                    at = end
+                    added += 1
+        finally:
+            QApplication.restoreOverrideCursor()
+        if errors:
+            QMessageBox.warning(self, APP_NAME, "Не всё удалось импортировать:\n\n" + "\n".join(errors))
+        if added:
+            self.statusBar().showMessage(f"Добавлено файлов: {added}", 4000)
+        return added
+
+    def _import_visual(self, path, kind, name, at) -> int:
+        info = media.probe(path)
+        mid, dst = media.copy_to_media(path)
+        fps = self.project.fps
+        if kind == "video":
+            length = max(1, round(info.duration * fps))
+        elif kind == "gif":
+            length = max(fps, round(max(info.duration, 0.1) * fps))
+        else:
+            length = fps * 3  # картинка — 3 секунды, потом можно растянуть за край
+        clip = VisualClip(mid, kind, name, at, length, 0.0, 1.0, info.width, info.height, info.duration)
+        self.project.add_visual_clip(clip, dst, info if kind == "video" else None)
+        if kind == "video" and info.has_audio:
+            amid, apath = audio.new_media_path()
+            try:
+                media.extract_audio(dst, apath)
+                duration, peaks = audio.analyze_wav(apath)
+                if duration > 0:
+                    self.project.add_audio_clip(f"{name} · звук", amid, apath, at, duration, peaks)
+            except (OSError, Exception) as e:  # noqa: BLE001 — видео без читаемого звука тоже годится
+                self.statusBar().showMessage(f"Звук из видео не извлечён: {e}", 5000)
+        return at + length
+
+    def _import_audio_file(self, path, at) -> int | None:
+        mid, dst = audio.new_media_path()
+        if path.lower().endswith(".wav"):
+            try:
+                audio.analyze_wav(path)
+                shutil.copyfile(path, dst)
+            except Exception:  # WAV в необычном кодеке — перекодируем
+                audio.decode_to_wav(path, dst)
+        else:
+            audio.decode_to_wav(path, dst)
+        clip = self._add_audio(os.path.splitext(os.path.basename(path))[0], mid, dst, at)
+        return clip.end_frame(self.project.fps) if clip else None
+
+    def split_clip(self):
+        if not self.project.split_clip():
+            self.statusBar().showMessage("Выберите клип на видеодорожке и поставьте бегунок внутрь него", 3000)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls():
+            e.acceptProposedAction()
+
+    def dropEvent(self, e):
+        paths = [u.toLocalFile() for u in e.mimeData().urls() if u.isLocalFile()]
+        if paths:
+            e.acceptProposedAction()
+            self.import_files(paths)
+
+    def show_tutorial(self):
+        self._stop_playback()
+        overlay = TutorialOverlay(self)
+        overlay.finished.connect(lambda: prefs().set("general/tutorial_done", True))
+        overlay.start()
+        self._tutorial = overlay
+
+    def maybe_tutorial(self):
+        if not prefs().get("general/tutorial_done"):
+            self.show_tutorial()
+
     def import_audio(self):
         self._stop_playback()
         path, _ = QFileDialog.getOpenFileName(
@@ -714,8 +866,9 @@ class MainWindow(QMainWindow):
         if duration <= 0:
             self.statusBar().showMessage("Пустая запись — ничего не добавлено", 3000)
             return
-        self.project.add_audio_clip(name, media_id, path, start, duration, peaks)
+        clip = self.project.add_audio_clip(name, media_id, path, start, duration, peaks)
         self.statusBar().showMessage(f"Добавлен звук «{name}», {duration:.1f} с", 3000)
+        return clip
 
     def closeEvent(self, e):
         self._stop_playback()
@@ -750,7 +903,10 @@ def run(argv) -> int:
             w.open_path(os.path.abspath(files[0]))
         else:
             # окно проектов поверх главного окна сразу после запуска
-            QTimer.singleShot(0, lambda: w.show_projects(startup=True))
+            def first_run():
+                w.show_projects(startup=True)
+                w.maybe_tutorial()
+            QTimer.singleShot(0, first_run)
 
     def splash_done():
         state["splash_done"] = True

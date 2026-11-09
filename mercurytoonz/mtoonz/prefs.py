@@ -7,6 +7,7 @@ from PySide6.QtCore import QObject, QSettings, Signal
 DEFAULTS = {
     "general/splash": True,            # заставка при запуске
     "general/startup_sound": True,     # звук при запуске
+    "general/tutorial_done": False,    # обучение уже показано
     "tablet/curve": 1.0,               # кривая нажима: <1 — мягче (легче нажимать), >1 — жёстче
     "tablet/pen_eraser": True,         # обратный конец пера — ластик
     "tablet/min_pressure": 0.0,        # «мёртвая зона»: нажим ниже порога не рисует

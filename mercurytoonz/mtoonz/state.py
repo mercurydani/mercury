@@ -48,6 +48,7 @@ TOOLS = [
     ToolInfo("pencil", "Карандаш", "pencil", "P", draws=True, sized=True),
     ToolInfo("eraser", "Ластик", "eraser", "E", draws=True, sized=True),
     ToolInfo("fill", "Заливка", "fill", "G"),
+    ToolInfo("curve", "Кривая", "curve", "C", draws=True, sized=True),
     ToolInfo("shapes", "Фигуры", "shapes", "U", draws=True, sized=True),
     ToolInfo("eyedropper", "Пипетка", "eyedropper", "I"),
     ToolInfo("hand", "Рука", "hand", "H"),
@@ -57,6 +58,7 @@ TOOLS_BY_KEY = {t.key: t for t in TOOLS}
 
 # Разделители в панели инструментов ставятся перед этими инструментами
 TOOL_GROUP_STARTS = {"brush", "fill", "eyedropper"}
+BRUSH_TOOLS = ("brush", "pencil", "eraser", "curve")  # инструменты с библиотекой кистей
 
 
 class EditorState(QObject):
@@ -75,7 +77,9 @@ class EditorState(QObject):
             "pencil": ToolSettings(),
             "eraser": ToolSettings(),
             "shapes": ToolSettings(size=4, smoothing=0, stabilizer=0, pressure=False),
+            "curve": ToolSettings(),
         }
+        self.settings["curve"].apply_preset(PRESETS_BY_KEY["ink"])
         self.settings["brush"].apply_preset(PRESETS_BY_KEY["ink"])
         self.settings["pencil"].apply_preset(PRESETS_BY_KEY["pencil_hb"])
         self.settings["eraser"].apply_preset(ERASER_BY_KEY["eraser_hard"])

@@ -50,7 +50,10 @@ class TimelineCanvas(QWidget):
         self.hoff = 0
         self.voff = 0
         self._scrubbing = False
-        self._drag = None          # (id клипа, кадр захвата, исходная дорожка)
+        self._drag = None          # (id клипа, кадр захвата, исходная дорожка, режим move/left/right)
+        self._thumbs: dict = {}
+        from ..media import MediaPool
+        self.pool = MediaPool()    # для миниатюр клипов
         self._drag_delta = 0
         self._drag_row = -1
         self.setMouseTracking(True)
@@ -131,20 +134,28 @@ class TimelineCanvas(QWidget):
                     if self._drag is not None and clip.id == self._drag[0]:
                         continue
                     self._paint_clip(p, clip, clip.start, y, cur, track.enabled)
-            elif not track.clips:
-                p.setPen(QColor("#4a4f58"))
-                f = QFont(self.font())
-                f.setPixelSize(11)
-                p.setFont(f)
-                p.drawText(QRectF(HEAD_W + 10, y, 600, ROW_H), Qt.AlignVCenter,
-                           "Пустая видеодорожка — сюда можно будет добавить видео, картинки и GIF")
+            else:
+                for clip in track.clips:
+                    if self._drag is not None and clip.id == self._drag[0]:
+                        continue
+                    self._paint_vclip(p, clip, clip.start, clip.length, y, cur, track.enabled)
+                if not track.clips:
+                    p.setPen(QColor("#4a4f58"))
+                    f = QFont(self.font())
+                    f.setPixelSize(11)
+                    p.setFont(f)
+                    p.drawText(QRectF(HEAD_W + 10, y, 700, ROW_H), Qt.AlignVCenter,
+                               "Перетащите сюда видео, картинку или GIF — или кнопка «Импорт» (Ctrl+I)")
         # перетаскиваемый клип рисуем поверх, на дорожке под курсором
         if self._drag is not None:
             found = proj.find_clip(self._drag[0])
             if found and 0 <= self._drag_row < len(proj.tracks):
                 _t, clip = found
-                self._paint_clip(p, clip, max(0, clip.start + self._drag_delta), self.row_y(self._drag_row),
-                                 True, True)
+                start, length = self._drag_geometry(clip)
+                if hasattr(clip, "transform"):
+                    self._paint_vclip(p, clip, start, length, self.row_y(self._drag_row), True, True)
+                else:
+                    self._paint_clip(p, clip, start, self.row_y(self._drag_row), True, True)
         cx = self.frame_x(proj.current_frame)
         p.fillRect(QRectF(cx, HEADER_H, cw, self.height()), QColor(255, 90, 79, 24))
         p.restore()
@@ -176,6 +187,14 @@ class TimelineCanvas(QWidget):
         if layer is None:
             p.setRenderHint(QPainter.Antialiasing, False)
             return
+        # ключи движения слоя-элемента — жёлтые ромбики сверху
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor("#ffd84a"))
+        for k in layer.transform.key_frames():
+            if first <= k <= last:
+                kx, ky = self.frame_x(k) + cw / 2, y + 6
+                p.drawPolygon(QPolygonF([QPointF(kx, ky - 4), QPointF(kx + 4, ky), QPointF(kx, ky + 4),
+                                         QPointF(kx - 4, ky)]))
         keys = layer.sorted_keys()
         for i, k in enumerate(keys):
             end = keys[i + 1] if i + 1 < len(keys) else proj.frame_count
@@ -211,6 +230,77 @@ class TimelineCanvas(QWidget):
                 p.setBrush(QColor(theme.TEXT_MUTED))
                 p.drawRect(QRectF(ex + cw / 2 - 2.5, c.y() - 3.5, 5, 7))
         p.setOpacity(1.0)
+        p.setRenderHint(QPainter.Antialiasing, False)
+
+    def _drag_geometry(self, clip):
+        """Начало и длина клипа с учётом перетаскивания или обрезки."""
+        mode = self._drag[3]
+        d = self._drag_delta
+        if mode == "left":
+            d = max(-clip.start, min(d, clip.length - 1))
+            if clip.kind == "video":
+                d = max(d, -int(clip.offset * self.project.fps / max(0.01, clip.speed)))
+            return clip.start + d, clip.length - d
+        if mode == "right":
+            length = max(1, clip.length + d)
+            cap = clip.max_length(self.project.fps)
+            return clip.start, min(length, cap) if cap else length
+        length = clip.length if hasattr(clip, "length") else None
+        return max(0, clip.start + d), length
+
+    def _thumb(self, clip):
+        key = (clip.media_id, round(clip.offset, 2))
+        img = self._thumbs.get(key)
+        if img is None and key not in self._thumbs:
+            src = self.pool.get(self.project, clip.media_id, clip.kind)
+            frame = src.frame(clip.offset, 160) if src is not None else None
+            img = frame.scaledToHeight(ROW_H * 2 - 12, Qt.SmoothTransformation) if frame is not None else None
+            self._thumbs[key] = img
+        return img
+
+    def _paint_vclip(self, p: QPainter, clip, start, length, y, cur, enabled):
+        x0, x1 = self.frame_x(start), self.frame_x(start + length)
+        if x1 < HEAD_W or x0 > self.width():
+            return
+        rect = QRectF(x0 + 1, y + 3, x1 - x0 - 2, ROW_H - 6)
+        selected = self.project.selection == ("clip", clip.id)
+        p.setRenderHint(QPainter.Antialiasing)
+        base = QColor("#24407f" if cur else "#1f366b") if enabled else QColor("#3a3f47")
+        p.setPen(QPen(QColor("#ffffff") if selected else C_VIDEO, 2 if selected else 1) if (cur or selected)
+                 else Qt.NoPen)
+        p.setBrush(base)
+        p.drawRoundedRect(rect, 4, 4)
+        p.save()
+        p.setClipRect(rect.adjusted(1, 1, -1, -1))
+        thumb = self._thumb(clip)
+        tx = max(rect.left() + 2, HEAD_W)
+        if thumb is not None:
+            p.setOpacity(0.9 if enabled else 0.4)
+            p.drawImage(QRectF(tx, rect.top() + 2, thumb.width() / 2, thumb.height() / 2), thumb)
+            tx += thumb.width() / 2 + 6
+            p.setOpacity(1.0)
+        p.setPen(QColor("#e6ecff"))
+        f = QFont(self.font())
+        f.setPixelSize(11)
+        p.setFont(f)
+        label = clip.name + ("" if abs(clip.speed - 1) < 1e-6 else f"  ·  {round(clip.speed * 100)}%")
+        p.drawText(QRectF(tx, rect.top(), rect.right() - tx, rect.height() - 8), Qt.AlignLeft | Qt.AlignVCenter, label)
+        # ключевые кадры элемента — ромбики внизу клипа
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor("#ffd84a"))
+        for k in clip.transform.key_frames():
+            if 0 <= k < length:
+                kx = self.frame_x(start + k) + self.cell_w / 2
+                ky = rect.bottom() - 5
+                p.drawPolygon(QPolygonF([QPointF(kx, ky - 4), QPointF(kx + 4, ky), QPointF(kx, ky + 4),
+                                         QPointF(kx - 4, ky)]))
+        p.restore()
+        # ручки обрезки
+        if selected:
+            p.setBrush(QColor("#ffffff"))
+            p.setPen(Qt.NoPen)
+            p.drawRoundedRect(QRectF(rect.left(), rect.top() + 6, 3, rect.height() - 12), 1.5, 1.5)
+            p.drawRoundedRect(QRectF(rect.right() - 3, rect.top() + 6, 3, rect.height() - 12), 1.5, 1.5)
         p.setRenderHint(QPainter.Antialiasing, False)
 
     def _paint_clip(self, p: QPainter, clip, start, y, cur, enabled):
@@ -384,12 +474,23 @@ class TimelineCanvas(QWidget):
             return
         proj.set_track(r)
         track = proj.tracks[r]
-        clip = track.clip_at(f, proj.fps) if track.kind == "audio" else None
+        clip = track.clip_at(f, proj.fps) if not track.animation else None
+        if clip is not None and hasattr(clip, "transform"):
+            proj.select(("clip", clip.id))
+        elif track.animation and proj.draw_layer() is not None:
+            proj.select(("layer", proj.draw_layer().id))
         if clip is not None and e.button() == Qt.LeftButton and not track.locked:
-            self._drag = (clip.id, f, track)
+            mode = "move"
+            if hasattr(clip, "transform"):
+                xl, xr = self.frame_x(clip.start), self.frame_x(clip.end_frame())
+                if abs(x - xl) <= 7:
+                    mode = "left"
+                elif abs(x - xr) <= 7:
+                    mode = "right"
+            self._drag = (clip.id, f, track, mode)
             self._drag_delta = 0
             self._drag_row = r
-            self.setCursor(Qt.ClosedHandCursor)
+            self.setCursor(Qt.SizeHorCursor if mode != "move" else Qt.ClosedHandCursor)
             return
         proj.set_frame(f)
         if e.button() == Qt.LeftButton:
@@ -399,7 +500,12 @@ class TimelineCanvas(QWidget):
                 self._menu(["key", "key_blank", "key_remove", None, "frame_insert", "frame_remove", None, "clear"],
                            e.globalPosition().toPoint())
             elif clip is not None:
-                self._menu([("Удалить звук", lambda: proj.delete_clip(clip.id))], e.globalPosition().toPoint())
+                title = "Удалить клип" if hasattr(clip, "transform") else "Удалить звук"
+                self._menu([("Разрезать на текущем кадре", lambda: self.actions["split_clip"].trigger())
+                            if hasattr(clip, "transform") else None,
+                            (title, lambda: proj.delete_clip(clip.id))], e.globalPosition().toPoint())
+            elif track.kind == "video":
+                self._menu(["import_media"], e.globalPosition().toPoint())
             elif track.kind == "audio":
                 self._menu(["record_audio", "import_audio"], e.globalPosition().toPoint())
 
@@ -412,8 +518,13 @@ class TimelineCanvas(QWidget):
                 return
             _t, clip = found
             self._drag_delta = max(-clip.start, self.frame_at(e.position().x()) - self._drag[1])
+            if self._drag[3] != "move":
+                self._drag_delta = self.frame_at(e.position().x()) - self._drag[1]
+                self.update()
+                return
             r = self.row_at(e.position().y())
-            if 0 <= r < len(proj.tracks) and proj.tracks[r].kind == "audio":
+            src = self._drag[2]
+            if 0 <= r < len(proj.tracks) and proj.tracks[r].kind == src.kind and not proj.tracks[r].animation:
                 self._drag_row = r
             self.update()
             return
@@ -424,15 +535,24 @@ class TimelineCanvas(QWidget):
     def mouseReleaseEvent(self, e):
         self._scrubbing = False
         if self._drag is not None:
-            clip_id, grab_frame, src = self._drag
+            clip_id, grab_frame, src, mode = self._drag
             proj = self.project
             dst = proj.tracks[self._drag_row] if 0 <= self._drag_row < len(proj.tracks) else src
             delta = self._drag_delta
+            found = proj.find_clip(clip_id)
+            geom = self._drag_geometry(found[1]) if found is not None else None
             self._drag = None
             self._drag_delta = 0
             self.unsetCursor()
-            found = proj.find_clip(clip_id)
-            if found is not None:
+            if found is not None and mode != "move":
+                clip = found[1]
+                start, length = geom
+                offset = None
+                if mode == "left" and clip.kind == "video":
+                    offset = clip.offset + (start - clip.start) / proj.fps * clip.speed
+                if (start, length) != (clip.start, clip.length):
+                    proj.trim_clip(clip_id, start, length, offset)
+            elif found is not None:
                 clip = found[1]
                 if delta or dst is not src:
                     if not proj.move_clip(clip_id, clip.start + delta, dst):
@@ -523,8 +643,8 @@ class Timeline(QWidget):
         sep()
         btn("onion")
         sep()
+        btn("import_media")
         btn("record_audio")
-        btn("import_audio")
         bl.addStretch()
 
         self.counter = QLabel()

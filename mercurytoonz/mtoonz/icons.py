@@ -85,6 +85,14 @@ _ICONS = {
     "mail": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>',
     "history": '<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 8v4.5l3 2"/>',
     "keyboard": '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+    "curve": '<path d="M4 18C7 6 12 20 20 6"/><rect x="2.5" y="16.5" width="3" height="3" fill="currentColor"/>'
+             '<rect x="18.5" y="4.5" width="3" height="3" fill="currentColor"/>'
+             '<rect x="10.5" y="11" width="3" height="3" fill="currentColor"/>',
+    "import": '<path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 19h14"/>',
+    "diamond": '<path d="M12 4l8 8-8 8-8-8z" fill="currentColor"/>',
+    "diamond-empty": '<path d="M12 4l8 8-8 8-8-8z"/>',
+    "magic": '<path d="M4 20L15 9"/><path d="M14 4v3M19 9h-3M17.5 5.5l-2 2M18 3l.5 1.5L20 5l-1.5.5L18 7l-.5-1.5L16 5l1.5-.5z"/>',
+    "school": '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/>',
     "film": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
     "audio-track": '<path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/>',
     "up": '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/>',

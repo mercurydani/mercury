@@ -27,11 +27,12 @@ from PySide6.QtGui import QColor, QImage
 
 from . import APP_VERSION, audio
 from .brushes import BrushParams
-from .model import AudioClip, Drawing, Layer, Project, Stroke, Track
+from .animation import Transform
+from .model import AudioClip, Drawing, Layer, Project, Stroke, Track, VisualClip
 
 EXTENSION = ".mtoonz"
 FORMAT_ID = "mercurytoonz"
-FORMAT_VERSION = 2  # 2: дорожки таймлайна (tracks) отдельно от рисованных слоёв
+FORMAT_VERSION = 3  # 2: дорожки отдельно от слоёв; 3: видео/картинки/GIF и ключи трансформаций
 
 
 class ProjectFileError(Exception):
@@ -82,10 +83,19 @@ def _layer_to_dict(layer: Layer) -> dict:
         "tag": layer.tag,
         "keys": {str(k): {"strokes": [_stroke_to_dict(s) for s in d.strokes]}
                  for k, d in sorted(layer.keys.items())},
+        **({"transform": layer.transform.to_dict()} if layer.transform.to_dict() else {}),
     }
 
 
-def _clip_to_dict(c: AudioClip) -> dict:
+def _clip_to_dict(c) -> dict:
+    if isinstance(c, VisualClip):
+        d = {"id": c.id, "type": c.kind, "media": c.media_id, "name": c.name, "start": c.start,
+             "length": c.length, "offset": round(c.offset, 4), "speed": c.speed, "src_w": c.src_w,
+             "src_h": c.src_h, "source_duration": round(c.source_duration, 4)}
+        tr = c.transform.to_dict()
+        if tr:
+            d["transform"] = tr
+        return d
     return {"id": c.id, "type": "audio", "media": c.media_id, "name": c.name, "start": c.start,
             "duration": round(c.duration, 4), "volume": c.volume}
 
@@ -120,6 +130,14 @@ def _track_from_dict(d: dict, media: dict) -> Track | None:
     for cd in d.get("clips", []):
         if cd.get("type") == "audio" and kind == "audio" and cd.get("media") in media:
             t.clips.append(_clip_from_dict(cd, media))
+        elif cd.get("type") in ("video", "image", "gif") and kind == "video" and cd.get("media") in media:
+            c = VisualClip(cd["media"], cd["type"], cd.get("name", "Клип"), int(cd.get("start", 0)),
+                           max(1, int(cd.get("length", 1))), float(cd.get("offset", 0)), float(cd.get("speed", 1)),
+                           int(cd.get("src_w", 1920)), int(cd.get("src_h", 1080)),
+                           float(cd.get("source_duration", 0)), Transform.from_dict(cd.get("transform")))
+            if cd.get("id"):
+                c.id = cd["id"]
+            t.clips.append(c)
         else:
             t.raw_clips.append(cd)
     return t
@@ -137,6 +155,7 @@ def _layer_from_dict(d: dict, media: dict) -> Layer:
         layer.name = f"{layer.name} (не поддерживается)"
         layer.locked = True
         return layer
+    layer.transform = Transform.from_dict(d.get("transform"))
     for k, kd in d.get("keys", {}).items():
         layer.keys[int(k)] = Drawing([_stroke_from_dict(s) for s in kd.get("strokes", [])])
     return layer
@@ -157,12 +176,21 @@ def project_to_dict(project: Project) -> dict:
         },
         "layers": [_layer_to_dict(l) for l in project.layers],
         "tracks": [_track_to_dict(t) for t in project.tracks],
-        "media": [{"id": mid, "file": _media_entry(mid, path)} for mid, path in sorted(project.media.items())],
+        "media": [_media_meta(project, mid, path) for mid, path in sorted(project.media.items())],
     }
 
 
 def _media_entry(mid: str, path: str) -> str:
     return f"media/{mid}{os.path.splitext(path)[1].lower()}"
+
+
+def _media_meta(project: Project, mid: str, path: str) -> dict:
+    d = {"id": mid, "file": _media_entry(mid, path)}
+    info = project.media_info.get(mid)
+    if info is not None:
+        d["info"] = {"kind": info.kind, "width": info.width, "height": info.height,
+                     "duration": round(info.duration, 4), "fps": info.fps, "has_audio": info.has_audio}
+    return d
 
 
 def _now() -> str:
@@ -239,6 +267,7 @@ def load_project(path: str, project: Project):
         # медиафайлы распаковываем во временную папку проекта
         work = tempfile.mkdtemp(prefix="mtoonz-media-")
         media = {}
+        media_info = {}
         names = set(z.namelist())
         for entry in data.get("media", []):
             name = entry.get("file", "")
@@ -248,6 +277,12 @@ def load_project(path: str, project: Project):
                 with z.open(name) as src, open(target, "wb") as dst:
                     shutil.copyfileobj(src, dst)
                 media[mid] = target
+                if isinstance(entry.get("info"), dict):
+                    from .media import MediaInfo
+                    i = entry["info"]
+                    media_info[mid] = MediaInfo(i.get("kind", "video"), int(i.get("width", 0)),
+                                                int(i.get("height", 0)), float(i.get("duration", 0)),
+                                                float(i.get("fps", 0)), bool(i.get("has_audio", False)))
     scene = data.get("scene", {})
     Layer._counter = 0
     layers, tracks = [], []
@@ -282,6 +317,7 @@ def load_project(path: str, project: Project):
     project.layers = layers
     project.tracks = tracks
     project.media = media
+    project.media_info = media_info
     project.file_path = path
     project._after_load()
 

@@ -14,21 +14,24 @@ import math
 import time
 
 from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPointingDevice, QTransform
+from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPointingDevice, QPolygonF, QTransform
 from PySide6.QtWidgets import QApplication, QWidget
 
 from .. import theme
+from ..animation import element_quad
 from ..brushes import SHAPE_PARAMS, preset_params
 from ..model import Drawing, Project, Stroke
 from ..prefs import apply_curve, prefs
-from ..render import draw_drawing, draw_stroke
+from ..media import MediaPool
+from ..render import clip_geometry, clip_transform, draw_clip, draw_drawing, draw_stroke, layer_transform
 from ..state import TOOLS_BY_KEY, EditorState
 
 ONION_PREV = QColor("#ff4f6d")
 ONION_NEXT = QColor("#2fb4ff")
 ZOOM_STEPS = [0.05, 0.1, 0.15, 0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0, 16.0]
 MAX_CACHE_SIDE = 4096
-DRAW_TOOLS = ("brush", "pencil", "eraser")
+PREVIEW_MEDIA_W = 1280   # ширина кадров видео для просмотра на холсте
+DRAW_TOOLS = ("brush", "pencil", "eraser")  # инструменты «от руки»
 
 
 def smooth_points(points, amount: int):
@@ -73,6 +76,28 @@ def curve_points(a: QPointF, b: QPointF, through: QPointF, n: int = 64):
         u = 1 - t
         out.append((u * u * a.x() + 2 * u * t * cx + t * t * b.x(),
                     u * u * a.y() + 2 * u * t * cy + t * t * b.y(), 1.0))
+    return out
+
+
+def catmull_rom(points, seg: int = 18):
+    """Плавная кривая, проходящая через все точки (как инструмент «Кривая» в Paint Tool SAI)."""
+    pts = [(p.x(), p.y()) for p in points]
+    if len(pts) < 2:
+        return [(x, y, 1.0) for x, y in pts]
+    out = []
+    for i in range(len(pts) - 1):
+        p0 = pts[i - 1] if i > 0 else pts[i]
+        p1, p2 = pts[i], pts[i + 1]
+        p3 = pts[i + 2] if i + 2 < len(pts) else pts[i + 1]
+        for k in range(seg):
+            t = k / seg
+            t2, t3 = t * t, t * t * t
+            x = 0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2
+                       + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3)
+            y = 0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2
+                       + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+            out.append((x, y, 1.0))
+    out.append((pts[-1][0], pts[-1][1], 1.0))
     return out
 
 
@@ -130,6 +155,10 @@ class Canvas(QWidget):
         self._stroke_tool: str | None = None
         self.pen_info = None                     # (нажим, наклон x, наклон y, конец пера) — для настроек
         self._cache: dict = {}
+        self._sai: list | None = None            # точки инструмента «Кривая» (как в SAI)
+        self._sai_hover: QPointF | None = None
+        self._tf: dict | None = None             # перетаскивание в инструменте «Трансформация»
+        self.pool = MediaPool()                  # открытые видео, картинки и GIF для просмотра
 
         self.setMouseTracking(True)
         self.setTabletTracking(True)
@@ -200,7 +229,7 @@ class Canvas(QWidget):
         return vis.intersected(QRectF(0, 0, pw, ph)).toAlignedRect()
 
     def _render(self, drawing: Drawing | None, region: QRect, extra: Stroke | None = None,
-                tint: QColor | None = None) -> QImage:
+                tint: QColor | None = None, lt: QTransform | None = None) -> QImage:
         dpr = self.devicePixelRatioF()
         img = QImage(max(1, int(region.width() * dpr)), max(1, int(region.height() * dpr)),
                      QImage.Format_ARGB32_Premultiplied)
@@ -211,6 +240,8 @@ class Canvas(QWidget):
         p.translate(-region.x(), -region.y())
         p.scale(self.zoom, self.zoom)
         p.setClipRect(self.paper_rect())
+        if lt is not None:
+            p.setTransform(lt, True)
         draw_drawing(p, drawing)
         if extra:
             draw_stroke(p, extra)
@@ -222,15 +253,18 @@ class Canvas(QWidget):
         p.end()
         return img
 
-    def _cached(self, drawing: Drawing, region: QRect, tint: QColor | None = None) -> QImage:
+    def _cached(self, drawing: Drawing, region: QRect, tint: QColor | None = None,
+                lt: QTransform | None = None) -> QImage:
+        m = None if lt is None else tuple(round(x, 4) for x in (lt.m11(), lt.m12(), lt.m13(), lt.m21(), lt.m22(),
+                                                                 lt.m23(), lt.m31(), lt.m32(), lt.m33()))
         key = (id(drawing), len(drawing.strokes), id(drawing.strokes[-1]) if drawing.strokes else 0,
                self.zoom, region.x(), region.y(), region.width(), region.height(),
-               tint.rgba() if tint else 0, self.devicePixelRatioF())
+               tint.rgba() if tint else 0, self.devicePixelRatioF(), m)
         img = self._cache.get(key)
         if img is None:
             if len(self._cache) > 48:
                 self._cache.clear()
-            img = self._render(drawing, region, tint=tint)
+            img = self._render(drawing, region, tint=tint, lt=lt)
             self._cache[key] = img
         return img
 
@@ -246,6 +280,11 @@ class Canvas(QWidget):
             pts = line_points(a, b)
         elif self._live:
             pts = self._live
+        elif tool == "curve" and self._sai:
+            ctrl = self._sai + ([self._sai_hover] if self._sai_hover is not None else [])
+            if len(ctrl) < 2:
+                return None
+            pts = catmull_rom(ctrl)
         elif tool == "shapes" and self._shape_start is not None and self._shape_end is not None:
             if st.shape == "curve":
                 bend = self._curve_bend or (self._shape_start + self._shape_end) / 2
@@ -280,20 +319,60 @@ class Canvas(QWidget):
         region = self._region()
         origin = QPointF(self.offset.x() + region.x(), self.offset.y() + region.y())
 
+        # дорожки снизу вверх: клипы видео/картинок/GIF и рисунок «Анимации»
+        for track in reversed(proj.tracks):
+            if track.kind != "video" or not track.enabled:
+                continue
+            if track.animation:
+                self._paint_layers(p, region, origin, cur_layer, f)
+            else:
+                clip = track.clip_at(f, proj.fps)
+                if clip is not None and hasattr(clip, "transform"):
+                    p.save()
+                    p.setTransform(self.transform())
+                    p.setClipRect(self.paper_rect())
+                    if not draw_clip(p, proj, self.pool, clip, f, PREVIEW_MEDIA_W):
+                        self._paint_missing(p, clip, f)
+                    p.restore()
+        p.setOpacity(1.0)
+
+        p.setPen(QPen(QColor(0, 0, 0, 60), 1))
+        p.setBrush(Qt.NoBrush)
+        p.drawRect(paper)
+        self._paint_overlay(p)
+        p.end()
+
+    def _paint_missing(self, p: QPainter, clip, f):
+        """Клип, для которого нет кадра (файл не найден) — серая заглушка с названием."""
+        t = clip_transform(self.project, clip, f)
+        if t is None:
+            return
+        w, h = clip_geometry(self.project, clip)
+        p.setTransform(t, True)
+        p.fillRect(QRectF(0, 0, w, h), QColor(60, 64, 80, 160))
+        p.setPen(QColor("#ffffff"))
+        p.drawText(QRectF(0, 0, w, h), Qt.AlignCenter, f"{clip.name}\n(файл не найден)")
+
+    def _layer_t(self, layer, f) -> QTransform | None:
+        return layer_transform(self.project, layer, f)
+
+    def _paint_layers(self, p: QPainter, region: QRect, origin: QPointF, cur_layer, f: int):
+        proj = self.project
         # луковая кожа: соседние рисунки текущего слоя
         if self.state.onion and cur_layer is not None and cur_layer.visible and cur_layer.type == "drawing":
+            lt = self._layer_t(cur_layer, f)
             keys = cur_layer.sorted_keys()
             cur_key = cur_layer.key_at_or_before(f)
             idx = keys.index(cur_key) if cur_key in keys else -1
             for n in range(1, self.state.onion_prev + 1):
                 if idx - n >= 0 and not cur_layer.keys[keys[idx - n]].is_empty():
                     p.setOpacity(0.35 / n)
-                    p.drawImage(origin, self._cached(cur_layer.keys[keys[idx - n]], region, ONION_PREV))
+                    p.drawImage(origin, self._cached(cur_layer.keys[keys[idx - n]], region, ONION_PREV, lt))
             for n in range(1, self.state.onion_next + 1):
                 j = idx + n if idx >= 0 else n - 1
                 if 0 <= j < len(keys) and keys[j] > f and not cur_layer.keys[keys[j]].is_empty():
                     p.setOpacity(0.35 / n)
-                    p.drawImage(origin, self._cached(cur_layer.keys[keys[j]], region, ONION_NEXT))
+                    p.drawImage(origin, self._cached(cur_layer.keys[keys[j]], region, ONION_NEXT, lt))
             p.setOpacity(1.0)
 
         live = self._live_stroke()
@@ -305,31 +384,29 @@ class Canvas(QWidget):
             has = drawing is not None and not drawing.is_empty()
             if not has and extra is None:
                 continue
-            p.setOpacity(layer.opacity)
+            lt = self._layer_t(layer, f)
+            op = layer.opacity * (layer.transform.value("opacity", f) if lt is not None else 1.0)
+            p.setOpacity(op)
             if extra is not None and extra.erase:
                 # ластик должен стирать уже нарисованное — рисуем слой заново вместе с ним
-                p.drawImage(origin, self._render(drawing, region, extra))
+                p.drawImage(origin, self._render(drawing, region, extra, lt=lt))
             else:
                 if has:
-                    p.drawImage(origin, self._cached(drawing, region))
+                    p.drawImage(origin, self._cached(drawing, region, lt=lt))
                 if extra is not None:
                     p.save()
                     p.setTransform(self.transform())
                     p.setClipRect(self.paper_rect())
+                    if lt is not None:
+                        p.setTransform(lt, True)
                     p.setRenderHint(QPainter.Antialiasing)
                     draw_stroke(p, extra)
                     p.restore()
         p.setOpacity(1.0)
 
-        p.setPen(QPen(QColor(0, 0, 0, 60), 1))
-        p.setBrush(Qt.NoBrush)
-        p.drawRect(paper)
-        self._paint_overlay(p)
-        p.end()
-
     def _paint_overlay(self, p: QPainter):
         p.setRenderHint(QPainter.Antialiasing)
-        t = self.transform()
+        t = self._view_t()
         # «верёвочка» стабилизатора
         if self._live is not None and self._stab is not None and self._target is not None:
             a, b = t.map(self._stab), t.map(self._target)
@@ -337,6 +414,19 @@ class Canvas(QWidget):
             p.drawLine(a, b)
             p.setBrush(QColor(theme.ACCENT))
             p.drawEllipse(a, 2.5, 2.5)
+        # точки кривой SAI
+        if self._sai:
+            p.setPen(QPen(QColor(theme.ACCENT), 1, Qt.DashLine))
+            p.setBrush(Qt.NoBrush)
+            pts = [t.map(q) for q in self._sai]
+            for a, b in zip(pts, pts[1:]):
+                p.drawLine(a, b)
+            p.setPen(QPen(QColor(theme.ACCENT), 1.5))
+            p.setBrush(QColor("#ffffff"))
+            for q in pts:
+                p.drawRect(QRectF(q.x() - 3.5, q.y() - 3.5, 7, 7))
+        if self.state.tool == "transform":
+            self._paint_transform_box(p)
         # опорные точки кривой
         if self._curve_bend is not None and self._shape_start is not None:
             p.setPen(QPen(QColor(theme.ACCENT), 1))
@@ -359,6 +449,11 @@ class Canvas(QWidget):
 
     def _on_tool_changed(self):
         self._cancel_shape()
+        self._sai = None
+        if self.state.tool == "transform" and self.project.selection is None:
+            layer = self.project.draw_layer()
+            if layer is not None:
+                self.project.select(("layer", layer.id))
         self._update_cursor()
 
     def _update_cursor(self):
@@ -413,8 +508,24 @@ class Canvas(QWidget):
         self.update()
 
     # ---------- общий ввод для мыши и пера ----------
-    def _begin_draw(self, pos: QPointF, pressure: float, shift: bool, tool: str):
+    def _to_local(self, pos: QPointF) -> QPointF:
+        """Точка курсора в координатах текущего слоя (с учётом его сдвига, поворота, деформации)."""
         scene = self.to_scene(pos)
+        layer = self.project.draw_layer()
+        lt = self._layer_t(layer, self.project.current_frame) if layer is not None else None
+        if lt is None:
+            return scene
+        inv, ok = lt.inverted()
+        return inv.map(scene) if ok else scene
+
+    def _view_t(self) -> QTransform:
+        """Из координат текущего слоя — в экран."""
+        layer = self.project.draw_layer()
+        lt = self._layer_t(layer, self.project.current_frame) if layer is not None else None
+        return lt * self.transform() if lt is not None else self.transform()
+
+    def _begin_draw(self, pos: QPointF, pressure: float, shift: bool, tool: str):
+        scene = self._to_local(pos)
         self._stroke_tool = tool
         self._mouse = pos
         self._last_t = time.perf_counter()
@@ -428,7 +539,7 @@ class Canvas(QWidget):
         self.update()
 
     def _move_draw(self, pos: QPointF, pressure: float, shift: bool):
-        scene = self.to_scene(pos)
+        scene = self._to_local(pos)
         if self._live_line is not None:
             a = self._live_line[0]
             self._live_line = (a, _constrain_45(a, scene) if shift else scene)
@@ -448,7 +559,7 @@ class Canvas(QWidget):
                 stroke = None
             self._live_line = None
         elif self._live is not None:
-            self._target = self.to_scene(pos)
+            self._target = self._to_local(pos)
             # стабилизатор отстаёт — дотягиваем линию до курсора
             if self._stab is not None:
                 gap = math.hypot(self._target.x() - self._stab.x(), self._target.y() - self._stab.y())
@@ -520,14 +631,16 @@ class Canvas(QWidget):
             self._update_cursor()
             return
         if e.button() == Qt.RightButton:
-            if tool == "zoom":
+            if tool == "curve" and self._sai:
+                self._finish_sai()
+            elif tool == "zoom":
                 self.zoom_step(-1, pos)
             elif self._shape_start is not None:
                 self._cancel_shape()
             return
         if e.button() != Qt.LeftButton:
             return
-        scene = self.to_scene(pos)
+        scene = self._to_local(pos)
         if tool == "zoom":
             self.zoom_step(-1 if e.modifiers() & Qt.AltModifier else 1, pos)
         elif tool == "eyedropper":
@@ -537,6 +650,18 @@ class Canvas(QWidget):
         elif tool in DRAW_TOOLS:
             if self._can_draw():
                 self._begin_draw(pos, 1.0, bool(e.modifiers() & Qt.ShiftModifier), tool)
+        elif tool == "transform":
+            self._tf_press(pos, e.modifiers())
+        elif tool == "curve":
+            if self._sai is None:
+                if not self._can_draw():
+                    return
+                self._sai = [scene]
+                self.message.emit("Щёлкайте, чтобы добавлять точки кривой. Enter или двойной щелчок — готово, "
+                                  "Backspace — убрать точку, Esc — отмена")
+            elif (self._sai[-1] - scene).manhattanLength() > 0.5:
+                self._sai.append(scene)
+            self.update()
         elif tool == "shapes":
             if self._curve_bend is not None:
                 self._commit_shape()  # второй щелчок фиксирует кривую
@@ -561,10 +686,18 @@ class Canvas(QWidget):
             if not self._pen:
                 self._move_draw(pos, self._pressure_at(pos), bool(e.modifiers() & Qt.ShiftModifier))
             return
+        if self._tf is not None:
+            self._tf_move(pos, e.modifiers())
+            return
+        if self.state.tool == "transform":
+            self._tf_hover(pos)
+        local = self._to_local(pos)
+        if self._sai is not None:
+            self._sai_hover = local
         if self._curve_bend is not None:
-            self._curve_bend = scene
+            self._curve_bend = local
         elif self._shape_start is not None:
-            self._shape_end = scene
+            self._shape_end = local
         self._mouse = pos
         self.update()
 
@@ -577,6 +710,9 @@ class Canvas(QWidget):
             return
         if (self._live is not None or self._live_line is not None) and not self._pen:
             self._end_draw(e.position())
+            return
+        if self._tf is not None:
+            self._tf_release()
             return
         st = self.state.tool_settings()
         stroke = None
@@ -600,6 +736,203 @@ class Canvas(QWidget):
         if stroke is not None:
             self.project.add_stroke(stroke)
 
+    def mouseDoubleClickEvent(self, e):
+        if self.state.tool == "curve" and self._sai:
+            self._finish_sai()
+            return
+        super().mouseDoubleClickEvent(e)
+
+    def _finish_sai(self):
+        pts = self._sai or []
+        self._sai = None
+        self._sai_hover = None
+        if len(pts) >= 2:
+            self._sai = pts
+            stroke = self._live_stroke()
+            self._sai = None
+            if stroke is not None:
+                self.project.add_stroke(stroke)
+        self.update()
+
+    # ---------- инструмент «Трансформация» ----------
+    def _element(self):
+        el = self.project.selected_element()
+        if el is None:
+            return None
+        obj, tr, w, h, cx, cy, start = el
+        local = self.project.current_frame - start
+        v = tr.values(local)
+        quad = element_quad(v, w, h, cx, cy)
+        return obj, tr, w, h, cx, cy, local, v, quad
+
+    def _handles(self, quad, v):
+        """Ручки рамки в экранных координатах: углы c0..c3, середины краёв e0..e3, поворот rot."""
+        t = self.transform()
+        q = [t.map(quad.at(i)) for i in range(4)]
+        hs = {f"c{i}": q[i] for i in range(4)}
+        for i in range(4):
+            a, b = q[i], q[(i + 1) % 4]
+            hs[f"e{i}"] = (a + b) / 2
+        top = hs["e0"]
+        center = (q[0] + q[1] + q[2] + q[3]) / 4
+        d = top - center
+        ln = math.hypot(d.x(), d.y()) or 1
+        hs["rot"] = top + d / ln * 26
+        return hs, q, center
+
+    def _paint_transform_box(self, p: QPainter):
+        el = self._element()
+        if el is None:
+            return
+        *_x, v, quad = el
+        hs, q, _c = self._handles(quad, v)
+        p.save()
+        p.setPen(QPen(QColor(theme.ACCENT), 1.5))
+        p.setBrush(Qt.NoBrush)
+        p.drawPolygon(QPolygonF(q))
+        p.drawLine(hs["e0"], hs["rot"])
+        p.setBrush(QColor("#ffffff"))
+        for name, pt in hs.items():
+            if name == "rot":
+                p.drawEllipse(pt, 6, 6)
+            else:
+                p.drawRect(QRectF(pt.x() - 4.5, pt.y() - 4.5, 9, 9))
+        p.restore()
+
+    def _hit_handle(self, pos: QPointF):
+        el = self._element()
+        if el is None:
+            return None
+        *_x, v, quad = el
+        hs, _q, _c = self._handles(quad, v)
+        for name, pt in hs.items():
+            if (pt - pos).manhattanLength() <= 11:
+                return name
+        return None
+
+    def _clip_under(self, pos: QPointF):
+        scene = self.to_scene(pos)
+        proj = self.project
+        for track in proj.tracks:  # сверху вниз
+            if track.kind != "video" or track.animation or not track.enabled or track.locked:
+                continue
+            clip = track.clip_at(proj.current_frame, proj.fps)
+            if clip is None or not hasattr(clip, "transform"):
+                continue
+            w, h = clip_geometry(proj, clip)
+            quad = element_quad(clip.transform.values(proj.current_frame - clip.start), w, h,
+                                proj.width / 2, proj.height / 2)
+            if quad.containsPoint(scene, Qt.OddEvenFill):
+                return clip
+        return None
+
+    def _tf_press(self, pos: QPointF, mods):
+        handle = self._hit_handle(pos)
+        if handle is None:
+            el = self._element()
+            inside = el is not None and el[-1].containsPoint(self.to_scene(pos), Qt.OddEvenFill)
+            if not inside:
+                clip = self._clip_under(pos)
+                if clip is not None:
+                    self.project.select(("clip", clip.id))
+                else:
+                    layer = self.project.draw_layer()
+                    if layer is None:
+                        return
+                    self.project.select(("layer", layer.id))
+            handle = "move"
+        el = self._element()
+        if el is None:
+            return
+        obj, tr, w, h, cx, cy, local, v, quad = el
+        if isinstance(getattr(obj, "locked", False), bool) and getattr(obj, "locked", False):
+            self.message.emit("Слой заблокирован")
+            return
+        mode = handle
+        if handle.startswith("c") and mods & Qt.ControlModifier:
+            mode = "pin" + handle[1]
+        elif handle.startswith("e") and mods & Qt.AltModifier:
+            mode = "skew" + handle[1]
+        self._tf = {"mode": mode, "press": self.to_scene(pos), "orig": tr.copy(), "obj": obj, "v0": dict(v),
+                    "w": w, "h": h, "cx": cx, "cy": cy, "local": local}
+
+    def _tf_hover(self, pos: QPointF):
+        h = self._hit_handle(pos)
+        if h is None:
+            el = self._element()
+            inside = el is not None and el[-1].containsPoint(self.to_scene(pos), Qt.OddEvenFill)
+            self.setCursor(Qt.SizeAllCursor if inside else Qt.ArrowCursor)
+        elif h == "rot":
+            self.setCursor(Qt.CrossCursor)
+        elif h.startswith("c"):
+            self.setCursor(Qt.SizeFDiagCursor if h in ("c0", "c2") else Qt.SizeBDiagCursor)
+        else:
+            self.setCursor(Qt.SizeVerCursor if h in ("e0", "e2") else Qt.SizeHorCursor)
+
+    def _tf_move(self, pos: QPointF, mods):
+        d = self._tf
+        m = self.to_scene(pos)
+        m0 = d["press"]
+        v0 = d["v0"]
+        w, h = d["w"], d["h"]
+        center = QPointF(d["cx"] + v0["x"], d["cy"] + v0["y"])
+        rot0 = QTransform().translate(center.x(), center.y()).rotate(v0["rot"]) \
+            .shear(math.tan(math.radians(v0["skx"])), 0)
+        inv, _ok = rot0.inverted()
+        ql, ql0 = inv.map(m), inv.map(m0)
+        mode = d["mode"]
+        new = {}
+        if mode == "move":
+            new = {"x": v0["x"] + m.x() - m0.x(), "y": v0["y"] + m.y() - m0.y()}
+        elif mode == "rot":
+            a = math.degrees(math.atan2(m.y() - center.y(), m.x() - center.x())
+                             - math.atan2(m0.y() - center.y(), m0.x() - center.x()))
+            r = v0["rot"] + a
+            if mods & Qt.ShiftModifier:
+                r = round(r / 15) * 15
+            new = {"rot": r}
+        elif mode.startswith("pin"):
+            i = mode[3]
+            new = {f"c{i}x": v0[f"c{i}x"] + m.x() - m0.x(), f"c{i}y": v0[f"c{i}y"] + m.y() - m0.y()}
+        elif mode.startswith("skew"):
+            i = int(mode[4])
+            if i in (0, 2):
+                sign = -1 if i == 0 else 1
+                dx = ql.x() - ql0.x()
+                new = {"skx": v0["skx"] + sign * math.degrees(math.atan2(dx, h / 2 * abs(v0["sy"]) or 1))}
+        elif mode.startswith("c"):
+            hx, hy = [(-1, -1), (1, -1), (1, 1), (-1, 1)][int(mode[1])]
+            if mods & Qt.ShiftModifier:  # свободно
+                new = {"sx": ql.x() / (hx * w / 2), "sy": ql.y() / (hy * h / 2)}
+            else:  # пропорционально
+                ref = QPointF(hx * w / 2 * v0["sx"], hy * h / 2 * v0["sy"])
+                k = (ql.x() * ref.x() + ql.y() * ref.y()) / max(1e-6, ref.x() ** 2 + ref.y() ** 2)
+                new = {"sx": v0["sx"] * k, "sy": v0["sy"] * k}
+        elif mode.startswith("e"):
+            i = int(mode[1])
+            if i == 0:
+                new = {"sy": -ql.y() / (h / 2)}
+            elif i == 2:
+                new = {"sy": ql.y() / (h / 2)}
+            elif i == 1:
+                new = {"sx": ql.x() / (w / 2)}
+            else:
+                new = {"sx": -ql.x() / (w / 2)}
+        tr = d["orig"].copy()
+        for prop, val in new.items():
+            tr.set(prop, d["local"], val)
+        d["obj"].transform = tr
+        self.project.contentChanged.emit()
+
+    def _tf_release(self):
+        d, self._tf = self._tf, None
+        obj = d["obj"]
+        final = obj.transform.copy()
+        obj.transform = d["orig"]
+        if final.to_dict() != d["orig"].to_dict():
+            self.project.edit("Трансформация", lambda: setattr(obj, "transform", final))
+        self.project.contentChanged.emit()
+
     def wheelEvent(self, e):
         d = e.angleDelta()
         if e.modifiers() & Qt.ControlModifier or self.state.tool == "zoom":
@@ -614,11 +947,33 @@ class Canvas(QWidget):
             self.update()
         e.accept()
 
+    def event(self, e):
+        # пока строится кривая, Enter/Esc/Backspace — её, а не горячие клавиши окна (Enter = «Воспроизвести»)
+        if (e.type() == QEvent.ShortcutOverride and (self._sai is not None or self._curve_bend is not None)
+                and e.key() in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape, Qt.Key_Backspace)):
+            e.accept()
+            return True
+        return super().event(e)
+
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Space and not e.isAutoRepeat():
             self._space = True
             self._update_cursor()
             return
+        if self._sai is not None:
+            if e.key() == Qt.Key_Escape:
+                self._sai = None
+                self.update()
+                return
+            if e.key() in (Qt.Key_Return, Qt.Key_Enter):
+                self._finish_sai()
+                return
+            if e.key() == Qt.Key_Backspace:
+                self._sai.pop()
+                if not self._sai:
+                    self._sai = None
+                self.update()
+                return
         if e.key() == Qt.Key_Escape and self._shape_start is not None:
             self._cancel_shape()
             return

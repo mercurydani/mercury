@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 
 from .. import icons, theme
 from ..brushes import ERASER_PRESETS, PRESETS, draw_brush_stroke, preview_points
-from ..state import TOOLS_BY_KEY, EditorState
+from ..state import BRUSH_TOOLS, TOOLS_BY_KEY, EditorState
 
 TOOL_HINTS = {
     "brush": "Shift — прямая линия. Стабилизатор убирает дрожание мыши, нажим от скорости делает линию живой.",
@@ -19,7 +19,11 @@ TOOL_HINTS = {
     "eraser": "Shift — стереть по прямой.",
     "shapes": "Shift — ровный квадрат / круг / угол 45°. «Кривая»: протяните линию, затем изогните мышью и щёлкните.",
     "select": "Выделение области кадра. Скоро.",
-    "transform": "Перемещение, поворот и масштаб. Скоро.",
+    "transform": "Выберите клип или слой щелчком. Внутри рамки — двигать, углы — масштаб (Shift — свободно), "
+                 "края — растянуть, кружок сверху — поворот (Shift — шаг 15°). Ctrl+угол — деформация, "
+                 "Alt+край — наклон. Если свойство анимировано, изменение ставит ключевой кадр.",
+    "curve": "Как в Paint Tool SAI: щёлкайте — линия плавно пройдёт через все точки. Enter, двойной щелчок "
+             "или правая кнопка — готово; Backspace — убрать точку; Esc — отмена. Рисует выбранной кистью.",
     "fill": "Заливка замкнутых областей. Скоро.",
     "eyedropper": "Щёлкните по холсту, чтобы взять цвет.",
     "hand": "Перетаскивайте холст. В любом инструменте — зажатый пробел или средняя кнопка мыши.",
@@ -211,7 +215,7 @@ class ToolOptions(QWidget):
         self.shortcut.setText(info.shortcut)
         st = self.state.tool_settings()
         has = st is not None
-        has_brush = tool in ("brush", "pencil", "eraser")
+        has_brush = tool in BRUSH_TOOLS
         if has_brush:
             self._fill_brushes()
         self.brush_title.setVisible(has_brush)
@@ -246,7 +250,7 @@ class ToolOptions(QWidget):
         self.shape.blockSignals(True)
         self.shape.setCurrentIndex(max(0, self.shape.findData(st.shape)))
         self.shape.blockSignals(False)
-        if self.brushes.isVisible() or self.state.tool in ("brush", "pencil", "eraser"):
+        if self.brushes.isVisible() or self.state.tool in BRUSH_TOOLS:
             self.brushes.blockSignals(True)
             for i in range(self.brushes.count()):
                 it = self.brushes.item(i)

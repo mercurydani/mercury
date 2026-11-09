@@ -42,7 +42,7 @@ def about_html() -> str:
 <h3>Сведения о сборке</h3>
 <table>
 <tr><td class=muted>Версия программы</td><td>{APP_VERSION}</td></tr>
-<tr><td class=muted>Формат проекта</td><td>.mtoonz, версия 2</td></tr>
+<tr><td class=muted>Формат проекта</td><td>.mtoonz, версия 3</td></tr>
 <tr><td class=muted>Python</td><td>{platform.python_version()}</td></tr>
 <tr><td class=muted>Qt / PySide6</td><td>{qVersion()} / {PYSIDE_VERSION}</td></tr>
 <tr><td class=muted>Система</td><td>{platform.system()} {platform.release()} ({platform.machine()})</td></tr>

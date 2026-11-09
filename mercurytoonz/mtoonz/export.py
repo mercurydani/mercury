@@ -199,8 +199,9 @@ def build_command(ffmpeg: str, project: Project, s: ExportSettings) -> list[str]
     return cmd
 
 
-def _frame_bytes(project: Project, frame: int, s: ExportSettings) -> bytes:
-    img = render_frame(project, frame, background=not s.transparent, size=(s.width, s.height))
+def _frame_bytes(project: Project, frame: int, s: ExportSettings, pool=None) -> bytes:
+    img = render_frame(project, frame, background=not s.transparent, size=(s.width, s.height), pool=pool,
+                       media_w=s.width)
     img = img.convertToFormat(QImage.Format_RGBA8888)
     return img.constBits().tobytes()[: s.width * s.height * 4]
 
@@ -208,6 +209,15 @@ def _frame_bytes(project: Project, frame: int, s: ExportSettings) -> bytes:
 def export(project: Project, s: ExportSettings, progress=None) -> str:
     """Экспортирует проект. progress(done, total) -> bool; False — отмена.
     Возвращает путь к результату."""
+    from .media import MediaPool
+    pool = MediaPool()  # видео читаются подряд — каждый кадр не перематывается заново
+    try:
+        return _export(project, s, progress, pool)
+    finally:
+        pool.close()
+
+
+def _export(project: Project, s: ExportSettings, progress, pool) -> str:
     total = s.frames if FORMATS_BY_KEY[s.fmt].video else 1
 
     def tick(done):
@@ -220,7 +230,8 @@ def export(project: Project, s: ExportSettings, progress=None) -> str:
         digits = max(4, len(str(s.last + 1)))
         for i, f in enumerate(range(s.first, s.last + 1)):
             tick(i)
-            img = render_frame(project, f, background=not s.transparent, size=(s.width, s.height))
+            img = render_frame(project, f, background=not s.transparent, size=(s.width, s.height), pool=pool,
+                               media_w=s.width)
             img.save(os.path.join(s.path, f"{base}_{f + 1:0{digits}d}.png"), "PNG")
         tick(total)
         return s.path
@@ -232,10 +243,10 @@ def export(project: Project, s: ExportSettings, progress=None) -> str:
     folder = os.path.dirname(os.path.abspath(s.path))
     os.makedirs(folder, exist_ok=True)
     with tempfile.TemporaryFile() as log:
-        return _run_ffmpeg(project, s, cmd, log, total, tick)
+        return _run_ffmpeg(project, s, cmd, log, total, tick, pool)
 
 
-def _run_ffmpeg(project: Project, s: ExportSettings, cmd, log, total, tick) -> str:
+def _run_ffmpeg(project: Project, s: ExportSettings, cmd, log, total, tick, pool) -> str:
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE if FORMATS_BY_KEY[s.fmt].video else subprocess.DEVNULL,
                             stdout=subprocess.DEVNULL, stderr=log, creationflags=flags)
@@ -244,7 +255,7 @@ def _run_ffmpeg(project: Project, s: ExportSettings, cmd, log, total, tick) -> s
             for i, f in enumerate(range(s.first, s.last + 1)):
                 tick(i)
                 try:
-                    proc.stdin.write(_frame_bytes(project, f, s))
+                    proc.stdin.write(_frame_bytes(project, f, s, pool))
                 except (BrokenPipeError, OSError):
                     break  # FFmpeg завершился с ошибкой — причину прочитаем ниже
             try:

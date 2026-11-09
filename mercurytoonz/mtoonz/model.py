@@ -13,6 +13,7 @@ from dataclasses import dataclass, field, replace
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QColor, QUndoCommand, QUndoStack
 
+from .animation import Key, Transform
 from .brushes import BrushParams
 
 
@@ -58,6 +59,7 @@ class Layer:
         self.tag = LAYER_TAGS[Layer._counter % len(LAYER_TAGS)]
         Layer._counter += 1
         self.keys: dict[int, Drawing] = {}
+        self.transform = Transform()   # слой как «элемент»: движение, поворот, деформация по ключам
 
     def key_at_or_before(self, frame: int) -> int | None:
         best = None
@@ -82,11 +84,12 @@ class Layer:
 
     # состояние для истории правок
     def get_state(self):
-        return (self.name, {k: d.copy() for k, d in self.keys.items()})
+        return (self.name, {k: d.copy() for k, d in self.keys.items()}, self.transform.copy())
 
     def set_state(self, state):
-        self.name, keys = state
+        self.name, keys, tr = state
         self.keys = {k: d.copy() for k, d in keys.items()}
+        self.transform = tr.copy()
 
 
 @dataclass
@@ -108,6 +111,39 @@ class AudioClip:
         return replace(self)
 
 
+@dataclass
+class VisualClip:
+    """Клип на видеодорожке: видео, картинка или GIF. Может двигаться и деформироваться по ключам."""
+
+    media_id: str
+    kind: str                  # video / image / gif
+    name: str
+    start: int = 0             # первый кадр на таймлайне
+    length: int = 48           # длительность в кадрах
+    offset: float = 0.0        # с какой секунды исходника начинается клип
+    speed: float = 1.0         # скорость воспроизведения (1 = обычная)
+    src_w: int = 1920
+    src_h: int = 1080
+    source_duration: float = 0.0
+    transform: Transform = field(default_factory=Transform)
+    id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+
+    def end_frame(self, fps: int = 0) -> int:
+        return self.start + max(1, self.length)
+
+    def copy(self) -> "VisualClip":
+        return replace(self, transform=self.transform.copy())
+
+    def source_time(self, frame: int, fps: int) -> float:
+        return self.offset + (frame - self.start) / max(1, fps) * self.speed
+
+    def max_length(self, fps: int) -> int | None:
+        """Сколько кадров можно показать до конца исходника (у картинок — без ограничения)."""
+        if self.kind != "video" or self.source_duration <= 0:
+            return None
+        return max(1, int((self.source_duration - self.offset) * fps / max(0.01, self.speed)))
+
+
 class Track:
     """Дорожка таймлайна: видео ("video") или звук ("audio").
 
@@ -122,7 +158,7 @@ class Track:
         self.animation = animation
         self.enabled = True   # видимость видео / звук включён
         self.locked = False
-        self.clips: list[AudioClip] = []
+        self.clips: list = []   # AudioClip на звуковых дорожках, VisualClip на видеодорожках
         self.raw_clips: list = []   # клипы незнакомого типа из более новых версий — храним как есть
 
     def get_state(self):
@@ -132,13 +168,13 @@ class Track:
         self.name, clips = state
         self.clips = [c.copy() for c in clips]
 
-    def clip_at(self, frame: int, fps: int) -> AudioClip | None:
+    def clip_at(self, frame: int, fps: int):
         for c in self.clips:
             if c.start <= frame < c.end_frame(fps):
                 return c
         return None
 
-    def is_free(self, start: int, end: int, fps: int, ignore: AudioClip | None = None) -> bool:
+    def is_free(self, start: int, end: int, fps: int, ignore=None) -> bool:
         return all(c is ignore or c.end_frame(fps) <= start or c.start >= end for c in self.clips)
 
 
@@ -152,6 +188,7 @@ class Project(QObject):
     frameChanged = Signal(int)
     layerChanged = Signal(int)
     sceneChanged = Signal()        # размер листа
+    selectionChanged = Signal()    # выбран другой элемент (клип или слой)
     dirtyChanged = Signal(bool)
     fileChanged = Signal()         # имя проекта или путь к файлу
 
@@ -168,6 +205,8 @@ class Project(QObject):
         self.tracks: list[Track] = []  # дорожки таймлайна сверху вниз
         self.current_track = 0
         self.media: dict[str, str] = {}  # id медиафайла -> путь к файлу на диске
+        self.media_info: dict = {}       # id медиафайла -> media.MediaInfo (для видео)
+        self.selection: tuple | None = None  # выбранный элемент: ("clip", id) или ("layer", id)
         self.current_frame = 0
         self.current_layer = 0
         self._extra_dirty = False      # изменения вне истории (видимость слоя и т.п.)
@@ -186,6 +225,7 @@ class Project(QObject):
         self.layers[0].keys[0] = Drawing()
         self.tracks = default_tracks()
         self.media = {}
+        self.media_info = {}
         self._after_load()
 
     def _after_load(self):
@@ -193,6 +233,7 @@ class Project(QObject):
         self.current_frame = 0
         self.current_layer = 0
         self.current_track = 0
+        self.selection = None
         self.undo_stack.clear()
         self.undo_stack.setClean()
         self._extra_dirty = False
@@ -449,8 +490,7 @@ class Project(QObject):
         def do():
             track = Track(kind, f"Видео {n}" if kind == "video" else f"Звук {n}")
             if kind == "video":
-                # видео — над звуком: после последней видеодорожки
-                idx = max((i for i, t in enumerate(self.tracks) if t.kind == "video"), default=-1) + 1
+                idx = self._new_video_index()
             else:
                 idx = len(self.tracks)
             self.tracks.insert(idx, track)
@@ -517,7 +557,7 @@ class Project(QObject):
         src, clip = found
         dst = to_track or src
         start = max(0, start)
-        if dst.kind != "audio" or dst.locked:
+        if dst.kind != src.kind or dst.animation or dst.locked:
             return False
         if start == clip.start and dst is src:
             return False
@@ -553,6 +593,154 @@ class Project(QObject):
 
     def animation_enabled(self) -> bool:
         return any(t.enabled for t in self.tracks if t.animation) or not any(t.animation for t in self.tracks)
+
+    # ---------- элементы: клипы на видеодорожках и слои с трансформацией ----------
+    def _new_video_index(self) -> int:
+        """Новая видеодорожка встаёт сразу под «Анимацией» — над остальными клипами:
+        верхняя дорожка в списке рисуется поверх (как V2 над V1 в монтажных программах)."""
+        anim = next((i for i, t in enumerate(self.tracks) if t.animation), -1)
+        return anim + 1
+
+    def _video_track_for(self, start: int, end: int) -> Track:
+        cur = self.track()
+        order = ([cur] if cur is not None and cur.kind == "video" and not cur.animation else []) + \
+                [t for t in self.tracks if t.kind == "video" and not t.animation and t is not cur]
+        for t in order:
+            if not t.locked and t.is_free(start, end, self.fps):
+                return t
+        n = sum(1 for t in self.tracks if t.kind == "video" and not t.animation) + 1
+        t = Track("video", f"Видео {n}")
+        self.tracks.insert(self._new_video_index(), t)
+        return t
+
+    def add_visual_clip(self, clip: VisualClip, path: str, info=None) -> VisualClip:
+        self.media[clip.media_id] = path
+        if info is not None:
+            self.media_info[clip.media_id] = info
+
+        def do():
+            track = self._video_track_for(clip.start, clip.end_frame())
+            track.clips.append(clip)
+            self.current_track = self.tracks.index(track)
+            if clip.end_frame() > self.frame_count:
+                self.frame_count = clip.end_frame()
+
+        self.edit("Добавить " + {"video": "видео", "gif": "GIF", "image": "картинку"}.get(clip.kind, "клип"), do)
+        self.select(("clip", clip.id))
+        return clip
+
+    def trim_clip(self, clip_id: str, start: int, length: int, offset: float | None = None) -> bool:
+        found = self.find_clip(clip_id)
+        if found is None:
+            return False
+        track, clip = found
+        start, length = max(0, start), max(1, length)
+        if not track.is_free(start, start + length, self.fps, ignore=clip):
+            return False
+
+        def do():
+            _t, c = self.find_clip(clip_id)
+            if isinstance(c, VisualClip):
+                c.transform.shift_keys(c.start - start)  # ключи привязаны к началу клипа
+                if offset is not None:
+                    c.offset = max(0.0, offset)
+                c.length = length
+            c.start = start
+            if c.end_frame(self.fps) > self.frame_count:
+                self.frame_count = c.end_frame(self.fps)
+
+        self.edit("Обрезать клип", do)
+        return True
+
+    def split_clip(self, clip_id: str | None = None, frame: int | None = None) -> bool:
+        """Разрезает клип на кадре: получается два клипа подряд (ключи переносятся во вторую часть)."""
+        frame = self.current_frame if frame is None else frame
+        if clip_id is None:
+            sel = self.selection
+            clip_id = sel[1] if sel and sel[0] == "clip" else None
+        if clip_id is None:
+            t = self.track()
+            c = t.clip_at(frame, self.fps) if t is not None and not t.animation else None
+            clip_id = c.id if c is not None and isinstance(c, VisualClip) else None
+        found = self.find_clip(clip_id) if clip_id else None
+        if found is None or not isinstance(found[1], VisualClip):
+            return False
+        _track, clip = found
+        cut = frame - clip.start
+        if not (0 < cut < clip.length):
+            return False
+
+        def do():
+            t, c = self.find_clip(clip_id)
+            second = c.copy()
+            second.id = uuid.uuid4().hex[:12]
+            second.start = frame
+            second.length = c.length - cut
+            if c.kind == "video":
+                second.offset = c.offset + cut / self.fps * c.speed
+            # значения свойств в момент разреза сохраняются в обеих частях
+            vals = c.transform.values(cut)
+            second.transform.shift_keys(-cut)
+            for p, ks in second.transform.keys.items():
+                ks[:] = [k for k in ks if k.frame >= 0]
+                if not ks or ks[0].frame > 0:
+                    ks.insert(0, Key(0, vals[p], "smooth"))
+            for p, ks in c.transform.keys.items():
+                tail = [k for k in ks if k.frame >= cut]
+                ks[:] = [k for k in ks if k.frame < cut]
+                if tail:
+                    ks.append(Key(cut, vals[p], "smooth"))
+            c.length = cut
+            t.clips.append(second)
+
+        self.edit("Разрезать клип", do)
+        return True
+
+    def select(self, sel: tuple | None):
+        if sel != self.selection:
+            self.selection = sel
+            self.selectionChanged.emit()
+
+    def selected_element(self):
+        """(объект, Transform, ширина, высота, центр x, центр y, начало) выбранного элемента или None."""
+        if not self.selection:
+            return None
+        kind, oid = self.selection
+        if kind == "clip":
+            found = self.find_clip(oid)
+            if found is None or not isinstance(found[1], VisualClip):
+                return None
+            c = found[1]
+            fit = min(self.width / max(1, c.src_w), self.height / max(1, c.src_h))
+            return c, c.transform, c.src_w * fit, c.src_h * fit, self.width / 2, self.height / 2, c.start
+        for layer in self.layers:
+            if layer.id == oid:
+                return layer, layer.transform, self.width, self.height, self.width / 2, self.height / 2, 0
+        return None
+
+    def edit_element(self, text: str, fn):
+        """Правка трансформации выбранного элемента: fn(transform, локальный кадр)."""
+        el = self.selected_element()
+        if el is None:
+            return
+        obj, _tr, *_rest, start = el
+        local = self.current_frame - start
+
+        def do():
+            fn(obj.transform, local)
+
+        self.edit(text, do)
+        self.contentChanged.emit()
+
+    def visual_clips_at(self, frame: int):
+        """Видимые клипы на кадре снизу вверх: [(дорожка, клип)]."""
+        out = []
+        for t in reversed(self.tracks):
+            if t.kind == "video" and not t.animation and t.enabled:
+                c = t.clip_at(frame, self.fps)
+                if c is not None and isinstance(c, VisualClip):
+                    out.append((t, c))
+        return out
 
     def set_scene(self, width: int, height: int, fps: int, frame_count: int):
         if (width, height, fps, frame_count) == (self.width, self.height, self.fps, self.frame_count):
