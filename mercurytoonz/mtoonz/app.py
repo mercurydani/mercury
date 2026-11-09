@@ -1,0 +1,454 @@
+"""Главное окно MercuryToonz."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import QSize, Qt, QTimer
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence
+from PySide6.QtWidgets import (
+    QApplication, QDialog, QDialogButtonBox, QDockWidget, QFormLayout, QLabel,
+    QMainWindow, QMessageBox, QSizePolicy, QSpinBox, QToolBar, QWidget,
+)
+
+from . import APP_NAME, APP_VERSION, icons, theme
+from .model import Project
+from .state import TOOL_GROUP_STARTS, TOOLS, EditorState
+from .widgets.canvas import Canvas
+from .widgets.color_panel import ColorPanel
+from .widgets.timeline import Timeline
+from .widgets.tool_options import ToolOptions
+
+SHORTCUTS_HELP = """
+<h3>Инструменты</h3>
+<table cellspacing=4>
+<tr><td><b>V</b></td><td>Выделение</td><td width=24></td><td><b>Q</b></td><td>Трансформация</td></tr>
+<tr><td><b>B</b></td><td>Кисть</td><td></td><td><b>P</b></td><td>Карандаш</td></tr>
+<tr><td><b>E</b></td><td>Ластик</td><td></td><td><b>G</b></td><td>Заливка</td></tr>
+<tr><td><b>U</b></td><td>Фигуры (Shift — пропорционально)</td><td></td><td><b>I</b></td><td>Пипетка</td></tr>
+<tr><td><b>H</b> / Пробел</td><td>Рука</td><td></td><td><b>Z</b></td><td>Масштаб</td></tr>
+<tr><td><b>[ ]</b></td><td>Размер кисти</td><td></td><td><b>X</b></td><td>Поменять цвета</td></tr>
+</table>
+<h3>Кадры и воспроизведение</h3>
+<table cellspacing=4>
+<tr><td><b>F6</b></td><td>Ключевой кадр (копия)</td><td width=24></td><td><b>F7</b></td><td>Пустой ключевой кадр</td></tr>
+<tr><td><b>F5</b></td><td>Вставить кадр</td><td></td><td><b>Shift+F5</b></td><td>Удалить кадр</td></tr>
+<tr><td><b>, .</b></td><td>Предыдущий / следующий кадр</td><td></td><td><b>Home End</b></td><td>Первый / последний</td></tr>
+<tr><td><b>Enter</b></td><td>Воспроизвести / пауза</td><td></td><td><b>O</b></td><td>Луковая кожа</td></tr>
+</table>
+<h3>Вид</h3>
+<table cellspacing=4>
+<tr><td><b>Ctrl+колесо</b></td><td>Масштаб холста</td><td width=24></td><td><b>Ctrl+0</b></td><td>Вписать в окно</td></tr>
+<tr><td><b>Ctrl+1</b></td><td>Масштаб 100%</td><td></td><td><b>Ctrl+колесо</b> на таймлайне</td><td>Ширина кадров</td></tr>
+</table>
+"""
+
+
+class SceneSettingsDialog(QDialog):
+    def __init__(self, project: Project, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Настройки сцены")
+        form = QFormLayout(self)
+        form.setContentsMargins(18, 18, 18, 18)
+        form.setSpacing(10)
+        self.w = QSpinBox()
+        self.w.setRange(16, 8192)
+        self.w.setValue(project.width)
+        self.w.setSuffix(" px")
+        self.h = QSpinBox()
+        self.h.setRange(16, 8192)
+        self.h.setValue(project.height)
+        self.h.setSuffix(" px")
+        self.fps = QSpinBox()
+        self.fps.setRange(1, 60)
+        self.fps.setValue(project.fps)
+        self.frames = QSpinBox()
+        self.frames.setRange(1, 9999)
+        self.frames.setValue(project.frame_count)
+        for sb in (self.w, self.h, self.fps, self.frames):
+            sb.setMinimumWidth(110)
+        form.addRow("Ширина", self.w)
+        form.addRow("Высота", self.h)
+        form.addRow("Кадров в секунду", self.fps)
+        form.addRow("Длина (кадров)", self.frames)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.button(QDialogButtonBox.Ok).setDefault(True)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        form.addRow(buttons)
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.project = Project()
+        self.state = EditorState()
+        self.file_name: str | None = None
+        self.resize(1480, 920)
+        self.setWindowIcon(icons.icon("logo", theme.ACCENT))
+        self.setDockNestingEnabled(True)
+        self.setCorner(Qt.BottomRightCorner, Qt.BottomDockWidgetArea)
+        self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
+
+        self.play_timer = QTimer(self)
+        self.play_timer.timeout.connect(self._tick)
+
+        self.canvas = Canvas(self.project, self.state)
+        self.setCentralWidget(self.canvas)
+
+        self.actions: dict[str, QAction] = {}
+        self._create_actions()
+        self._create_toolbox()
+        self._create_topbar()
+        self._create_docks()
+        self._create_menus()
+        self._create_statusbar()
+
+        self.project.undo_stack.cleanChanged.connect(lambda _: self._update_title())
+        self.project.frameChanged.connect(lambda _: self._update_status())
+        self.project.layerChanged.connect(lambda _: self._update_status())
+        self.project.structureChanged.connect(self._update_status)
+        self.state.toolChanged.connect(self._on_tool_changed)
+        self.canvas.message.connect(lambda m: self.statusBar().showMessage(m, 3000))
+        self.canvas.zoomChanged.connect(lambda z: self.zoom_label.setText(f"{z * 100:.0f}%"))
+        self.canvas.cursorMoved.connect(lambda x, y: self.pos_label.setText(f"X {x:5.0f}   Y {y:5.0f}"))
+        self._update_title()
+        self._update_status()
+
+    # ------------------------------------------------------------------ actions
+    def _act(self, key, text, icon=None, shortcut=None, slot=None, checkable=False, tip=None):
+        a = QAction(text, self)
+        if icon:
+            a.setIcon(icons.icon(icon))
+        if shortcut:
+            seqs = shortcut if isinstance(shortcut, (list, tuple)) else [shortcut]
+            a.setShortcuts([QKeySequence(s) for s in seqs])
+        a.setCheckable(checkable)
+        if slot:
+            a.triggered.connect(slot)
+        sc = a.shortcut().toString(QKeySequence.NativeText)
+        a.setToolTip(f"{tip or text}  ({sc})" if sc else (tip or text))
+        a.setStatusTip(tip or text)
+        self.addAction(a)  # чтобы горячие клавиши работали без меню
+        self.actions[key] = a
+        return a
+
+    def _soon(self, what):
+        return lambda: self.statusBar().showMessage(f"«{what}» появится на следующих шагах", 3000)
+
+    def _create_actions(self):
+        p = self.project
+        A = self._act
+        # файл
+        A("new", "Новый проект", "new", QKeySequence.New, self.new_project)
+        A("open", "Открыть…", "open", QKeySequence.Open, self._soon("Открытие проекта"))
+        A("save", "Сохранить", "save", QKeySequence.Save, self._soon("Сохранение"))
+        A("save_as", "Сохранить как…", None, QKeySequence.SaveAs, self._soon("Сохранение"))
+        A("export_video", "Видео (MP4)…", "export", None, self._soon("Экспорт видео"))
+        A("export_gif", "Анимированный GIF…", None, None, self._soon("Экспорт GIF"))
+        A("export_png", "Последовательность PNG…", None, None, self._soon("Экспорт PNG"))
+        A("quit", "Выход", None, QKeySequence.Quit, self.close)
+        # правка
+        undo = p.undo_stack.createUndoAction(self, "Отменить")
+        undo.setIcon(icons.icon("undo"))
+        undo.setShortcut(QKeySequence.Undo)
+        redo = p.undo_stack.createRedoAction(self, "Повторить")
+        redo.setIcon(icons.icon("redo"))
+        redo.setShortcuts([QKeySequence.Redo, QKeySequence("Ctrl+Y")])
+        for k, a in (("undo", undo), ("redo", redo)):
+            self.addAction(a)
+            self.actions[k] = a
+        A("cut", "Вырезать", None, QKeySequence.Cut, self._soon("Вырезать"))
+        A("copy", "Копировать", None, QKeySequence.Copy, self._soon("Копировать"))
+        A("paste", "Вставить", None, QKeySequence.Paste, self._soon("Вставить"))
+        A("clear", "Очистить кадр", "trash", "Delete", p.clear_drawing)
+        A("swap_colors", "Поменять цвета", "swap", "X", self.state.swap_colors)
+        A("size_up", "Увеличить кисть", None, "]", lambda: self._brush_size(1.25))
+        A("size_down", "Уменьшить кисть", None, "[", lambda: self._brush_size(0.8))
+        # вид
+        A("zoom_in", "Приблизить", None, [QKeySequence.ZoomIn, "Ctrl+="], lambda: self.canvas.zoom_step(1))
+        A("zoom_out", "Отдалить", None, QKeySequence.ZoomOut, lambda: self.canvas.zoom_step(-1))
+        A("zoom_fit", "Вписать в окно", "fit", "Ctrl+0", self.canvas.fit_to_view)
+        A("zoom_100", "Масштаб 100%", None, "Ctrl+1", lambda: self.canvas.set_zoom(1.0))
+        onion = A("onion", "Луковая кожа", "onion", "O", self.state.set_onion, checkable=True,
+                  tip="Луковая кожа — показать соседние рисунки")
+        onion.setChecked(self.state.onion)
+        # кадры
+        A("key", "Ключевой кадр", "keyframe", "F6", lambda: p.insert_keyframe(False),
+          tip="Ключевой кадр — копия текущего рисунка")
+        A("key_blank", "Пустой ключевой кадр", "keyframe-empty", "F7", lambda: p.insert_keyframe(True))
+        A("key_remove", "Удалить ключевой кадр", None, "Shift+F6", p.remove_keyframe)
+        A("frame_insert", "Вставить кадр", "frame-add", "F5", p.insert_frame,
+          tip="Вставить кадр — продлить экспозицию")
+        A("frame_remove", "Удалить кадр", "frame-remove", "Shift+F5", p.remove_frame)
+        A("first", "Первый кадр", "first", "Home", lambda: p.set_frame(0))
+        A("prev", "Предыдущий кадр", "prev", [",", "Left"], lambda: self._step(-1))
+        A("next", "Следующий кадр", "next", [".", "Right"], lambda: self._step(1))
+        A("last", "Последний кадр", "last", "End", lambda: p.set_frame(p.frame_count - 1))
+        A("prev_key", "Предыдущий ключ", None, "Shift+,", lambda: self._step_key(-1))
+        A("next_key", "Следующий ключ", None, "Shift+.", lambda: self._step_key(1))
+        # слои
+        A("layer_add", "Новый слой", "layer-add", "Ctrl+Shift+N", p.add_layer)
+        A("layer_duplicate", "Дублировать слой", "duplicate", "Ctrl+Shift+D", p.duplicate_layer)
+        A("layer_delete", "Удалить слой", "trash", None, p.delete_layer)
+        A("layer_rename", "Переименовать слой…", None, "F2", self.rename_layer)
+        A("layer_up", "Слой выше", None, "Ctrl+Shift+Up", lambda: p.move_layer(-1))
+        A("layer_down", "Слой ниже", None, "Ctrl+Shift+Down", lambda: p.move_layer(1))
+        # анимация
+        A("play", "Воспроизвести", "play", ["Return", "Enter"], self.toggle_play,
+          tip="Воспроизвести / пауза")
+        loop = A("loop", "Зациклить", "loop", None, lambda v: setattr(self.state, "loop", v), checkable=True)
+        loop.setChecked(self.state.loop)
+        A("tween", "Создать промежуточные кадры", "tween", None, self._soon("Промежуточные кадры (tween)"))
+        A("scene", "Настройки сцены…", "settings", "Ctrl+Alt+S", self.scene_settings)
+        # справка
+        A("shortcuts", "Горячие клавиши", None, "F1", self.show_shortcuts)
+        A("about", "О программе", None, None, self.show_about)
+
+        # инструменты
+        self.tool_group = QActionGroup(self)
+        self.tool_group.setExclusive(True)
+        for t in TOOLS:
+            a = A(f"tool_{t.key}", t.title, t.icon, t.shortcut,
+                  (lambda checked=False, k=t.key: self.state.set_tool(k)), checkable=True)
+            a.setActionGroup(self.tool_group)
+            a.setIcon(icons.icon(t.icon))
+        self.actions[f"tool_{self.state.tool}"].setChecked(True)
+
+    def _brush_size(self, factor):
+        st = self.state.tool_settings()
+        if st:
+            new = st.size * factor
+            new = max(new, st.size + 1) if factor > 1 else min(new, st.size - 1)
+            st.size = float(max(1, min(300, round(new))))
+            self.state.toolChanged.emit(self.state.tool)  # обновить панель
+            self.state.settingsChanged.emit()
+
+    # ------------------------------------------------------------------ UI parts
+    def _create_toolbox(self):
+        tb = QToolBar("Инструменты")
+        tb.setObjectName("toolbox")
+        tb.setOrientation(Qt.Vertical)
+        tb.setMovable(False)
+        tb.setIconSize(QSize(22, 22))
+        for t in TOOLS:
+            if t.key in TOOL_GROUP_STARTS:
+                tb.addSeparator()
+            tb.addAction(self.actions[f"tool_{t.key}"])
+        self.addToolBar(Qt.LeftToolBarArea, tb)
+        self.toolbox = tb
+
+    def _create_topbar(self):
+        tb = QToolBar("Основная панель")
+        tb.setObjectName("topbar")
+        tb.setMovable(False)
+        tb.setIconSize(QSize(18, 18))
+        logo = QLabel()
+        logo.setPixmap(icons.pixmap("logo", theme.ACCENT, 22))
+        logo.setContentsMargins(6, 0, 4, 0)
+        tb.addWidget(logo)
+        name = QLabel(f"<b>Mercury</b><span style='color:{theme.ACCENT}'><b>Toonz</b></span>")
+        name.setContentsMargins(0, 0, 12, 0)
+        tb.addWidget(name)
+        for k in ("new", "open", "save"):
+            tb.addAction(self.actions[k])
+        tb.addSeparator()
+        for k in ("undo", "redo"):
+            tb.addAction(self.actions[k])
+        tb.addSeparator()
+        tb.addAction(self.actions["export_video"])
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        tb.addWidget(spacer)
+        tb.addAction(self.actions["onion"])
+        tb.addAction(self.actions["zoom_fit"])
+        tb.addAction(self.actions["scene"])
+        self.addToolBar(Qt.TopToolBarArea, tb)
+        self.topbar = tb
+
+    def _dock(self, title, widget, area, name):
+        d = QDockWidget(title, self)
+        d.setObjectName(name)
+        d.setWidget(widget)
+        d.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable |
+                      QDockWidget.DockWidgetClosable)
+        self.addDockWidget(area, d)
+        return d
+
+    def _create_docks(self):
+        self.tool_options = ToolOptions(self.state)
+        self.color_panel = ColorPanel(self.state)
+        self.timeline = Timeline(self.project, self.state, self.actions)
+        self.dock_tool = self._dock("Инструмент", self.tool_options, Qt.RightDockWidgetArea, "dockTool")
+        self.dock_color = self._dock("Цвет", self.color_panel, Qt.RightDockWidgetArea, "dockColor")
+        self.dock_timeline = self._dock("Таймлайн", self.timeline, Qt.BottomDockWidgetArea, "dockTimeline")
+        self.resizeDocks([self.dock_tool, self.dock_color], [300, 300], Qt.Horizontal)
+        self.resizeDocks([self.dock_tool, self.dock_color], [210, 400], Qt.Vertical)
+        self.resizeDocks([self.dock_timeline], [250], Qt.Vertical)
+
+    def _create_menus(self):
+        mb = self.menuBar()
+        a = self.actions
+
+        def menu(title, items):
+            m = mb.addMenu(title)
+            for it in items:
+                if it is None:
+                    m.addSeparator()
+                elif isinstance(it, tuple):
+                    sub = m.addMenu(it[0])
+                    for k in it[1]:
+                        sub.addAction(a[k])
+                elif isinstance(it, QAction):
+                    m.addAction(it)
+                else:
+                    m.addAction(a[it])
+            return m
+
+        menu("Файл", ["new", "open", None, "save", "save_as", None,
+                      ("Экспорт", ["export_video", "export_gif", "export_png"]), None, "quit"])
+        menu("Правка", ["undo", "redo", None, "cut", "copy", "paste", "clear", None,
+                        "swap_colors", "size_up", "size_down"])
+        menu("Вид", ["zoom_in", "zoom_out", "zoom_fit", "zoom_100", None, "onion", None,
+                     self.dock_tool.toggleViewAction(), self.dock_color.toggleViewAction(),
+                     self.dock_timeline.toggleViewAction()])
+        tools = mb.addMenu("Инструменты")
+        for t in TOOLS:
+            tools.addAction(a[f"tool_{t.key}"])
+        menu("Кадр", ["key", "key_blank", "key_remove", None, "frame_insert", "frame_remove", None,
+                      "first", "prev", "next", "last", None, "prev_key", "next_key"])
+        menu("Слой", ["layer_add", "layer_duplicate", "layer_delete", "layer_rename", None,
+                      "layer_up", "layer_down"])
+        menu("Анимация", ["play", "loop", None, "tween", None, "scene"])
+        menu("Справка", ["shortcuts", None, "about"])
+
+    def _create_statusbar(self):
+        sb = self.statusBar()
+        self.tool_label = QLabel()
+        self.frame_label = QLabel()
+        self.pos_label = QLabel("X     0   Y     0")
+        self.pos_label.setMinimumWidth(130)
+        self.zoom_label = QLabel(f"{self.canvas.zoom * 100:.0f}%")
+        self.zoom_label.setMinimumWidth(50)
+        self.size_label = QLabel()
+        for w in (self.tool_label, self.frame_label, self.size_label, self.pos_label, self.zoom_label):
+            sb.addPermanentWidget(w)
+
+    # ------------------------------------------------------------------ behaviour
+    def _on_tool_changed(self, tool):
+        a = self.actions.get(f"tool_{tool}")
+        if a and not a.isChecked():
+            a.setChecked(True)
+        self._update_status()
+
+    def _update_status(self):
+        p = self.project
+        layer = p.layer()
+        self.frame_label.setText(f"Кадр {p.current_frame + 1}/{p.frame_count}   ·   {layer.name if layer else '—'}")
+        self.tool_label.setText(next(t.title for t in TOOLS if t.key == self.state.tool))
+        self.size_label.setText(f"{p.width}×{p.height} · {p.fps} fps")
+
+    def _update_title(self):
+        name = self.file_name or "Без названия"
+        dirty = "" if self.project.undo_stack.isClean() else " •"
+        self.setWindowTitle(f"{name}{dirty} — {APP_NAME}")
+
+    def _step(self, d):
+        p = self.project
+        f = p.current_frame + d
+        if f >= p.frame_count:
+            f = 0 if self.state.loop else p.frame_count - 1
+        elif f < 0:
+            f = p.frame_count - 1 if self.state.loop else 0
+        p.set_frame(f)
+
+    def _step_key(self, d):
+        layer = self.project.layer()
+        if layer is None:
+            return
+        f = self.project.current_frame
+        keys = layer.sorted_keys()
+        cand = [k for k in keys if (k > f if d > 0 else k < f)]
+        if cand:
+            self.project.set_frame(cand[0] if d > 0 else cand[-1])
+
+    def toggle_play(self):
+        a = self.actions["play"]
+        if self.play_timer.isActive():
+            self.play_timer.stop()
+            a.setIcon(icons.icon("play"))
+            a.setText("Воспроизвести")
+        else:
+            self.play_timer.start(max(1, round(1000 / self.project.fps)))
+            a.setIcon(icons.icon("pause"))
+            a.setText("Пауза")
+
+    def _tick(self):
+        p = self.project
+        self.play_timer.setInterval(max(1, round(1000 / p.fps)))
+        if p.current_frame + 1 >= p.frame_count and not self.state.loop:
+            self.toggle_play()
+            return
+        self._step(1)
+
+    def new_project(self):
+        if not self.project.undo_stack.isClean():
+            r = QMessageBox.question(self, APP_NAME, "Начать новый проект? Несохранённые изменения пропадут.")
+            if r != QMessageBox.Yes:
+                return
+        self.project.reset()
+        self.file_name = None
+        self._update_title()
+
+    def rename_layer(self):
+        from PySide6.QtWidgets import QInputDialog
+        layer = self.project.layer()
+        if layer is None:
+            return
+        name, ok = QInputDialog.getText(self, "Переименовать слой", "Имя слоя:", text=layer.name)
+        if ok:
+            self.project.rename_layer(self.project.current_layer, name.strip())
+
+    def scene_settings(self):
+        dlg = SceneSettingsDialog(self.project, self)
+        if dlg.exec() == QDialog.Accepted:
+            p = self.project
+            size_changed = (dlg.w.value(), dlg.h.value()) != (p.width, p.height)
+            p.width, p.height = dlg.w.value(), dlg.h.value()
+            p.fps = dlg.fps.value()
+            self.timeline.fps.setValue(p.fps)
+            p.set_frame_count(dlg.frames.value())
+            p.structureChanged.emit()
+            if size_changed:
+                self.canvas.fit_to_view()
+
+    def show_shortcuts(self):
+        box = QMessageBox(self)
+        box.setWindowTitle("Горячие клавиши")
+        box.setTextFormat(Qt.RichText)
+        box.setText(SHORTCUTS_HELP)
+        box.exec()
+
+    def show_about(self):
+        QMessageBox.about(
+            self, f"О программе {APP_NAME}",
+            f"<h2>{APP_NAME} {APP_VERSION}</h2>"
+            "<p>Программа для 2D-анимации: покадровое рисование и анимация по ключевым кадрам.</p>",
+        )
+
+    def closeEvent(self, e):
+        if not self.project.undo_stack.isClean():
+            r = QMessageBox.question(self, APP_NAME, "Выйти? Несохранённые изменения пропадут.")
+            if r != QMessageBox.Yes:
+                e.ignore()
+                return
+        e.accept()
+
+
+def run(argv) -> int:
+    app = QApplication(argv)
+    app.setApplicationName(APP_NAME)
+    app.setApplicationVersion(APP_VERSION)
+    app.setStyle("Fusion")
+    app.setStyleSheet(theme.STYLESHEET)
+    w = MainWindow()
+    w.show()
+    return app.exec()
