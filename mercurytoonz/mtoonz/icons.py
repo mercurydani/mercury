@@ -116,7 +116,7 @@ def pixmap(name: str, color: str = theme.TEXT, size: int = 20, dpr: float = 2.0)
 
 
 @lru_cache(maxsize=None)
-def icon(name: str, color: str = theme.TEXT, checked_color: str = "#1a1208") -> QIcon:
+def icon(name: str, color: str = theme.TEXT, checked_color: str = "#ffffff") -> QIcon:
     ic = QIcon()
     for size in (16, 20, 24, 32):
         ic.addPixmap(pixmap(name, color, size), QIcon.Normal, QIcon.Off)

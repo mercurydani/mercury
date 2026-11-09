@@ -40,7 +40,7 @@ class Drawing:
         return Drawing(list(self.strokes))
 
 
-LAYER_TAGS = ["#ff8a3d", "#5cc8ff", "#9be36b", "#ffd84a", "#c58cff", "#ff6fa8", "#5be0c4"]
+LAYER_TAGS = ["#6f8fff", "#ff8a3d", "#9be36b", "#ffd84a", "#c58cff", "#ff6fa8", "#5be0c4"]
 
 
 class Layer:

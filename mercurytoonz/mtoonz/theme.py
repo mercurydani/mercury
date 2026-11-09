@@ -1,15 +1,30 @@
-"""Цветовая тема и стили интерфейса."""
+"""Цветовая тема и стили интерфейса — фирменный стиль Mercury Studio (mercurystudio.pro).
 
-BG_DEEP = "#14161a"      # фон вокруг холста
-BG_PANEL = "#1d2026"     # панели
-BG_RAISED = "#252930"    # кнопки, поля
-BG_HOVER = "#2e333b"
-BORDER = "#343943"
-TEXT = "#d9dce2"
-TEXT_MUTED = "#8a909b"
-ACCENT = "#ff8a3d"       # «меркурианский» оранжевый
-ACCENT_DIM = "#7a4524"
-PLAYHEAD = "#ff5a4f"
+Как на сайте студии: чёрный космос со звёздами, серебристая планета Меркурий с синим свечением,
+насыщенный синий для главных кнопок, белый жирный шрифт, тёмные «таблетки».
+"""
+
+# --- фирменные цвета ---
+MERCURY_BLUE = "#2f62f0"      # главный цвет (кнопки, выделение)
+MERCURY_BLUE_LIGHT = "#6f8fff"
+MERCURY_GLOW = "#4a6cff"      # свечение по краю планеты
+PLANET_LIGHT = "#e6e8ee"      # освещённая сторона планеты
+PLANET_MID = "#9a9ca6"
+PLANET_DARK = "#34363f"
+SPACE_NIGHT = "#050609"       # фон заставки — как на сайте
+
+# --- интерфейс ---
+BG_DEEP = "#0a0b10"      # фон вокруг холста
+BG_PANEL = "#121319"     # панели
+BG_RAISED = "#1b1d24"    # кнопки, поля, «таблетки»
+BG_HOVER = "#252832"
+BORDER = "#2a2d37"
+TEXT = "#eceef3"
+TEXT_MUTED = "#8e919c"
+ACCENT = MERCURY_BLUE
+ACCENT_DIM = "#1f3477"
+ON_ACCENT = "#ffffff"    # текст и значки на синем
+PLAYHEAD = "#ff4f5e"
 
 STYLESHEET = f"""
 * {{
@@ -65,7 +80,7 @@ QMenu::item {{
 }}
 QMenu::item:selected {{
     background: {ACCENT};
-    color: #1a1208;
+    color: {ON_ACCENT};
 }}
 QMenu::item:disabled {{
     color: {TEXT_MUTED};
@@ -125,7 +140,7 @@ QPushButton:hover {{
 }}
 QPushButton:default {{
     background: {ACCENT};
-    color: #1a1208;
+    color: {ON_ACCENT};
     border-color: {ACCENT};
 }}
 QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
@@ -134,7 +149,7 @@ QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
     border-radius: 5px;
     padding: 3px 6px;
     selection-background-color: {ACCENT};
-    selection-color: #1a1208;
+    selection-color: {ON_ACCENT};
 }}
 QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
     border-color: {ACCENT};
@@ -152,7 +167,7 @@ QComboBox QAbstractItemView {{
     background: {BG_RAISED};
     border: 1px solid {BORDER};
     selection-background-color: {ACCENT};
-    selection-color: #1a1208;
+    selection-color: {ON_ACCENT};
 }}
 QSlider::groove:horizontal {{
     height: 4px;
@@ -220,6 +235,27 @@ QStatusBar QLabel {{
     color: {TEXT_MUTED};
     padding: 0 8px;
 }}
+QTabWidget::pane {{
+    background: {BG_PANEL};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    top: -1px;
+    padding: 10px;
+}}
+QTabBar::tab {{
+    background: transparent;
+    color: {TEXT_MUTED};
+    padding: 7px 16px;
+    margin-right: 4px;
+    border-radius: 6px;
+}}
+QTabBar::tab:selected {{
+    background: {BG_RAISED};
+    color: {TEXT};
+}}
+QTabBar::tab:hover {{
+    color: {TEXT};
+}}
 QToolTip {{
     background: {BG_RAISED};
     color: {TEXT};
@@ -237,3 +273,21 @@ QLabel#frameCounter {{
     padding: 0 8px;
 }}
 """
+
+
+def palette():
+    """Тёмная палитра для всех виджетов (в том числе тех, что не описаны в STYLESHEET)."""
+    from PySide6.QtGui import QColor, QPalette
+    pal = QPalette()
+    roles = {
+        QPalette.Window: BG_PANEL, QPalette.WindowText: TEXT, QPalette.Base: BG_DEEP,
+        QPalette.AlternateBase: BG_RAISED, QPalette.ToolTipBase: BG_RAISED, QPalette.ToolTipText: TEXT,
+        QPalette.Text: TEXT, QPalette.Button: BG_RAISED, QPalette.ButtonText: TEXT, QPalette.BrightText: "#ffffff",
+        QPalette.Highlight: ACCENT, QPalette.HighlightedText: ON_ACCENT, QPalette.Link: MERCURY_BLUE_LIGHT,
+        QPalette.PlaceholderText: TEXT_MUTED, QPalette.Mid: BORDER, QPalette.Dark: BG_DEEP, QPalette.Light: BG_HOVER,
+    }
+    for role, color in roles.items():
+        pal.setColor(role, QColor(color))
+    for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
+        pal.setColor(QPalette.Disabled, role, QColor(TEXT_MUTED))
+    return pal

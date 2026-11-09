@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout, QWidget,
 )
 
-from .. import APP_NAME, fileformat, icons, theme
+from .. import APP_NAME, brand, fileformat, icons, theme
 
 # Пропорции кадра: (ключ, подпись, где используется, ширина, высота, [разрешения])
 ASPECTS = [
@@ -328,8 +328,9 @@ class CardDelegate(QStyledItemDelegate):
             w, h = img.width() * s, img.height() * s
             p.drawImage(QRectF(thumb_r.center().x() - w / 2, thumb_r.center().y() - h / 2, w, h), img)
         else:
-            p.drawPixmap(int(thumb_r.center().x() - 16), int(thumb_r.center().y() - 16),
-                         icons.pixmap("logo", theme.ACCENT_DIM, 32))
+            p.setOpacity(0.5)
+            p.drawPixmap(int(thumb_r.center().x() - 24), int(thumb_r.center().y() - 24), brand.logo_pixmap(48))
+            p.setOpacity(1.0)
         p.setClipping(False)
 
         f = QFont(option.font)
@@ -376,18 +377,18 @@ class ProjectBrowser(QDialog):
         sl = QVBoxLayout(side)
         sl.setContentsMargins(18, 20, 18, 18)
         sl.setSpacing(8)
-        brand = QHBoxLayout()
+        head = QHBoxLayout()
         logo = QLabel()
-        logo.setPixmap(icons.pixmap("logo", theme.ACCENT, 30))
-        brand.addWidget(logo)
-        brand.addWidget(QLabel(f"<span style='font-size:18px'><b>Mercury</b>"
+        logo.setPixmap(brand.logo_pixmap(36))
+        head.addWidget(logo)
+        head.addWidget(QLabel(f"<span style='font-size:18px'><b>Mercury</b>"
                                f"<b style='color:{theme.ACCENT}'>Toonz</b></span>"))
-        brand.addStretch()
-        sl.addLayout(brand)
+        head.addStretch()
+        sl.addLayout(head)
         sl.addSpacing(18)
 
         self.btn_new = QPushButton("  Новый проект")
-        self.btn_new.setIcon(icons.icon("plus", "#1a1208"))
+        self.btn_new.setIcon(icons.icon("plus", "#ffffff"))
         self.btn_new.setDefault(True)
         self.btn_new.setMinimumHeight(38)
         sl.addWidget(self.btn_new)
@@ -469,7 +470,7 @@ class ProjectBrowser(QDialog):
         el = QVBoxLayout(empty)
         el.addStretch()
         ei = QLabel()
-        ei.setPixmap(icons.pixmap("logo", theme.ACCENT_DIM, 64))
+        ei.setPixmap(brand.logo_pixmap(96, True))
         ei.setAlignment(Qt.AlignCenter)
         el.addWidget(ei)
         self.empty_title = QLabel("Здесь пока пусто")
@@ -495,9 +496,9 @@ class ProjectBrowser(QDialog):
         bottom.addStretch()
         self.btn_open = QPushButton("Открыть")
         self.btn_open.setMinimumWidth(120)
-        self.btn_open.setStyleSheet(f"QPushButton {{ background:{theme.ACCENT}; color:#1a1208; "
+        self.btn_open.setStyleSheet(f"QPushButton {{ background:{theme.ACCENT}; color:#ffffff; "
                                     f"border-color:{theme.ACCENT}; font-weight:600; }}"
-                                    "QPushButton:disabled { background:#3a3026; color:#7a6a5a; }")
+                                    "QPushButton:disabled { background:#1f2a4d; color:#6b7698; }")
         bottom.addWidget(self.btn_open)
         ml.addLayout(bottom)
         root.addWidget(main, 1)

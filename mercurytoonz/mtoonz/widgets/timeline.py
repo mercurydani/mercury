@@ -25,15 +25,15 @@ HEAD_W = 200
 HEADER_H = 26
 ROW_H = 38
 
-C_ROW = QColor("#1f2228")
-C_ROW_ALT = QColor("#22252c")
-C_ROW_CUR = QColor("#272c34")
-C_GRID = QColor("#2b2f37")
-C_GRID_5 = QColor("#363b45")
-C_OUTSIDE = QColor("#17191d")
-C_SPAN = QColor("#3a404b")
-C_SPAN_CUR = QColor("#4a5160")
-C_SPAN_EMPTY = QColor("#2b3038")
+C_ROW = QColor("#1a1c26")
+C_ROW_ALT = QColor("#1d1f2a")
+C_ROW_CUR = QColor("#252838")
+C_GRID = QColor("#272a37")
+C_GRID_5 = QColor("#343849")
+C_OUTSIDE = QColor("#14151d")
+C_SPAN = QColor("#383d50")
+C_SPAN_CUR = QColor("#4a4f66")
+C_SPAN_EMPTY = QColor("#292c3a")
 C_VIDEO = QColor("#5cc8ff")
 C_AUDIO = QColor("#3fbf7f")
 

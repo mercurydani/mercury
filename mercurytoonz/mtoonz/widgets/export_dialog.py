@@ -169,7 +169,7 @@ class ExportDialog(QDialog):
         self.go = QPushButton("Экспортировать")
         self.go.setDefault(True)
         self.go.setMinimumWidth(150)
-        self.go.setStyleSheet(f"QPushButton {{ background:{theme.ACCENT}; color:#1a1208; border-color:{theme.ACCENT}; "
+        self.go.setStyleSheet(f"QPushButton {{ background:{theme.ACCENT}; color:#ffffff; border-color:{theme.ACCENT}; "
                               "font-weight:600; }")
         self.go.clicked.connect(self.run)
         buttons.addWidget(cancel)

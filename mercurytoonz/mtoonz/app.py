@@ -13,7 +13,8 @@ from PySide6.QtWidgets import (
 import os
 import shutil
 
-from . import APP_NAME, APP_VERSION, audio, fileformat, icons, theme
+from . import APP_NAME, APP_VERSION, audio, brand, fileformat, icons, theme
+from .prefs import prefs
 from .audio import RecordDialog
 from .widgets.help_dialog import HelpDialog
 from .model import Project
@@ -23,6 +24,8 @@ from .widgets.canvas import Canvas
 from .widgets.color_panel import ColorPanel
 from .widgets.export_dialog import ExportDialog
 from .widgets.layers_panel import LayersPanel
+from .widgets.preferences import PreferencesDialog
+from .widgets.splash import SplashScreen
 from .widgets import project_browser as pb
 from .widgets.timeline import Timeline
 from .widgets.tool_options import ToolOptions
@@ -103,7 +106,7 @@ class MainWindow(QMainWindow):
         self.project = Project()
         self.state = EditorState()
         self.resize(1480, 920)
-        self.setWindowIcon(icons.icon("logo", theme.ACCENT))
+        self.setWindowIcon(brand.app_icon())
         self.setDockNestingEnabled(True)
         self.setCorner(Qt.BottomRightCorner, Qt.RightDockWidgetArea)  # слои — на всю высоту
         self.setCorner(Qt.BottomLeftCorner, Qt.BottomDockWidgetArea)
@@ -191,6 +194,9 @@ class MainWindow(QMainWindow):
         A("paste", "Вставить", None, QKeySequence.Paste, self._soon("Вставить"))
         A("clear", "Очистить кадр", "trash", "Delete", p.clear_drawing)
         A("swap_colors", "Поменять цвета", "swap", "X", self.state.swap_colors)
+        A("preferences", "Настройки…", "settings", QKeySequence.Preferences, lambda: self.show_preferences(),
+          tip="Настройки: планшет, мышь, заставка")
+        A("tablet_settings", "Планшет и перо…", None, None, lambda: self.show_preferences("tablet"))
         A("size_up", "Увеличить кисть", None, "]", lambda: self._brush_size(1.25))
         A("size_down", "Уменьшить кисть", None, "[", lambda: self._brush_size(0.8))
         # вид
@@ -244,6 +250,7 @@ class MainWindow(QMainWindow):
         A("changelog", "Что нового", "history", None, lambda: self.show_help("changelog"))
         A("privacy", "Политика конфиденциальности", "shield", None, lambda: self.show_help("privacy"))
         A("contacts", "Связаться с разработчиком", "mail", None, lambda: self.show_help("contacts"))
+        A("splash", "Показать заставку", None, None, self.show_splash)
         A("about", f"О программе {APP_NAME}", "info", None, lambda: self.show_help("about"))
 
         # инструменты
@@ -285,7 +292,7 @@ class MainWindow(QMainWindow):
         tb.setMovable(False)
         tb.setIconSize(QSize(18, 18))
         logo = QLabel()
-        logo.setPixmap(icons.pixmap("logo", theme.ACCENT, 22))
+        logo.setPixmap(brand.logo_pixmap(28))
         logo.setContentsMargins(6, 0, 4, 0)
         tb.addWidget(logo)
         name = QLabel(f"<b>Mercury</b><span style='color:{theme.ACCENT}'><b>Toonz</b></span>")
@@ -393,7 +400,7 @@ class MainWindow(QMainWindow):
         file_menu.insertSeparator(a["save"])
         self._rebuild_recent()
         menu("Правка", ["undo", "redo", None, "cut", "copy", "paste", "clear", None,
-                        "swap_colors", "size_up", "size_down"])
+                        "swap_colors", "size_up", "size_down", None, "tablet_settings", "preferences"])
         menu("Вид", ["zoom_in", "zoom_out", "zoom_fit", "zoom_100", None, "onion", None,
                      self.dock_tool.toggleViewAction(), self.dock_props.toggleViewAction(),
                      self.dock_timeline.toggleViewAction()])
@@ -407,7 +414,7 @@ class MainWindow(QMainWindow):
         menu("Дорожка", ["track_add_video", "track_add_audio", "track_delete", None,
                          "record_audio", "import_audio"])
         menu("Анимация", ["play", "loop", None, "tween", None, "scene"])
-        menu("Справка", ["shortcuts", "changelog", None, "privacy", "contacts", None, "about"])
+        menu("Справка", ["shortcuts", "changelog", None, "privacy", "contacts", None, "splash", "about"])
 
     def _create_statusbar(self):
         sb = self.statusBar()
@@ -646,6 +653,16 @@ class MainWindow(QMainWindow):
                 return
         self.project.delete_track()
 
+    def show_preferences(self, tab: str = "general"):
+        dlg = PreferencesDialog(self, tab)
+        dlg.showSplash.connect(self.show_splash)
+        dlg.exec()
+
+    def show_splash(self):
+        self._splash = SplashScreen(prefs().get("general/startup_sound"))
+        self._splash.status = "mercurystudio.pro"
+        self._splash.start()
+
     def show_help(self, section: str = "about"):
         HelpDialog(SHORTCUTS_HELP, section, self).exec()
 
@@ -713,13 +730,39 @@ def run(argv) -> int:
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
     app.setStyle("Fusion")
+    app.setPalette(theme.palette())
     app.setStyleSheet(theme.STYLESHEET)
-    w = MainWindow()
-    w.show()
+    app.setWindowIcon(brand.app_icon())
     files = [a for a in argv[1:] if a.endswith(fileformat.EXTENSION) and os.path.exists(a)]
-    if files:
-        w.open_path(os.path.abspath(files[0]))
+    state = {"window": None, "splash_done": False}
+
+    def build():
+        state["window"] = MainWindow()
+        launch()
+
+    def launch():
+        w = state["window"]
+        if w is None or not state["splash_done"] or w.isVisible():
+            return
+        w.show()
+        w.raise_()
+        if files:
+            w.open_path(os.path.abspath(files[0]))
+        else:
+            # окно проектов поверх главного окна сразу после запуска
+            QTimer.singleShot(0, lambda: w.show_projects(startup=True))
+
+    def splash_done():
+        state["splash_done"] = True
+        launch()
+
+    if prefs().get("general/splash"):
+        splash = SplashScreen(prefs().get("general/startup_sound"))
+        splash.finished.connect(splash_done)
+        splash.start()
+        state["splash"] = splash
+        QTimer.singleShot(60, build)  # окно собирается, пока идёт заставка
     else:
-        # окно проектов поверх главного окна сразу после запуска
-        QTimer.singleShot(0, lambda: w.show_projects(startup=True))
+        state["splash_done"] = True
+        build()
     return app.exec()

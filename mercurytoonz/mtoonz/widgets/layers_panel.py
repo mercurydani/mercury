@@ -59,7 +59,7 @@ class LayerList(QWidget):
         for r, layer in enumerate(proj.layers):
             y = r * ROW_H
             cur = r == proj.current_layer
-            p.fillRect(QRectF(0, y, self.width(), ROW_H), QColor("#2a2f38" if cur else theme.BG_PANEL))
+            p.fillRect(QRectF(0, y, self.width(), ROW_H), QColor("#252838" if cur else theme.BG_PANEL))
             if cur:
                 p.fillRect(QRectF(0, y, 3, ROW_H), QColor(theme.ACCENT))
             cy = y + ROW_H / 2

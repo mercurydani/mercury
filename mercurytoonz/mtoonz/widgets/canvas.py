@@ -13,13 +13,14 @@ from __future__ import annotations
 import math
 import time
 
-from PySide6.QtCore import QPointF, QRect, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPen, QTransform
+from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPointingDevice, QTransform
 from PySide6.QtWidgets import QApplication, QWidget
 
 from .. import theme
 from ..brushes import SHAPE_PARAMS, preset_params
 from ..model import Drawing, Project, Stroke
+from ..prefs import apply_curve, prefs
 from ..render import draw_drawing, draw_stroke
 from ..state import TOOLS_BY_KEY, EditorState
 
@@ -99,6 +100,7 @@ def shape_points(kind: str, a: QPointF, b: QPointF, constrain: bool):
 
 class Canvas(QWidget):
     cursorMoved = Signal(float, float)
+    penMoved = Signal()
     zoomChanged = Signal(float)
     message = Signal(str)
 
@@ -124,7 +126,9 @@ class Canvas(QWidget):
         self._pan_last: QPointF | None = None
         self._space = False
         self._mouse: QPointF | None = None
-        self._tablet_pressure: float | None = None
+        self._pen = False                        # текущий мазок рисуется пером планшета
+        self._stroke_tool: str | None = None
+        self.pen_info = None                     # (нажим, наклон x, наклон y, конец пера) — для настроек
         self._cache: dict = {}
 
         self.setMouseTracking(True)
@@ -232,8 +236,8 @@ class Canvas(QWidget):
 
     # ---------- отрисовка ----------
     def _live_stroke(self) -> Stroke | None:
-        tool = self.state.tool
-        st = self.state.tool_settings()
+        tool = self._active_tool()
+        st = self.state.tool_settings(tool)
         if st is None:
             return None
         color = QColor(self.state.color)
@@ -251,7 +255,7 @@ class Canvas(QWidget):
             return Stroke(tuple(pts), color, st.size, st.opacity, brush=SHAPE_PARAMS)
         else:
             return None
-        preset = self.state.preset()
+        preset = self.state.preset(tool)
         params = preset_params(preset, st.taper) if preset else SHAPE_PARAMS
         return Stroke(tuple(pts), color, st.size, st.opacity, erase=(tool == "eraser"),
                       use_pressure=st.pressure, brush=params)
@@ -340,10 +344,10 @@ class Canvas(QWidget):
             for pt in (self._shape_start, self._shape_end, self._curve_bend):
                 p.drawEllipse(t.map(pt), 4, 4)
         # контур кисти
-        info = TOOLS_BY_KEY.get(self.state.tool)
+        info = TOOLS_BY_KEY.get(self._active_tool())
         if self._mouse is None or info is None or not info.sized or self._space or self._pan_last:
             return
-        st = self.state.tool_settings()
+        st = self.state.tool_settings(self._active_tool())
         r = max(1.5, st.size * self.zoom / 2)
         p.setBrush(Qt.NoBrush)
         p.setPen(QPen(QColor(255, 255, 255, 200), 1.5))
@@ -388,10 +392,8 @@ class Canvas(QWidget):
         return True
 
     def _pressure_at(self, pos_widget: QPointF) -> float:
-        """Нажим пера, а для мыши — по скорости движения."""
-        if self._tablet_pressure is not None:
-            return self._tablet_pressure
-        st = self.state.tool_settings()
+        """Нажим для мыши — по скорости движения (быстрее — тоньше)."""
+        st = self.state.tool_settings(self._active_tool())
         if not st or st.speed <= 0 or self._mouse is None:
             return 1.0
         now = time.perf_counter()
@@ -402,14 +404,114 @@ class Canvas(QWidget):
         self._speed_p += (target - self._speed_p) * 0.35
         return max(0.05, self._speed_p)
 
-    def tabletEvent(self, e):
-        self._tablet_pressure = max(0.05, e.pressure())
-        e.ignore()  # координаты обрабатываются синтезированными событиями мыши
+    def _active_tool(self) -> str:
+        """Инструмент текущего мазка (перо, перевёрнутое ластиком, временно рисует ластиком)."""
+        return self._stroke_tool or self.state.tool
 
     def _cancel_shape(self):
         self._shape_start = self._shape_end = self._curve_bend = None
         self.update()
 
+    # ---------- общий ввод для мыши и пера ----------
+    def _begin_draw(self, pos: QPointF, pressure: float, shift: bool, tool: str):
+        scene = self.to_scene(pos)
+        self._stroke_tool = tool
+        self._mouse = pos
+        self._last_t = time.perf_counter()
+        self._speed_p = 1.0
+        if shift:
+            self._live_line = (scene, scene)
+        else:
+            self._live = [(scene.x(), scene.y(), pressure)]
+            self._stab = QPointF(scene)
+            self._target = QPointF(scene)
+        self.update()
+
+    def _move_draw(self, pos: QPointF, pressure: float, shift: bool):
+        scene = self.to_scene(pos)
+        if self._live_line is not None:
+            a = self._live_line[0]
+            self._live_line = (a, _constrain_45(a, scene) if shift else scene)
+        elif self._live is not None:
+            self._target = scene
+            self._add_live_point(scene, pressure)
+        self._mouse = pos
+        self.update()
+
+    def _end_draw(self, pos: QPointF):
+        st = self.state.tool_settings(self._active_tool())
+        stroke = None
+        if self._live_line is not None:
+            stroke = self._live_stroke()
+            a, b = self._live_line
+            if (b - a).manhattanLength() < 0.5:
+                stroke = None
+            self._live_line = None
+        elif self._live is not None:
+            self._target = self.to_scene(pos)
+            # стабилизатор отстаёт — дотягиваем линию до курсора
+            if self._stab is not None:
+                gap = math.hypot(self._target.x() - self._stab.x(), self._target.y() - self._stab.y())
+                steps = max(1 if gap > 0.01 else 0, int(gap / max(1.0, st.size * 0.3)))
+                last_p = self._live[-1][2]
+                for i in range(1, steps + 1):
+                    q = self._stab + (self._target - self._stab) * (i / steps)
+                    self._live.append((q.x(), q.y(), last_p))
+            self._live = smooth_points(self._live, st.smoothing)
+            stroke = self._live_stroke()
+            self._live = None
+            self._stab = self._target = None
+        self._stroke_tool = None
+        self._pen = False
+        if stroke is not None:
+            self.project.add_stroke(stroke)
+        self.update()
+
+    def _add_live_point(self, target: QPointF, pressure: float):
+        st = self.state.tool_settings(self._active_tool())
+        s = (st.stabilizer / 100) if st else 0
+        if not self._pen:  # мышью рука дрожит сильнее — немного помогаем
+            s = min(0.95, s + prefs().get("mouse/extra_stab") / 100 * (1 - s))
+        if s > 0:
+            k = max(0.03, (1 - s) ** 1.6)
+            self._stab = self._stab + (target - self._stab) * k
+            pt = self._stab
+        else:
+            pt = target
+        lx, ly, _ = self._live[-1]
+        if math.hypot(pt.x() - lx, pt.y() - ly) >= 0.6 / self.zoom:
+            self._live.append((pt.x(), pt.y(), pressure))
+
+    # ---------- графический планшет ----------
+    def tabletEvent(self, e):
+        """Перо обрабатываем напрямую: точные координаты, нажим с кривой, ластик на обратном конце."""
+        pos = e.position()
+        eraser_end = (e.pointerType() == QPointingDevice.PointerType.Eraser
+                      and prefs().get("tablet/pen_eraser"))
+        tool = "eraser" if eraser_end else self.state.tool
+        self.pen_info = (e.pressure(), e.xTilt(), e.yTilt(), "ластик" if eraser_end else "перо")
+        self.penMoved.emit()
+        kind = e.type()
+        shift = bool(e.modifiers() & Qt.ShiftModifier)
+        if kind == QEvent.TabletPress:
+            if (e.button() == Qt.LeftButton and tool in DRAW_TOOLS and not self._space
+                    and self._pan_last is None and self._live is None and self._live_line is None):
+                if self._can_draw():
+                    self._pen = True
+                    self._begin_draw(pos, apply_curve(e.pressure()), shift, tool)
+                e.accept()
+                return
+        elif kind == QEvent.TabletMove and self._pen:
+            self._move_draw(pos, apply_curve(e.pressure()), shift)
+            e.accept()
+            return
+        elif kind == QEvent.TabletRelease and self._pen:
+            self._end_draw(pos)
+            e.accept()
+            return
+        e.ignore()  # остальное (навигация, другие инструменты, наведение) — как мышь
+
+    # ---------- мышь ----------
     def mousePressEvent(self, e):
         pos = e.position()
         tool = self.state.tool
@@ -433,18 +535,8 @@ class Canvas(QWidget):
             dpr = img.devicePixelRatio()
             self.state.set_color(img.pixelColor(int(pos.x() * dpr), int(pos.y() * dpr)))
         elif tool in DRAW_TOOLS:
-            if not self._can_draw():
-                return
-            self._mouse = pos
-            self._last_t = time.perf_counter()
-            self._speed_p = 1.0
-            if e.modifiers() & Qt.ShiftModifier:
-                self._live_line = (scene, scene)
-            else:
-                self._live = [(scene.x(), scene.y(), self._tablet_pressure or 1.0)]
-                self._stab = QPointF(scene)
-                self._target = QPointF(scene)
-            self.update()
+            if self._can_draw():
+                self._begin_draw(pos, 1.0, bool(e.modifiers() & Qt.ShiftModifier), tool)
         elif tool == "shapes":
             if self._curve_bend is not None:
                 self._commit_shape()  # второй щелчок фиксирует кривую
@@ -454,19 +546,6 @@ class Canvas(QWidget):
                 self._shape_end = scene
         else:
             self.message.emit(f"Инструмент «{TOOLS_BY_KEY[tool].title}» появится на следующих шагах")
-
-    def _add_live_point(self, target: QPointF, pressure: float):
-        st = self.state.tool_settings()
-        s = (st.stabilizer / 100) if st else 0
-        if s > 0:
-            k = max(0.03, (1 - s) ** 1.6)
-            self._stab = self._stab + (target - self._stab) * k
-            pt = self._stab
-        else:
-            pt = target
-        lx, ly, _ = self._live[-1]
-        if math.hypot(pt.x() - lx, pt.y() - ly) >= 0.6 / self.zoom:
-            self._live.append((pt.x(), pt.y(), pressure))
 
     def mouseMoveEvent(self, e):
         pos = e.position()
@@ -478,14 +557,11 @@ class Canvas(QWidget):
             self._mouse = pos
             self.update()
             return
-        if self._live_line is not None:
-            a = self._live_line[0]
-            self._live_line = (a, _constrain_45(a, scene) if e.modifiers() & Qt.ShiftModifier else scene)
-        elif self._live is not None:
-            pressure = self._pressure_at(pos)
-            self._target = scene
-            self._add_live_point(scene, pressure)
-        elif self._curve_bend is not None:
+        if self._live is not None or self._live_line is not None:
+            if not self._pen:
+                self._move_draw(pos, self._pressure_at(pos), bool(e.modifiers() & Qt.ShiftModifier))
+            return
+        if self._curve_bend is not None:
             self._curve_bend = scene
         elif self._shape_start is not None:
             self._shape_end = scene
@@ -499,29 +575,12 @@ class Canvas(QWidget):
             return
         if e.button() != Qt.LeftButton:
             return
+        if (self._live is not None or self._live_line is not None) and not self._pen:
+            self._end_draw(e.position())
+            return
         st = self.state.tool_settings()
         stroke = None
-        if self._live_line is not None:
-            stroke = self._live_stroke()
-            a, b = self._live_line
-            if (b - a).manhattanLength() < 0.5:
-                stroke = None
-            self._live_line = None
-        elif self._live is not None:
-            self._target = self.to_scene(e.position())
-            # стабилизатор отстаёт — дотягиваем линию до курсора
-            if self._target is not None and self._stab is not None:
-                gap = math.hypot(self._target.x() - self._stab.x(), self._target.y() - self._stab.y())
-                steps = max(1 if gap > 0.01 else 0, int(gap / max(1.0, st.size * 0.3)))
-                last_p = self._live[-1][2]
-                for i in range(1, steps + 1):
-                    q = self._stab + (self._target - self._stab) * (i / steps)
-                    self._live.append((q.x(), q.y(), last_p))
-            self._live = smooth_points(self._live, st.smoothing)
-            stroke = self._live_stroke()
-            self._live = None
-            self._stab = self._target = None
-        elif self._shape_start is not None and self._curve_bend is None:
+        if self._shape_start is not None and self._curve_bend is None:
             if (self._shape_end - self._shape_start).manhattanLength() < 0.5:
                 self._cancel_shape()
             elif st.shape == "curve":
@@ -531,7 +590,6 @@ class Canvas(QWidget):
             else:
                 stroke = self._live_stroke()
                 self._cancel_shape()
-        self._tablet_pressure = None
         if stroke is not None:
             self.project.add_stroke(stroke)
         self.update()

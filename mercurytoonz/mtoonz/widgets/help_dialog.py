@@ -12,7 +12,9 @@ from PySide6.QtWidgets import (
 )
 
 from .. import (
-    APP_NAME, APP_RELEASE_DATE, APP_VERSION, DEVELOPER_EMAIL, DEVELOPER_NAME, ISSUES_URL, PROJECT_URL, icons,
+    brand,
+    APP_NAME, APP_RELEASE_DATE, APP_VERSION, DEVELOPER_EMAIL, DEVELOPER_NAME, ISSUES_URL, PROJECT_URL, STUDIO_URL,
+    icons,
     theme,
 )
 from ..versions import CHANGELOG
@@ -23,7 +25,7 @@ h2 {{ font-size: 20px; margin: 0 0 6px 0; }}
 h3 {{ font-size: 15px; margin: 18px 0 4px 0; }}
 p, li {{ line-height: 145%; }}
 .muted {{ color: {theme.TEXT_MUTED}; }}
-.badge {{ color: #1a1208; background: {theme.ACCENT}; }}
+.badge {{ color: #ffffff; background: {theme.ACCENT}; }}
 a {{ color: {theme.ACCENT}; }}
 td {{ padding: 2px 10px 2px 0; }}
 </style>
@@ -36,6 +38,7 @@ def about_html() -> str:
 <p class=muted>Версия {APP_VERSION} · выпуск от {APP_RELEASE_DATE}</p>
 <p>Программа для 2D-анимации и монтажа: покадровое рисование, анимация по ключевым кадрам,
 звуковые дорожки и запись голоса.</p>
+<p>Сделано в <a href="{STUDIO_URL}">Mercury Studio</a> · Белград.</p>
 <h3>Сведения о сборке</h3>
 <table>
 <tr><td class=muted>Версия программы</td><td>{APP_VERSION}</td></tr>
@@ -105,7 +108,8 @@ def contacts_html() -> str:
     rows = [f"<tr><td class=muted>Разработчик</td><td>{DEVELOPER_NAME}</td></tr>"]
     if DEVELOPER_EMAIL:
         rows.append(f"<tr><td class=muted>Почта</td><td><a href='mailto:{DEVELOPER_EMAIL}'>{DEVELOPER_EMAIL}</a></td></tr>")
-    rows.append(f"<tr><td class=muted>Сайт проекта</td><td><a href='{PROJECT_URL}'>{PROJECT_URL}</a></td></tr>")
+    rows.append(f"<tr><td class=muted>Студия</td><td><a href='{STUDIO_URL}'>{STUDIO_URL.split('//')[1]}</a></td></tr>")
+    rows.append(f"<tr><td class=muted>Код программы</td><td><a href='{PROJECT_URL}'>{PROJECT_URL}</a></td></tr>")
     rows.append(f"<tr><td class=muted>Ошибки и идеи</td><td><a href='{ISSUES_URL}'>{ISSUES_URL}</a></td></tr>")
     return CSS + f"""
 <h2>Связаться с разработчиком</h2>
@@ -140,14 +144,14 @@ class HelpDialog(QDialog):
 
         side = QVBoxLayout()
         side.setContentsMargins(14, 18, 10, 14)
-        brand = QHBoxLayout()
+        head = QHBoxLayout()
         logo = QLabel()
-        logo.setPixmap(icons.pixmap("logo", theme.ACCENT, 26))
-        brand.addWidget(logo)
-        brand.addWidget(QLabel(f"<b>Mercury</b><b style='color:{theme.ACCENT}'>Toonz</b>"
+        logo.setPixmap(brand.logo_pixmap(30))
+        head.addWidget(logo)
+        head.addWidget(QLabel(f"<b>Mercury</b><b style='color:{theme.ACCENT}'>Toonz</b>"
                                f"<br><span style='color:{theme.TEXT_MUTED}'>версия {APP_VERSION}</span>"))
-        brand.addStretch()
-        side.addLayout(brand)
+        head.addStretch()
+        side.addLayout(head)
         side.addSpacing(10)
         self.nav = QListWidget()
         self.nav.setFixedWidth(230)
@@ -156,7 +160,7 @@ class HelpDialog(QDialog):
             "QListWidget { background: transparent; border: none; outline: none; }"
             "QListWidget::item { padding: 8px 6px; border-radius: 6px; }"
             f"QListWidget::item:hover {{ background: {theme.BG_HOVER}; }}"
-            f"QListWidget::item:selected {{ background: {theme.ACCENT}; color: #1a1208; }}"
+            f"QListWidget::item:selected {{ background: {theme.ACCENT}; color: #ffffff; }}"
         )
         side.addWidget(self.nav, 1)
         close = QPushButton("Закрыть")

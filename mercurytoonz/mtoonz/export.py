@@ -262,6 +262,11 @@ def _run_ffmpeg(project: Project, s: ExportSettings, cmd, log, total, tick) -> s
     except ExportCancelled:
         proc.kill()
         proc.wait()
+        if proc.stdin is not None:
+            try:
+                proc.stdin.close()
+            except OSError:
+                pass
         if os.path.exists(s.path):
             os.remove(s.path)
         raise

@@ -133,6 +133,22 @@ def chaikin(points, iterations: int = 2):
     return pts
 
 
+def resample(points, max_step: float):
+    """Дробит длинные отрезки, чтобы соседние точки были не дальше max_step.
+    Иначе у линии с переменной толщиной появляются «ступеньки»."""
+    if len(points) < 2:
+        return list(points)
+    out = [points[0]]
+    for a, b in zip(points, points[1:]):
+        d = math.hypot(b[0] - a[0], b[1] - a[1])
+        n = int(d / max_step)
+        for i in range(1, n + 1):
+            t = i / (n + 1)
+            out.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t))
+        out.append(b)
+    return out
+
+
 def _cumulative(points):
     dist = [0.0]
     for a, b in zip(points, points[1:]):
@@ -293,6 +309,8 @@ def draw_brush_stroke(p: QPainter, points, color: QColor, width: float, params: 
         return
     if len(points) > 2 and params.kind != "pixel":
         points = chaikin(points, 2)
+    if params.kind in ("solid", "calligraphy"):
+        points = resample(points, max(1.5, width * 0.3))
     ws, dist = widths(points, width, params, use_pressure)
     col = QColor(0, 0, 0) if erase else QColor(color)
 
