@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field
 
 from PySide6.QtCore import QObject, Signal
@@ -40,9 +41,14 @@ LAYER_TAGS = ["#ff8a3d", "#5cc8ff", "#9be36b", "#ffd84a", "#c58cff", "#ff6fa8", 
 
 
 class Layer:
-    _counter = 0
+    """Слой. Сейчас есть только рисованные слои (type="drawing");
+    формат файла уже предусматривает видео-, аудио- и слои-элементы."""
 
-    def __init__(self, name: str):
+    _counter = 0
+    type = "drawing"
+
+    def __init__(self, name: str, layer_id: str | None = None):
+        self.id = layer_id or uuid.uuid4().hex[:12]
         self.name = name
         self.visible = True
         self.locked = False
@@ -78,30 +84,73 @@ class Project(QObject):
     structureChanged = Signal()    # слои / ключи / длина сцены
     frameChanged = Signal(int)
     layerChanged = Signal(int)
+    sceneChanged = Signal()        # размер листа
+    dirtyChanged = Signal(bool)
+    fileChanged = Signal()         # имя проекта или путь к файлу
 
     def __init__(self):
         super().__init__()
+        self.name = "Без названия"
+        self.file_path: str | None = None
         self.width = 1920
         self.height = 1080
         self.fps = 24
         self.frame_count = 48
+        self.background = QColor("#ffffff")
         self.layers: list[Layer] = []  # индекс 0 — верхний слой
         self.current_frame = 0
         self.current_layer = 0
+        self._extra_dirty = False      # изменения вне истории (видимость слоя и т.п.)
         self.undo_stack = QUndoStack(self)
+        self.undo_stack.cleanChanged.connect(self._on_clean_changed)
         self.reset()
 
     # ---------- состояние ----------
-    def reset(self):
+    def reset(self, name: str = "Без названия", width: int = 1920, height: int = 1080,
+              fps: int = 24, frame_count: int = 48):
         Layer._counter = 0
+        self.name = name
+        self.file_path = None
+        self.width, self.height, self.fps, self.frame_count = width, height, fps, frame_count
         self.layers = [Layer("Слой 1")]
         self.layers[0].keys[0] = Drawing()
+        self._after_load()
+
+    def _after_load(self):
+        """Сбрасывает историю и оповещает интерфейс после создания или загрузки проекта."""
         self.current_frame = 0
         self.current_layer = 0
         self.undo_stack.clear()
+        self.undo_stack.setClean()
+        self._extra_dirty = False
+        self.sceneChanged.emit()
         self.structureChanged.emit()
+        self.contentChanged.emit()
         self.frameChanged.emit(0)
         self.layerChanged.emit(0)
+        self.fileChanged.emit()
+        self.dirtyChanged.emit(False)
+
+    def _on_clean_changed(self, _clean):
+        try:
+            self.dirtyChanged.emit(self.is_dirty())
+        except RuntimeError:  # стек уже уничтожается вместе с проектом
+            pass
+
+    def is_dirty(self) -> bool:
+        return self._extra_dirty or not self.undo_stack.isClean()
+
+    def mark_dirty(self):
+        if not self._extra_dirty:
+            self._extra_dirty = True
+            self.dirtyChanged.emit(True)
+
+    def mark_saved(self, path: str):
+        self.file_path = path
+        self._extra_dirty = False
+        self.undo_stack.setClean()
+        self.fileChanged.emit()
+        self.dirtyChanged.emit(False)
 
     def layer(self) -> Layer | None:
         if 0 <= self.current_layer < len(self.layers):
@@ -125,6 +174,7 @@ class Project(QObject):
         return {
             "layers": [(l, l.name, {k: d.copy() for k, d in l.keys.items()}) for l in self.layers],
             "frame_count": self.frame_count,
+            "scene": (self.width, self.height, self.fps, QColor(self.background)),
             "current_layer": self.current_layer,
         }
 
@@ -135,6 +185,10 @@ class Project(QObject):
             layer.keys = {k: d.copy() for k, d in keys.items()}
             self.layers.append(layer)
         self.frame_count = snap["frame_count"]
+        scene = (self.width, self.height)
+        self.width, self.height, self.fps, self.background = snap["scene"]
+        if scene != (self.width, self.height):
+            self.sceneChanged.emit()
         self.current_layer = min(snap["current_layer"], len(self.layers) - 1)
         self.current_frame = min(self.current_frame, self.frame_count - 1)
         self.structureChanged.emit()
@@ -278,6 +332,19 @@ class Project(QObject):
         layer = self.layers[index]
         if name and name != layer.name:
             self.edit("Переименовать слой", lambda: setattr(layer, "name", name))
+
+    def set_scene(self, width: int, height: int, fps: int, frame_count: int):
+        if (width, height, fps, frame_count) == (self.width, self.height, self.fps, self.frame_count):
+            return
+        size_changed = (width, height) != (self.width, self.height)
+
+        def do():
+            self.width, self.height, self.fps = width, height, fps
+            self.frame_count = max(1, frame_count)
+
+        self.edit("Настройки сцены", do)
+        if size_changed:
+            self.sceneChanged.emit()
 
     def set_frame_count(self, n: int):
         n = max(1, n)

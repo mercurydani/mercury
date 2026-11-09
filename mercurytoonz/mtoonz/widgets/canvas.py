@@ -5,58 +5,17 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import (
-    QColor, QCursor, QImage, QPainter, QPainterPath, QPen, QTransform,
-)
+from PySide6.QtGui import QColor, QImage, QPainter, QPen, QTransform
 from PySide6.QtWidgets import QWidget
 
 from .. import theme
 from ..model import Drawing, Project, Stroke
+from ..render import draw_drawing, draw_stroke
 from ..state import TOOLS_BY_KEY, EditorState
 
 ONION_PREV = QColor("#ff4f6d")
 ONION_NEXT = QColor("#2fb4ff")
 ZOOM_STEPS = [0.05, 0.1, 0.15, 0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0, 16.0]
-
-
-def stroke_path(points) -> QPainterPath:
-    """Гладкая кривая через точки (квадратичные сплайны через середины отрезков)."""
-    path = QPainterPath()
-    if not points:
-        return path
-    path.moveTo(points[0][0], points[0][1])
-    if len(points) == 1:
-        path.lineTo(points[0][0] + 0.01, points[0][1])
-        return path
-    for i in range(1, len(points) - 1):
-        x0, y0 = points[i][0], points[i][1]
-        x1, y1 = points[i + 1][0], points[i + 1][1]
-        path.quadTo(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2)
-    path.lineTo(points[-1][0], points[-1][1])
-    return path
-
-
-def draw_stroke(p: QPainter, s: Stroke):
-    color = QColor(s.color)
-    if s.erase:
-        p.setCompositionMode(QPainter.CompositionMode_DestinationOut)
-        color = QColor(0, 0, 0)
-    else:
-        p.setCompositionMode(QPainter.CompositionMode_SourceOver)
-    p.setOpacity(s.opacity)
-    pts = s.points
-    if s.use_pressure and len(pts) > 1 and any(pt[2] != 1.0 for pt in pts):
-        # переменная толщина: рисуем отрезками
-        for a, b in zip(pts, pts[1:]):
-            w = max(0.5, s.width * (a[2] + b[2]) / 2)
-            p.setPen(QPen(color, w, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            p.drawLine(QPointF(a[0], a[1]), QPointF(b[0], b[1]))
-    else:
-        p.setPen(QPen(color, s.width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        p.setBrush(Qt.NoBrush)
-        p.drawPath(stroke_path(pts))
-    p.setOpacity(1.0)
-    p.setCompositionMode(QPainter.CompositionMode_SourceOver)
 
 
 def smooth_points(points, amount: int):
@@ -135,6 +94,7 @@ class Canvas(QWidget):
         project.structureChanged.connect(self.update)
         project.frameChanged.connect(lambda _: self.update())
         project.layerChanged.connect(lambda _: self.update())
+        project.sceneChanged.connect(self.fit_to_view)
         state.onionChanged.connect(self.update)
         state.toolChanged.connect(lambda _: self._update_cursor())
         state.settingsChanged.connect(self.update)
@@ -196,9 +156,7 @@ class Canvas(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setTransform(self.transform())
         p.setClipRect(self.paper_rect())
-        if drawing:
-            for s in drawing.strokes:
-                draw_stroke(p, s)
+        draw_drawing(p, drawing)
         if extra:
             draw_stroke(p, extra)
         if tint is not None:
@@ -237,7 +195,7 @@ class Canvas(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         for i, a in enumerate((26, 16, 8)):
             p.fillRect(paper.adjusted(-i - 1, -i + 1, i + 1, i + 3), QColor(0, 0, 0, a))
-        p.fillRect(paper, QColor("#ffffff"))
+        p.fillRect(paper, self.project.background)
 
         proj = self.project
         cur_layer = proj.layer()

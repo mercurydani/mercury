@@ -277,9 +277,11 @@ class TimelineCanvas(QWidget):
             layer = proj.layers[r]
             if e.button() == Qt.LeftButton and 6 <= x <= 30:
                 layer.visible = not layer.visible
+                proj.mark_dirty()
                 proj.contentChanged.emit()
             elif e.button() == Qt.LeftButton and 30 < x <= 54:
                 layer.locked = not layer.locked
+                proj.mark_dirty()
                 self.update()
             else:
                 proj.set_layer(r)
@@ -447,7 +449,9 @@ class Timeline(QWidget):
         self._on_structure()
 
     def _on_fps(self, v):
-        self.project.fps = v
+        if v != self.project.fps:
+            self.project.fps = v
+            self.project.mark_dirty()
 
     def _on_hbar(self, v):
         self.canvas.hoff = v
@@ -483,9 +487,10 @@ class Timeline(QWidget):
         self.canvas.ensure_frame_visible(f)
 
     def _on_structure(self):
-        self.length.blockSignals(True)
-        self.length.setValue(self.project.frame_count)
-        self.length.blockSignals(False)
+        for sb, v in ((self.length, self.project.frame_count), (self.fps, self.project.fps)):
+            sb.blockSignals(True)
+            sb.setValue(v)
+            sb.blockSignals(False)
         self._on_frame(self.project.current_frame)
         self._sync_bars()
 

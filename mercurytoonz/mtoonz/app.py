@@ -5,15 +5,19 @@ from __future__ import annotations
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence
 from PySide6.QtWidgets import (
-    QApplication, QDialog, QDialogButtonBox, QDockWidget, QFormLayout, QLabel,
-    QMainWindow, QMessageBox, QSizePolicy, QSpinBox, QToolBar, QWidget,
+    QApplication, QDialog, QDialogButtonBox, QDockWidget, QFileDialog, QFormLayout, QInputDialog, QLabel,
+    QMainWindow, QMenu, QMessageBox, QSizePolicy, QSpinBox, QToolBar, QWidget,
 )
 
-from . import APP_NAME, APP_VERSION, icons, theme
+import os
+
+from . import APP_NAME, APP_VERSION, fileformat, icons, theme
 from .model import Project
+from .render import first_drawn_frame, render_frame
 from .state import TOOL_GROUP_STARTS, TOOLS, EditorState
 from .widgets.canvas import Canvas
 from .widgets.color_panel import ColorPanel
+from .widgets import project_browser as pb
 from .widgets.timeline import Timeline
 from .widgets.tool_options import ToolOptions
 
@@ -33,6 +37,11 @@ SHORTCUTS_HELP = """
 <tr><td><b>F5</b></td><td>Вставить кадр</td><td></td><td><b>Shift+F5</b></td><td>Удалить кадр</td></tr>
 <tr><td><b>, .</b></td><td>Предыдущий / следующий кадр</td><td></td><td><b>Home End</b></td><td>Первый / последний</td></tr>
 <tr><td><b>Enter</b></td><td>Воспроизвести / пауза</td><td></td><td><b>O</b></td><td>Луковая кожа</td></tr>
+</table>
+<h3>Проекты</h3>
+<table cellspacing=4>
+<tr><td><b>Ctrl+Shift+O</b></td><td>Проекты</td><td width=24></td><td><b>Ctrl+N</b></td><td>Новый проект</td></tr>
+<tr><td><b>Ctrl+S</b></td><td>Сохранить</td><td></td><td><b>Ctrl+Shift+S</b></td><td>Сохранить как</td></tr>
 </table>
 <h3>Вид</h3>
 <table cellspacing=4>
@@ -81,7 +90,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.project = Project()
         self.state = EditorState()
-        self.file_name: str | None = None
         self.resize(1480, 920)
         self.setWindowIcon(icons.icon("logo", theme.ACCENT))
         self.setDockNestingEnabled(True)
@@ -102,7 +110,9 @@ class MainWindow(QMainWindow):
         self._create_menus()
         self._create_statusbar()
 
-        self.project.undo_stack.cleanChanged.connect(lambda _: self._update_title())
+        self.project.dirtyChanged.connect(lambda _: self._update_title())
+        self.project.fileChanged.connect(self._update_title)
+        self.project.fileChanged.connect(self._rebuild_recent)
         self.project.frameChanged.connect(lambda _: self._update_status())
         self.project.layerChanged.connect(lambda _: self._update_status())
         self.project.structureChanged.connect(self._update_status)
@@ -139,9 +149,12 @@ class MainWindow(QMainWindow):
         A = self._act
         # файл
         A("new", "Новый проект", "new", QKeySequence.New, self.new_project)
-        A("open", "Открыть…", "open", QKeySequence.Open, self._soon("Открытие проекта"))
-        A("save", "Сохранить", "save", QKeySequence.Save, self._soon("Сохранение"))
-        A("save_as", "Сохранить как…", None, QKeySequence.SaveAs, self._soon("Сохранение"))
+        A("projects", "Проекты…", "layers", "Ctrl+Shift+O", self.show_projects,
+          tip="Проекты — список, создание, удаление")
+        A("open", "Открыть файл…", "open", QKeySequence.Open, self.open_dialog)
+        A("save", "Сохранить", "save", QKeySequence.Save, self.save)
+        A("save_as", "Сохранить как…", None, QKeySequence.SaveAs, self.save_as)
+        A("rename_project", "Переименовать проект…", None, None, self.rename_project)
         A("export_video", "Видео (MP4)…", "export", None, self._soon("Экспорт видео"))
         A("export_gif", "Анимированный GIF…", None, None, self._soon("Экспорт GIF"))
         A("export_png", "Последовательность PNG…", None, None, self._soon("Экспорт PNG"))
@@ -248,7 +261,7 @@ class MainWindow(QMainWindow):
         name = QLabel(f"<b>Mercury</b><span style='color:{theme.ACCENT}'><b>Toonz</b></span>")
         name.setContentsMargins(0, 0, 12, 0)
         tb.addWidget(name)
-        for k in ("new", "open", "save"):
+        for k in ("projects", "new", "save"):
             tb.addAction(self.actions[k])
         tb.addSeparator()
         for k in ("undo", "redo"):
@@ -303,8 +316,12 @@ class MainWindow(QMainWindow):
                     m.addAction(a[it])
             return m
 
-        menu("Файл", ["new", "open", None, "save", "save_as", None,
+        file_menu = menu("Файл", ["projects", None, "new", "open", None, "save", "save_as", "rename_project", None,
                       ("Экспорт", ["export_video", "export_gif", "export_png"]), None, "quit"])
+        self.recent_menu = QMenu("Недавние", self)
+        file_menu.insertMenu(a["save"], self.recent_menu)
+        file_menu.insertSeparator(a["save"])
+        self._rebuild_recent()
         menu("Правка", ["undo", "redo", None, "cut", "copy", "paste", "clear", None,
                         "swap_colors", "size_up", "size_down"])
         menu("Вид", ["zoom_in", "zoom_out", "zoom_fit", "zoom_100", None, "onion", None,
@@ -347,9 +364,8 @@ class MainWindow(QMainWindow):
         self.size_label.setText(f"{p.width}×{p.height} · {p.fps} fps")
 
     def _update_title(self):
-        name = self.file_name or "Без названия"
-        dirty = "" if self.project.undo_stack.isClean() else " •"
-        self.setWindowTitle(f"{name}{dirty} — {APP_NAME}")
+        dirty = " •" if self.project.is_dirty() else ""
+        self.setWindowTitle(f"{self.project.name}{dirty} — {APP_NAME}")
 
     def _step(self, d):
         p = self.project
@@ -389,14 +405,136 @@ class MainWindow(QMainWindow):
             return
         self._step(1)
 
+    # ------------------------------------------------------------------ файлы
+    def maybe_save(self) -> bool:
+        """Спрашивает про несохранённые изменения. False — пользователь передумал."""
+        if not self.project.is_dirty():
+            return True
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Question)
+        box.setWindowTitle(APP_NAME)
+        box.setText(f"Сохранить изменения в проекте «{self.project.name}»?")
+        save = box.addButton("Сохранить", QMessageBox.AcceptRole)
+        discard = box.addButton("Не сохранять", QMessageBox.DestructiveRole)
+        box.addButton("Отмена", QMessageBox.RejectRole)
+        box.setDefaultButton(save)
+        box.exec()
+        if box.clickedButton() is save:
+            return self.save()
+        return box.clickedButton() is discard
+
+    def _stop_playback(self):
+        if self.play_timer.isActive():
+            self.toggle_play()
+
+    def show_projects(self, startup: bool = False):
+        self._stop_playback()
+        dlg = pb.ProjectBrowser(self, current_path=self.project.file_path, startup=startup)
+        if dlg.exec() != QDialog.Accepted or dlg.result_action is None:
+            return
+        kind, value = dlg.result_action
+        if kind == "open":
+            self.open_path(value)
+        elif kind == "new":
+            self.create_project(value)
+
     def new_project(self):
-        if not self.project.undo_stack.isClean():
-            r = QMessageBox.question(self, APP_NAME, "Начать новый проект? Несохранённые изменения пропадут.")
-            if r != QMessageBox.Yes:
-                return
-        self.project.reset()
-        self.file_name = None
-        self._update_title()
+        self._stop_playback()
+        dlg = pb.NewProjectDialog(fileformat.unique_name(pb.projects_folder(), "Мультфильм"), self)
+        if dlg.exec() == QDialog.Accepted:
+            self.create_project(dlg.values())
+
+    def create_project(self, values: dict):
+        if not self.maybe_save():
+            return
+        self.project.reset(**values)
+        path = fileformat.unique_path(pb.projects_folder(), values["name"])
+        self._write(path)
+        self.canvas.fit_to_view()
+
+    def open_dialog(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Открыть проект", pb.projects_folder(),
+                                              f"Проекты MercuryToonz (*{fileformat.EXTENSION})")
+        if path:
+            self.open_path(path)
+
+    def open_path(self, path: str) -> bool:
+        if self.project.file_path and os.path.abspath(path) == os.path.abspath(self.project.file_path):
+            return True  # уже открыт
+        if not self.maybe_save():
+            return False
+        self._stop_playback()
+        try:
+            fileformat.load_project(path, self.project)
+        except (fileformat.ProjectFileError, OSError, ValueError) as e:
+            QMessageBox.warning(self, APP_NAME, f"Не удалось открыть «{os.path.basename(path)}».\n\n{e}")
+            return False
+        pb.remember_recent(path)
+        self._rebuild_recent()
+        self.canvas.fit_to_view()
+        self.statusBar().showMessage(f"Открыт проект «{self.project.name}»", 3000)
+        return True
+
+    def _write(self, path: str) -> bool:
+        p = self.project
+        thumb = render_frame(p, first_drawn_frame(p), max_width=480)
+        try:
+            fileformat.save_project(p, path, thumb)
+        except OSError as e:
+            QMessageBox.warning(self, APP_NAME, f"Не удалось сохранить проект.\n\n{e}")
+            return False
+        p.mark_saved(path)
+        pb.remember_recent(path)
+        self.statusBar().showMessage(f"Сохранено: {path}", 3000)
+        return True
+
+    def save(self) -> bool:
+        if not self.project.file_path:
+            return self.save_as()
+        return self._write(self.project.file_path)
+
+    def save_as(self) -> bool:
+        start = self.project.file_path or fileformat.unique_path(pb.projects_folder(), self.project.name)
+        path, _ = QFileDialog.getSaveFileName(self, "Сохранить проект как", start,
+                                              f"Проекты MercuryToonz (*{fileformat.EXTENSION})")
+        if not path:
+            return False
+        if not path.endswith(fileformat.EXTENSION):
+            path += fileformat.EXTENSION
+        name = os.path.splitext(os.path.basename(path))[0]
+        if self.project.file_path is None or name != os.path.splitext(os.path.basename(self.project.file_path))[0]:
+            self.project.name = name
+        return self._write(path)
+
+    def rename_project(self):
+        p = self.project
+        name, ok = QInputDialog.getText(self, "Переименовать проект", "Название:", text=p.name)
+        name = name.strip()
+        if not ok or not name or name == p.name:
+            return
+        p.name = name
+        if p.file_path:
+            old = p.file_path
+            new = fileformat.unique_path(os.path.dirname(old), name, exclude=old)
+            if self._write(new) and os.path.abspath(new) != os.path.abspath(old):
+                try:
+                    os.remove(old)
+                except OSError:
+                    pass
+        else:
+            p.mark_dirty()
+            p.fileChanged.emit()
+
+    def _rebuild_recent(self):
+        if not hasattr(self, "recent_menu"):
+            return
+        self.recent_menu.clear()
+        files = pb.recent_files()
+        for path in files:
+            act = self.recent_menu.addAction(os.path.splitext(os.path.basename(path))[0])
+            act.setToolTip(path)
+            act.triggered.connect(lambda _=False, pth=path: self.open_path(pth))
+        self.recent_menu.setEnabled(bool(files))
 
     def rename_layer(self):
         from PySide6.QtWidgets import QInputDialog
@@ -410,15 +548,7 @@ class MainWindow(QMainWindow):
     def scene_settings(self):
         dlg = SceneSettingsDialog(self.project, self)
         if dlg.exec() == QDialog.Accepted:
-            p = self.project
-            size_changed = (dlg.w.value(), dlg.h.value()) != (p.width, p.height)
-            p.width, p.height = dlg.w.value(), dlg.h.value()
-            p.fps = dlg.fps.value()
-            self.timeline.fps.setValue(p.fps)
-            p.set_frame_count(dlg.frames.value())
-            p.structureChanged.emit()
-            if size_changed:
-                self.canvas.fit_to_view()
+            self.project.set_scene(dlg.w.value(), dlg.h.value(), dlg.fps.value(), dlg.frames.value())
 
     def show_shortcuts(self):
         box = QMessageBox(self)
@@ -435,12 +565,11 @@ class MainWindow(QMainWindow):
         )
 
     def closeEvent(self, e):
-        if not self.project.undo_stack.isClean():
-            r = QMessageBox.question(self, APP_NAME, "Выйти? Несохранённые изменения пропадут.")
-            if r != QMessageBox.Yes:
-                e.ignore()
-                return
-        e.accept()
+        self._stop_playback()
+        if self.maybe_save():
+            e.accept()
+        else:
+            e.ignore()
 
 
 def run(argv) -> int:
@@ -451,4 +580,10 @@ def run(argv) -> int:
     app.setStyleSheet(theme.STYLESHEET)
     w = MainWindow()
     w.show()
+    files = [a for a in argv[1:] if a.endswith(fileformat.EXTENSION) and os.path.exists(a)]
+    if files:
+        w.open_path(os.path.abspath(files[0]))
+    else:
+        # окно проектов поверх главного окна сразу после запуска
+        QTimer.singleShot(0, lambda: w.show_projects(startup=True))
     return app.exec()
