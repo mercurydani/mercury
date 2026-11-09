@@ -2,48 +2,18 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen
+from PySide6.QtCore import QRectF, Qt
+from PySide6.QtGui import QColor, QImage, QPainter
 
+from .brushes import draw_brush_stroke
 from .model import Drawing, Project, Stroke
 
 
-def stroke_path(points) -> QPainterPath:
-    """Гладкая кривая через точки (квадратичные сплайны через середины отрезков)."""
-    path = QPainterPath()
-    if not points:
-        return path
-    path.moveTo(points[0][0], points[0][1])
-    if len(points) == 1:
-        path.lineTo(points[0][0] + 0.01, points[0][1])
-        return path
-    for i in range(1, len(points) - 1):
-        x0, y0 = points[i][0], points[i][1]
-        x1, y1 = points[i + 1][0], points[i + 1][1]
-        path.quadTo(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2)
-    path.lineTo(points[-1][0], points[-1][1])
-    return path
-
-
 def draw_stroke(p: QPainter, s: Stroke):
-    color = QColor(s.color)
-    if s.erase:
-        p.setCompositionMode(QPainter.CompositionMode_DestinationOut)
-        color = QColor(0, 0, 0)
-    else:
-        p.setCompositionMode(QPainter.CompositionMode_SourceOver)
+    p.setCompositionMode(QPainter.CompositionMode_DestinationOut if s.erase
+                         else QPainter.CompositionMode_SourceOver)
     p.setOpacity(s.opacity)
-    pts = s.points
-    if s.use_pressure and len(pts) > 1 and any(pt[2] != 1.0 for pt in pts):
-        # переменная толщина: рисуем отрезками
-        for a, b in zip(pts, pts[1:]):
-            w = max(0.5, s.width * (a[2] + b[2]) / 2)
-            p.setPen(QPen(color, w, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            p.drawLine(QPointF(a[0], a[1]), QPointF(b[0], b[1]))
-    else:
-        p.setPen(QPen(color, s.width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        p.setBrush(Qt.NoBrush)
-        p.drawPath(stroke_path(pts))
+    draw_brush_stroke(p, s.points, s.color, s.width, s.brush, s.use_pressure, s.erase)
     p.setOpacity(1.0)
     p.setCompositionMode(QPainter.CompositionMode_SourceOver)
 

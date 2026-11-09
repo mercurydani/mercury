@@ -25,8 +25,9 @@ from datetime import datetime, timezone
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice
 from PySide6.QtGui import QColor, QImage
 
-from . import APP_VERSION
-from .model import Drawing, Layer, Project, Stroke
+from . import APP_VERSION, audio
+from .brushes import BrushParams
+from .model import AudioLayer, Drawing, Layer, Project, Stroke
 
 EXTENSION = ".mtoonz"
 FORMAT_ID = "mercurytoonz"
@@ -53,6 +54,9 @@ def _stroke_to_dict(s: Stroke) -> dict:
         d["erase"] = True
     if s.use_pressure:
         d["pressure"] = True
+    brush = s.brush.to_dict()
+    if brush:
+        d["brush"] = brush
     return d
 
 
@@ -60,13 +64,27 @@ def _stroke_from_dict(d: dict) -> Stroke:
     flat = d.get("pts", [])
     pts = tuple((flat[i], flat[i + 1], flat[i + 2]) for i in range(0, len(flat) - 2, 3))
     return Stroke(pts, QColor(d.get("color", "#000000")), float(d.get("width", 4)),
-                  float(d.get("opacity", 1.0)), bool(d.get("erase", False)), bool(d.get("pressure", False)))
+                  float(d.get("opacity", 1.0)), bool(d.get("erase", False)), bool(d.get("pressure", False)),
+                  BrushParams.from_dict(d.get("brush")))
 
 
 def _layer_to_dict(layer: Layer) -> dict:
     raw = getattr(layer, "raw", None)
     if raw is not None:  # слой незнакомого типа — возвращаем без изменений
         return raw
+    if isinstance(layer, AudioLayer):
+        return {
+            "id": layer.id,
+            "type": "audio",
+            "name": layer.name,
+            "visible": layer.visible,
+            "locked": layer.locked,
+            "tag": layer.tag,
+            "media": layer.media_id,
+            "start": layer.start,
+            "volume": layer.volume,
+            "duration": round(layer.duration, 4),
+        }
     return {
         "id": layer.id,
         "type": layer.type,
@@ -80,7 +98,19 @@ def _layer_to_dict(layer: Layer) -> dict:
     }
 
 
-def _layer_from_dict(d: dict) -> Layer:
+def _layer_from_dict(d: dict, media: dict) -> Layer:
+    if d.get("type") == "audio" and d.get("media") in media:
+        layer = AudioLayer(d.get("name", "Звук"), d["media"], d.get("id"))
+        layer.visible = bool(d.get("visible", True))
+        layer.locked = bool(d.get("locked", False))
+        layer.tag = d.get("tag", layer.tag)
+        layer.start = int(d.get("start", 0))
+        layer.volume = float(d.get("volume", 1.0))
+        try:
+            layer.duration, layer.peaks = audio.analyze_wav(media[layer.media_id])
+        except Exception:  # файл не читается — оставим длительность из проекта
+            layer.duration = float(d.get("duration", 0))
+        return layer
     layer = Layer(d.get("name", "Слой"), d.get("id"))
     layer.visible = bool(d.get("visible", True))
     layer.locked = bool(d.get("locked", False))
@@ -111,8 +141,12 @@ def project_to_dict(project: Project) -> dict:
             "background": _color(project.background),
         },
         "layers": [_layer_to_dict(l) for l in project.layers],
-        "media": [],
+        "media": [{"id": mid, "file": _media_entry(mid, path)} for mid, path in sorted(project.media.items())],
     }
+
+
+def _media_entry(mid: str, path: str) -> str:
+    return f"media/{mid}{os.path.splitext(path)[1].lower()}"
 
 
 def _now() -> str:
@@ -158,6 +192,9 @@ def save_project(project: Project, path: str, thumbnail: QImage | None = None, c
             z.writestr("project.json", json.dumps(data, ensure_ascii=False, separators=(",", ":")))
             if thumbnail is not None:
                 z.writestr("thumbnail.png", _png_bytes(thumbnail))
+            for mid, mpath in sorted(project.media.items()):
+                if os.path.exists(mpath):
+                    z.write(mpath, _media_entry(mid, mpath), compress_type=zipfile.ZIP_STORED)
         os.replace(tmp, path)
     except Exception:
         if os.path.exists(tmp):
@@ -179,13 +216,25 @@ def load_project(path: str, project: Project):
             data = json.loads(z.read("project.json"))
         except (KeyError, ValueError) as e:
             raise ProjectFileError("Файл повреждён: нет описания сцены") from e
-    if data.get("format") != FORMAT_ID:
-        raise ProjectFileError("Это не проект MercuryToonz")
-    if int(data.get("version", 0)) > FORMAT_VERSION:
-        raise ProjectFileError("Проект создан в более новой версии MercuryToonz. Обновите программу.")
+        if data.get("format") != FORMAT_ID:
+            raise ProjectFileError("Это не проект MercuryToonz")
+        if int(data.get("version", 0)) > FORMAT_VERSION:
+            raise ProjectFileError("Проект создан в более новой версии MercuryToonz. Обновите программу.")
+        # медиафайлы распаковываем во временную папку проекта
+        work = tempfile.mkdtemp(prefix="mtoonz-media-")
+        media = {}
+        names = set(z.namelist())
+        for entry in data.get("media", []):
+            name = entry.get("file", "")
+            mid = str(entry.get("id", ""))
+            if name.startswith("media/") and name in names and ".." not in name and mid:
+                target = os.path.join(work, os.path.basename(name))
+                with z.open(name) as src, open(target, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                media[mid] = target
     scene = data.get("scene", {})
     Layer._counter = 0
-    layers = [_layer_from_dict(d) for d in data.get("layers", [])]
+    layers = [_layer_from_dict(d, media) for d in data.get("layers", [])]
     if not layers:
         layers = [Layer("Слой 1")]
         layers[0].keys[0] = Drawing()
@@ -196,6 +245,7 @@ def load_project(path: str, project: Project):
     project.frame_count = max(1, int(scene.get("frames", 48)))
     project.background = QColor(scene.get("background", "#ffffff"))
     project.layers = layers
+    project.media = media
     project.file_path = path
     project._after_load()
 

@@ -40,6 +40,9 @@ class TimelineCanvas(QWidget):
         self.hoff = 0
         self.voff = 0
         self._scrubbing = False
+        self._drag_layer = None   # перетаскиваемый звуковой клип
+        self._drag_from = 0
+        self._drag_delta = 0
         self.setMouseTracking(True)
         self.setMinimumHeight(HEADER_H + ROW_H * 2)
         self.setFocusPolicy(Qt.ClickFocus)
@@ -131,7 +134,53 @@ class TimelineCanvas(QWidget):
         self._paint_layers(p)
         p.end()
 
+    def _paint_audio_clip(self, p: QPainter, layer, y, cur):
+        fps = max(1, self.project.fps)
+        start = layer.start + (self._drag_delta if self._drag_layer is layer else 0)
+        end = start + max(1, round(layer.duration * fps))
+        x0, x1 = self.frame_x(start), self.frame_x(end)
+        if x1 < LAYER_W or x0 > self.width():
+            return
+        rect = QRectF(x0 + 1, y + 3, x1 - x0 - 2, ROW_H - 6)
+        p.setRenderHint(QPainter.Antialiasing)
+        base = QColor("#2a6b4d" if cur else "#24563f")
+        if not layer.visible:
+            base = QColor("#3a3f47")
+        p.setPen(QPen(QColor("#3fbf7f"), 1) if cur else Qt.NoPen)
+        p.setBrush(base)
+        p.drawRoundedRect(rect, 4, 4)
+        # волна
+        if layer.peaks:
+            from ..audio import PEAKS_PER_SECOND
+            mid = rect.center().y()
+            half = rect.height() / 2 - 3
+            vis0 = max(rect.left(), LAYER_W)
+            vis1 = min(rect.right(), self.width())
+            px_per_sec = self.cell_w * fps
+            wave = QColor("#9be3bf" if layer.visible else "#6b7280")
+            p.setPen(QPen(wave, 1))
+            xi = int(vis0)
+            while xi < vis1:
+                t0 = (xi - rect.left()) / px_per_sec
+                i0 = int(t0 * PEAKS_PER_SECOND)
+                i1 = max(i0 + 1, int((t0 + 1 / px_per_sec) * PEAKS_PER_SECOND))
+                chunk = layer.peaks[i0:i1]
+                if chunk:
+                    h = max(0.5, max(chunk) * half)
+                    p.drawLine(QPointF(xi + 0.5, mid - h), QPointF(xi + 0.5, mid + h))
+                xi += 1
+        p.setPen(QColor("#e6fff2"))
+        f = QFont(self.font())
+        f.setPixelSize(11)
+        p.setFont(f)
+        label = QRectF(max(rect.left(), LAYER_W) + 6, rect.top(), rect.width(), 14)
+        p.drawText(label, Qt.AlignLeft | Qt.AlignVCenter, layer.name)
+        p.setRenderHint(QPainter.Antialiasing, False)
+
     def _paint_layer_cells(self, p: QPainter, layer, y, first, last, cur):
+        if layer.type == "audio":
+            self._paint_audio_clip(p, layer, y, cur)
+            return
         proj = self.project
         cw = self.cell_w
         keys = layer.sorted_keys()
@@ -227,7 +276,9 @@ class TimelineCanvas(QWidget):
             if cur:
                 p.fillRect(QRectF(0, y, 3, ROW_H), QColor(theme.ACCENT))
             # видимость и блокировка
-            eye = icons.pixmap("eye" if layer.visible else "eye-off",
+            audio = layer.type == "audio"
+            eye = icons.pixmap(("speaker" if audio else "eye") if layer.visible else
+                               ("speaker-off" if audio else "eye-off"),
                                theme.TEXT if layer.visible else theme.TEXT_MUTED, 16)
             p.drawPixmap(QPointF(10, y + (ROW_H - 16) / 2), eye)
             lock = icons.pixmap("lock" if layer.locked else "unlock",
@@ -295,6 +346,15 @@ class TimelineCanvas(QWidget):
         r = self.row_at(y)
         if 0 <= r < len(proj.layers):
             proj.set_layer(r)
+            layer = proj.layers[r]
+            if (layer.type == "audio" and e.button() == Qt.LeftButton and not layer.locked
+                    and layer.start <= f < layer.end_frame(proj.fps)):
+                # тянем звуковой клип по времени
+                self._drag_layer = layer
+                self._drag_from = f
+                self._drag_delta = 0
+                self.setCursor(Qt.ClosedHandCursor)
+                return
         proj.set_frame(f)
         if e.button() == Qt.LeftButton:
             self._scrubbing = True
@@ -308,12 +368,27 @@ class TimelineCanvas(QWidget):
             menu.exec(e.globalPosition().toPoint())
 
     def mouseMoveEvent(self, e):
+        if self._drag_layer is not None:
+            d = self.frame_at(e.position().x()) - self._drag_from
+            self._drag_delta = max(-self._drag_layer.start, d)
+            self.update()
+            return
         if self._scrubbing:
             self.project.set_frame(self.frame_at(e.position().x()))
             self.ensure_frame_visible(self.project.current_frame)
 
     def mouseReleaseEvent(self, e):
         self._scrubbing = False
+        if self._drag_layer is not None:
+            layer, delta = self._drag_layer, self._drag_delta
+            self._drag_layer = None
+            self._drag_delta = 0
+            self.unsetCursor()
+            if delta:
+                self.project.move_audio(layer, layer.start + delta)
+            else:
+                self.project.set_frame(self._drag_from)
+            self.update()
 
     def mouseDoubleClickEvent(self, e):
         pos = e.position()
@@ -394,6 +469,9 @@ class Timeline(QWidget):
             btn(k)
         sep()
         btn("onion")
+        sep()
+        btn("record_audio")
+        btn("import_audio")
         bl.addStretch()
 
         self.counter = QLabel()

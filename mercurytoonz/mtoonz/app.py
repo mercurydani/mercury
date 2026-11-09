@@ -6,12 +6,16 @@ from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QDialog, QDialogButtonBox, QDockWidget, QFileDialog, QFormLayout, QInputDialog, QLabel,
-    QMainWindow, QMenu, QMessageBox, QSizePolicy, QSpinBox, QToolBar, QWidget,
+    QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QSpinBox, QSplitter, QToolBar,
+    QVBoxLayout, QWidget,
 )
 
 import os
+import shutil
 
-from . import APP_NAME, APP_VERSION, fileformat, icons, theme
+from . import APP_NAME, APP_VERSION, audio, fileformat, icons, theme
+from .audio import RecordDialog
+from .widgets.help_dialog import HelpDialog
 from .model import Project
 from .render import first_drawn_frame, render_frame
 from .state import TOOL_GROUP_STARTS, TOOLS, EditorState
@@ -27,7 +31,8 @@ SHORTCUTS_HELP = """
 <tr><td><b>V</b></td><td>Выделение</td><td width=24></td><td><b>Q</b></td><td>Трансформация</td></tr>
 <tr><td><b>B</b></td><td>Кисть</td><td></td><td><b>P</b></td><td>Карандаш</td></tr>
 <tr><td><b>E</b></td><td>Ластик</td><td></td><td><b>G</b></td><td>Заливка</td></tr>
-<tr><td><b>U</b></td><td>Фигуры (Shift — пропорционально)</td><td></td><td><b>I</b></td><td>Пипетка</td></tr>
+<tr><td><b>U</b></td><td>Фигуры: линия, кривая, прямоугольник, эллипс</td><td></td><td><b>I</b></td><td>Пипетка</td></tr>
+<tr><td><b>Shift</b> + рисование</td><td>Прямая линия</td><td></td><td><b>Esc</b></td><td>Отменить кривую</td></tr>
 <tr><td><b>H</b> / Пробел</td><td>Рука</td><td></td><td><b>Z</b></td><td>Масштаб</td></tr>
 <tr><td><b>[ ]</b></td><td>Размер кисти</td><td></td><td><b>X</b></td><td>Поменять цвета</td></tr>
 </table>
@@ -42,6 +47,10 @@ SHORTCUTS_HELP = """
 <table cellspacing=4>
 <tr><td><b>Ctrl+Shift+O</b></td><td>Проекты</td><td width=24></td><td><b>Ctrl+N</b></td><td>Новый проект</td></tr>
 <tr><td><b>Ctrl+S</b></td><td>Сохранить</td><td></td><td><b>Ctrl+Shift+S</b></td><td>Сохранить как</td></tr>
+</table>
+<h3>Звук</h3>
+<table cellspacing=4>
+<tr><td><b>Ctrl+R</b></td><td>Записать с микрофона</td><td width=24></td><td><b>Ctrl+I</b></td><td>Импорт звука</td></tr>
 </table>
 <h3>Вид</h3>
 <table cellspacing=4>
@@ -96,6 +105,8 @@ class MainWindow(QMainWindow):
         self.setCorner(Qt.BottomRightCorner, Qt.BottomDockWidgetArea)
         self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
 
+        self.playback = audio.AudioPlayback(self.project)
+        self.project.fileChanged.connect(self.playback.reset)
         self.play_timer = QTimer(self)
         self.play_timer.timeout.connect(self._tick)
 
@@ -213,8 +224,16 @@ class MainWindow(QMainWindow):
         A("tween", "Создать промежуточные кадры", "tween", None, self._soon("Промежуточные кадры (tween)"))
         A("scene", "Настройки сцены…", "settings", "Ctrl+Alt+S", self.scene_settings)
         # справка
-        A("shortcuts", "Горячие клавиши", None, "F1", self.show_shortcuts)
-        A("about", "О программе", None, None, self.show_about)
+        A("record_audio", "Записать звук с микрофона…", "mic", "Ctrl+R", self.record_audio,
+          tip="Записать голос с микрофона")
+        A("import_audio", "Импорт звука…", "music", "Ctrl+I", self.import_audio,
+          tip="Добавить звуковой файл (WAV, MP3, OGG, M4A…)")
+        # справка
+        A("shortcuts", "Горячие клавиши", "keyboard", "F1", lambda: self.show_help("shortcuts"))
+        A("changelog", "Что нового", "history", None, lambda: self.show_help("changelog"))
+        A("privacy", "Политика конфиденциальности", "shield", None, lambda: self.show_help("privacy"))
+        A("contacts", "Связаться с разработчиком", "mail", None, lambda: self.show_help("contacts"))
+        A("about", f"О программе {APP_NAME}", "info", None, lambda: self.show_help("about"))
 
         # инструменты
         self.tool_group = QActionGroup(self)
@@ -268,6 +287,9 @@ class MainWindow(QMainWindow):
             tb.addAction(self.actions[k])
         tb.addSeparator()
         tb.addAction(self.actions["export_video"])
+        tb.addSeparator()
+        tb.addAction(self.actions["record_audio"])
+        tb.addAction(self.actions["import_audio"])
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         tb.addWidget(spacer)
@@ -290,12 +312,42 @@ class MainWindow(QMainWindow):
         self.tool_options = ToolOptions(self.state)
         self.color_panel = ColorPanel(self.state)
         self.timeline = Timeline(self.project, self.state, self.actions)
-        self.dock_tool = self._dock("Инструмент", self.tool_options, Qt.RightDockWidgetArea, "dockTool")
-        self.dock_color = self._dock("Цвет", self.color_panel, Qt.RightDockWidgetArea, "dockColor")
+        tool_scroll = QScrollArea()
+        tool_scroll.setWidget(self.tool_options)
+        tool_scroll.setWidgetResizable(True)
+        tool_scroll.setFrameShape(QScrollArea.NoFrame)
+        tool_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        tool_scroll.setStyleSheet(f"QScrollArea, QScrollArea > QWidget > QWidget {{ background:{theme.BG_PANEL}; }}")
+        self.tool_options.setAttribute(Qt.WA_StyledBackground)
+        self.color_panel.setAttribute(Qt.WA_StyledBackground)
+
+        def section(title, body):
+            box = QWidget()
+            box.setObjectName("panel")
+            lay = QVBoxLayout(box)
+            lay.setContentsMargins(0, 0, 0, 0)
+            lay.setSpacing(0)
+            head = QLabel(title)
+            head.setStyleSheet(f"background:{theme.BG_PANEL}; color:{theme.TEXT_MUTED}; font-weight:600; "
+                               f"padding:6px 10px; border-bottom:1px solid {theme.BORDER};")
+            lay.addWidget(head)
+            lay.addWidget(body, 1)
+            return box
+
+        # правая колонка: инструмент и цвет, граница между ними перетаскивается
+        self.props_split = QSplitter(Qt.Vertical)
+        self.props_split.setHandleWidth(5)
+        self.props_split.setChildrenCollapsible(False)
+        self.props_split.addWidget(section("Инструмент", tool_scroll))
+        self.props_split.addWidget(section("Цвет", self.color_panel))
+        self.props_split.setStretchFactor(0, 3)
+        self.props_split.setStretchFactor(1, 2)
+        self.props_split.setSizes([620, 300])
+        self.dock_props = self._dock("Свойства", self.props_split, Qt.RightDockWidgetArea, "dockProps")
+        self.dock_props.setTitleBarWidget(QWidget())  # заголовки у секций свои
         self.dock_timeline = self._dock("Таймлайн", self.timeline, Qt.BottomDockWidgetArea, "dockTimeline")
-        self.resizeDocks([self.dock_tool, self.dock_color], [300, 300], Qt.Horizontal)
-        self.resizeDocks([self.dock_tool, self.dock_color], [210, 400], Qt.Vertical)
-        self.resizeDocks([self.dock_timeline], [250], Qt.Vertical)
+        self.resizeDocks([self.dock_props], [310], Qt.Horizontal)
+        self.resizeDocks([self.dock_timeline], [190], Qt.Vertical)
 
     def _create_menus(self):
         mb = self.menuBar()
@@ -325,7 +377,7 @@ class MainWindow(QMainWindow):
         menu("Правка", ["undo", "redo", None, "cut", "copy", "paste", "clear", None,
                         "swap_colors", "size_up", "size_down"])
         menu("Вид", ["zoom_in", "zoom_out", "zoom_fit", "zoom_100", None, "onion", None,
-                     self.dock_tool.toggleViewAction(), self.dock_color.toggleViewAction(),
+                     self.dock_props.toggleViewAction(),
                      self.dock_timeline.toggleViewAction()])
         tools = mb.addMenu("Инструменты")
         for t in TOOLS:
@@ -333,9 +385,10 @@ class MainWindow(QMainWindow):
         menu("Кадр", ["key", "key_blank", "key_remove", None, "frame_insert", "frame_remove", None,
                       "first", "prev", "next", "last", None, "prev_key", "next_key"])
         menu("Слой", ["layer_add", "layer_duplicate", "layer_delete", "layer_rename", None,
+                      "record_audio", "import_audio", None,
                       "layer_up", "layer_down"])
         menu("Анимация", ["play", "loop", None, "tween", None, "scene"])
-        menu("Справка", ["shortcuts", None, "about"])
+        menu("Справка", ["shortcuts", "changelog", None, "privacy", "contacts", None, "about"])
 
     def _create_statusbar(self):
         sb = self.statusBar()
@@ -390,10 +443,12 @@ class MainWindow(QMainWindow):
         a = self.actions["play"]
         if self.play_timer.isActive():
             self.play_timer.stop()
+            self.playback.stop()
             a.setIcon(icons.icon("play"))
             a.setText("Воспроизвести")
         else:
             self.play_timer.start(max(1, round(1000 / self.project.fps)))
+            self.playback.start(self.project.current_frame)
             a.setIcon(icons.icon("pause"))
             a.setText("Пауза")
 
@@ -404,6 +459,7 @@ class MainWindow(QMainWindow):
             self.toggle_play()
             return
         self._step(1)
+        self.playback.sync(p.current_frame)
 
     # ------------------------------------------------------------------ файлы
     def maybe_save(self) -> bool:
@@ -550,19 +606,59 @@ class MainWindow(QMainWindow):
         if dlg.exec() == QDialog.Accepted:
             self.project.set_scene(dlg.w.value(), dlg.h.value(), dlg.fps.value(), dlg.frames.value())
 
-    def show_shortcuts(self):
-        box = QMessageBox(self)
-        box.setWindowTitle("Горячие клавиши")
-        box.setTextFormat(Qt.RichText)
-        box.setText(SHORTCUTS_HELP)
-        box.exec()
+    def show_help(self, section: str = "about"):
+        HelpDialog(SHORTCUTS_HELP, section, self).exec()
 
-    def show_about(self):
-        QMessageBox.about(
-            self, f"О программе {APP_NAME}",
-            f"<h2>{APP_NAME} {APP_VERSION}</h2>"
-            "<p>Программа для 2D-анимации: покадровое рисование и анимация по ключевым кадрам.</p>",
-        )
+    # ------------------------------------------------------------------ звук
+    def record_audio(self):
+        self._stop_playback()
+        start = self.project.current_frame
+        dlg = RecordDialog(self)
+        dlg.recordingStarted.connect(lambda: (self.project.set_frame(start), self.toggle_play()))
+        dlg.recordingStopped.connect(self._stop_playback)
+        ok = dlg.exec() == QDialog.Accepted
+        self._stop_playback()
+        self.project.set_frame(start)
+        if ok and dlg.result_path:
+            n = sum(1 for l in self.project.layers if l.type == "audio") + 1
+            self._add_audio(f"Запись {n}", dlg.result_id, dlg.result_path, start)
+
+    def import_audio(self):
+        self._stop_playback()
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Импорт звука", os.path.expanduser("~"),
+            "Звук (*.wav *.mp3 *.ogg *.oga *.m4a *.aac *.flac *.opus *.wma);;Все файлы (*)")
+        if not path:
+            return
+        mid, dst = audio.new_media_path()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            if path.lower().endswith(".wav"):
+                try:
+                    audio.analyze_wav(path)
+                    shutil.copyfile(path, dst)
+                except Exception:  # WAV в необычном кодеке — перекодируем
+                    audio.decode_to_wav(path, dst)
+            else:
+                audio.decode_to_wav(path, dst)
+        except OSError as e:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(self, APP_NAME, f"Не удалось открыть звук «{os.path.basename(path)}».\n\n{e}")
+            return
+        QApplication.restoreOverrideCursor()
+        self._add_audio(os.path.splitext(os.path.basename(path))[0], mid, dst, self.project.current_frame)
+
+    def _add_audio(self, name: str, media_id: str, path: str, start: int):
+        try:
+            duration, peaks = audio.analyze_wav(path)
+        except Exception as e:  # noqa: BLE001
+            QMessageBox.warning(self, APP_NAME, f"Не удалось прочитать звук.\n\n{e}")
+            return
+        if duration <= 0:
+            self.statusBar().showMessage("Пустая запись — ничего не добавлено", 3000)
+            return
+        self.project.add_audio_layer(name, media_id, path, start, duration, peaks)
+        self.statusBar().showMessage(f"Добавлен звук «{name}», {duration:.1f} с", 3000)
 
     def closeEvent(self, e):
         self._stop_playback()

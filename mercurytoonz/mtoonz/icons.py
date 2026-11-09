@@ -74,6 +74,17 @@ _ICONS = {
     "fit": '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
     "settings": '<circle cx="12" cy="12" r="3"/>'
                 '<path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    "record": '<circle cx="12" cy="12" r="6" fill="currentColor"/>',
+    "stop": '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5" fill="currentColor"/>',
+    "mic": '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/>',
+    "speaker": '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+    "speaker-off": '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" stroke-opacity=".4"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+    "music": '<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+    "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5v.5"/>',
+    "shield": '<path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/>',
+    "mail": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>',
+    "history": '<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 8v4.5l3 2"/>',
+    "keyboard": '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
     "logo": '<circle cx="12" cy="12" r="8" fill="currentColor" stroke="none"/>'
             '<path d="M7 12.5c1.5-3 3-3 5 0s3.5 3 5 0" stroke="#1a1208" stroke-width="2"/>',
 }

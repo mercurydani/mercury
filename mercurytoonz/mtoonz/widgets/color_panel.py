@@ -24,7 +24,7 @@ class SVSquare(QWidget):
         self.hue = 0.0
         self.s = 1.0
         self.v = 1.0
-        self.setMinimumSize(160, 130)
+        self.setMinimumSize(160, 80)
         self.setCursor(Qt.CrossCursor)
 
     def set_hsv(self, h, s, v):
@@ -161,8 +161,8 @@ class ColorPanel(QWidget):
         self._hue = 0.0
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(12, 10, 12, 12)
-        root.setSpacing(10)
+        root.setContentsMargins(12, 8, 12, 10)
+        root.setSpacing(8)
 
         self.sv = SVSquare()
         self.hue = HueStrip()

@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QColor, QUndoCommand, QUndoStack
 
+from .brushes import BrushParams
+
 
 @dataclass(frozen=True)
 class Stroke:
@@ -24,6 +26,7 @@ class Stroke:
     opacity: float = 1.0
     erase: bool = False
     use_pressure: bool = False
+    brush: BrushParams = BrushParams()
 
 
 @dataclass
@@ -41,8 +44,7 @@ LAYER_TAGS = ["#ff8a3d", "#5cc8ff", "#9be36b", "#ffd84a", "#c58cff", "#ff6fa8", 
 
 
 class Layer:
-    """Слой. Сейчас есть только рисованные слои (type="drawing");
-    формат файла уже предусматривает видео-, аудио- и слои-элементы."""
+    """Рисованный слой (type="drawing"). Другие виды слоёв наследуются от него."""
 
     _counter = 0
     type = "drawing"
@@ -78,6 +80,38 @@ class Layer:
     def sorted_keys(self) -> list[int]:
         return sorted(self.keys)
 
+    # состояние для истории правок
+    def get_state(self):
+        return (self.name, {k: d.copy() for k, d in self.keys.items()})
+
+    def set_state(self, state):
+        self.name, keys = state
+        self.keys = {k: d.copy() for k, d in keys.items()}
+
+
+class AudioLayer(Layer):
+    """Звуковая дорожка: один звуковой клип, начинающийся с кадра `start`."""
+
+    type = "audio"
+
+    def __init__(self, name: str, media_id: str, layer_id: str | None = None):
+        super().__init__(name, layer_id)
+        self.tag = "#3fbf7f"
+        self.media_id = media_id
+        self.start = 0           # первый кадр клипа
+        self.volume = 1.0
+        self.duration = 0.0      # длительность звука, секунды
+        self.peaks: list[float] = []   # уровни громкости (100 значений в секунду) для волны
+
+    def end_frame(self, fps: int) -> int:
+        return self.start + max(1, round(self.duration * fps))
+
+    def get_state(self):
+        return (self.name, self.start, self.volume)
+
+    def set_state(self, state):
+        self.name, self.start, self.volume = state
+
 
 class Project(QObject):
     contentChanged = Signal()      # изменились рисунки — перерисовать холст
@@ -98,6 +132,7 @@ class Project(QObject):
         self.frame_count = 48
         self.background = QColor("#ffffff")
         self.layers: list[Layer] = []  # индекс 0 — верхний слой
+        self.media: dict[str, str] = {}  # id медиафайла -> путь к файлу на диске
         self.current_frame = 0
         self.current_layer = 0
         self._extra_dirty = False      # изменения вне истории (видимость слоя и т.п.)
@@ -114,6 +149,7 @@ class Project(QObject):
         self.width, self.height, self.fps, self.frame_count = width, height, fps, frame_count
         self.layers = [Layer("Слой 1")]
         self.layers[0].keys[0] = Drawing()
+        self.media = {}
         self._after_load()
 
     def _after_load(self):
@@ -172,7 +208,7 @@ class Project(QObject):
     # ---------- история ----------
     def _snapshot(self):
         return {
-            "layers": [(l, l.name, {k: d.copy() for k, d in l.keys.items()}) for l in self.layers],
+            "layers": [(l, l.get_state()) for l in self.layers],
             "frame_count": self.frame_count,
             "scene": (self.width, self.height, self.fps, QColor(self.background)),
             "current_layer": self.current_layer,
@@ -180,9 +216,8 @@ class Project(QObject):
 
     def _restore(self, snap):
         self.layers = []
-        for layer, name, keys in snap["layers"]:
-            layer.name = name
-            layer.keys = {k: d.copy() for k, d in keys.items()}
+        for layer, state in snap["layers"]:
+            layer.set_state(state)
             self.layers.append(layer)
         self.frame_count = snap["frame_count"]
         scene = (self.width, self.height)
@@ -203,9 +238,14 @@ class Project(QObject):
         after = self._snapshot()
         self.undo_stack.push(_SnapshotCommand(self, text, before, after))
 
+    def draw_layer(self) -> Layer | None:
+        """Текущий слой, если на нём можно рисовать и ставить ключевые кадры."""
+        layer = self.layer()
+        return layer if layer is not None and layer.type == "drawing" and not hasattr(layer, "raw") else None
+
     # ---------- рисование ----------
     def add_stroke(self, stroke: Stroke):
-        layer = self.layer()
+        layer = self.draw_layer()
         if layer is None:
             return
 
@@ -219,7 +259,7 @@ class Project(QObject):
         self.edit("Ластик" if stroke.erase else "Мазок", do)
 
     def clear_drawing(self):
-        layer = self.layer()
+        layer = self.draw_layer()
         if layer is None:
             return
         k = layer.key_at_or_before(self.current_frame)
@@ -229,7 +269,7 @@ class Project(QObject):
 
     # ---------- кадры ----------
     def insert_keyframe(self, blank: bool = False):
-        layer = self.layer()
+        layer = self.draw_layer()
         if layer is None:
             return
         f = self.current_frame
@@ -247,14 +287,14 @@ class Project(QObject):
         self.set_frame(f)
 
     def remove_keyframe(self):
-        layer = self.layer()
+        layer = self.draw_layer()
         if layer is None or self.current_frame not in layer.keys:
             return
         self.edit("Удалить ключевой кадр", lambda: layer.keys.pop(self.current_frame))
 
     def insert_frame(self):
         """Вставляет кадр на текущем слое: всё, что правее, сдвигается на 1."""
-        layer = self.layer()
+        layer = self.draw_layer()
         if layer is None:
             return
         f = self.current_frame
@@ -266,7 +306,7 @@ class Project(QObject):
         self.edit("Вставить кадр", do)
 
     def remove_frame(self):
-        layer = self.layer()
+        layer = self.draw_layer()
         if layer is None:
             return
         f = self.current_frame
@@ -296,7 +336,7 @@ class Project(QObject):
         self.edit("Новый слой", do)
 
     def duplicate_layer(self):
-        src = self.layer()
+        src = self.draw_layer()
         if src is None:
             return
 
@@ -332,6 +372,29 @@ class Project(QObject):
         layer = self.layers[index]
         if name and name != layer.name:
             self.edit("Переименовать слой", lambda: setattr(layer, "name", name))
+
+    # ---------- звук ----------
+    def add_audio_layer(self, name: str, media_id: str, path: str, start: int, duration: float, peaks):
+        self.media[media_id] = path
+
+        def do():
+            layer = AudioLayer(name, media_id)
+            layer.start = start
+            layer.duration = duration
+            layer.peaks = peaks
+            # звук кладём под рисованные слои
+            self.layers.append(layer)
+            self.current_layer = len(self.layers) - 1
+            end = layer.end_frame(self.fps)
+            if end > self.frame_count:
+                self.frame_count = end
+
+        self.edit("Добавить звук", do)
+
+    def move_audio(self, layer: "AudioLayer", start: int):
+        start = max(0, start)
+        if start != layer.start:
+            self.edit("Сдвинуть звук", lambda: setattr(layer, "start", start))
 
     def set_scene(self, width: int, height: int, fps: int, frame_count: int):
         if (width, height, fps, frame_count) == (self.width, self.height, self.fps, self.frame_count):

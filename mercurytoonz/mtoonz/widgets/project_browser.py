@@ -8,7 +8,7 @@ from datetime import datetime
 from PySide6.QtCore import QRectF, QSettings, QSize, QStandardPaths, Qt, QUrl
 from PySide6.QtGui import QColor, QDesktopServices, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
-    QAbstractItemView, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
+    QAbstractItemView, QButtonGroup, QComboBox, QGridLayout, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
     QHBoxLayout, QInputDialog, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMenu,
     QMessageBox, QPushButton, QSpinBox, QStackedWidget, QStyle, QStyledItemDelegate,
     QVBoxLayout, QWidget,
@@ -16,14 +16,24 @@ from PySide6.QtWidgets import (
 
 from .. import APP_NAME, fileformat, icons, theme
 
-PRESETS = [
-    ("Full HD 1920×1080", 1920, 1080),
-    ("HD 1280×720", 1280, 720),
-    ("4K 3840×2160", 3840, 2160),
-    ("Вертикальное 1080×1920", 1080, 1920),
-    ("Квадрат 1080×1080", 1080, 1080),
-    ("Свой размер", 0, 0),
+# Пропорции кадра: (ключ, подпись, где используется, ширина, высота, [разрешения])
+ASPECTS = [
+    ("16:9", "16:9", "YouTube, ТВ", 16, 9,
+     [(3840, 2160, "4K"), (2560, 1440, "2K"), (1920, 1080, "Full HD"), (1280, 720, "HD"), (854, 480, "480p")]),
+    ("9:16", "9:16", "Shorts, Reels, TikTok", 9, 16,
+     [(2160, 3840, "4K"), (1080, 1920, "Full HD"), (720, 1280, "HD")]),
+    ("1:1", "1:1", "Квадрат, аватарки", 1, 1,
+     [(2160, 2160, "4K"), (1080, 1080, "Full HD"), (720, 720, "HD")]),
+    ("4:5", "4:5", "Лента Instagram", 4, 5,
+     [(2160, 2700, "4K"), (1080, 1350, "Full HD")]),
+    ("4:3", "4:3", "Классический ТВ", 4, 3,
+     [(2880, 2160, "4K"), (1440, 1080, "Full HD"), (1024, 768, "XGA"), (640, 480, "VGA")]),
+    ("21:9", "21:9", "Кино, широкий", 21, 9,
+     [(3440, 1440, "UWQHD"), (2560, 1080, "UW Full HD")]),
+    ("custom", "Свой", "Любой размер", 3, 2, []),
 ]
+DEFAULT_ASPECT = "16:9"
+DEFAULT_SIZE = (1920, 1080)
 FPS_CHOICES = [8, 12, 15, 24, 25, 30, 48, 50, 60]
 
 CARD_W, CARD_H = 232, 206
@@ -74,28 +84,90 @@ def human_time(dt: datetime) -> str:
 
 
 # ------------------------------------------------------------------ новый проект
+class AspectCard(QPushButton):
+    """Кнопка-карточка с прямоугольником в пропорциях кадра."""
+
+    def __init__(self, key, title, subtitle, rw, rh):
+        super().__init__()
+        self.key, self.title, self.subtitle, self.rw, self.rh = key, title, subtitle, rw, rh
+        self.setCheckable(True)
+        self.setFixedSize(122, 112)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip(f"{title} — {subtitle}")
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
+        on, hover = self.isChecked(), self.underMouse()
+        p.setPen(QPen(QColor(theme.ACCENT if on else (theme.TEXT_MUTED if hover else theme.BORDER)), 2 if on else 1))
+        p.setBrush(QColor(theme.BG_RAISED if (on or hover) else theme.BG_PANEL))
+        p.drawRoundedRect(r, 8, 8)
+        box = 46
+        k = box / max(self.rw, self.rh)
+        w, h = self.rw * k, self.rh * k
+        frame = QRectF(r.center().x() - w / 2, 12 + (box - h) / 2, w, h)
+        p.setBrush(QColor(theme.ACCENT if on else "#3a404b"))
+        p.setPen(Qt.NoPen)
+        if self.key == "custom":
+            p.setBrush(Qt.NoBrush)
+            p.setPen(QPen(QColor(theme.ACCENT if on else theme.TEXT_MUTED), 1.5, Qt.DashLine))
+        p.drawRoundedRect(frame, 3, 3)
+        f = QFont(self.font())
+        f.setPixelSize(14)
+        f.setBold(True)
+        p.setFont(f)
+        p.setPen(QColor(theme.TEXT))
+        p.drawText(QRectF(r.left(), 64, r.width(), 20), Qt.AlignCenter, self.title)
+        f.setPixelSize(11)
+        f.setBold(False)
+        p.setFont(f)
+        p.setPen(QColor(theme.TEXT_MUTED))
+        p.drawText(QRectF(r.left() + 4, 84, r.width() - 8, 18), Qt.AlignCenter,
+                   p.fontMetrics().elidedText(self.subtitle, Qt.ElideRight, int(r.width() - 8)))
+
+
 class NewProjectDialog(QDialog):
+    """Новый проект: сначала пропорции кадра, затем разрешение, частота и длина."""
+
     def __init__(self, default_name: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Новый проект")
-        self.setMinimumWidth(420)
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(22, 20, 22, 18)
+        lay.setContentsMargins(24, 20, 24, 18)
         lay.setSpacing(14)
         title = QLabel("Новый проект")
-        title.setStyleSheet("font-size: 18px; font-weight: 600;")
+        title.setStyleSheet("font-size: 20px; font-weight: 600;")
         lay.addWidget(title)
+
+        name_row = QHBoxLayout()
+        name_row.addWidget(QLabel("Название"))
+        self.name = QLineEdit(default_name)
+        self.name.selectAll()
+        name_row.addWidget(self.name, 1)
+        lay.addLayout(name_row)
+
+        sec = QLabel("ПРОПОРЦИИ КАДРА")
+        sec.setObjectName("sectionTitle")
+        lay.addWidget(sec)
+        cards = QGridLayout()
+        cards.setSpacing(8)
+        self.cards: dict[str, AspectCard] = {}
+        group = QButtonGroup(self)
+        group.setExclusive(True)
+        for i, (key, t, sub, rw, rh, _res) in enumerate(ASPECTS):
+            c = AspectCard(key, t, sub, rw, rh)
+            group.addButton(c)
+            c.clicked.connect(lambda _=False, k=key: self._select_aspect(k))
+            self.cards[key] = c
+            cards.addWidget(c, i // 4, i % 4)
+        lay.addLayout(cards)
 
         form = QFormLayout()
         form.setSpacing(10)
         form.setLabelAlignment(Qt.AlignRight)
-        self.name = QLineEdit(default_name)
-        self.name.selectAll()
-        form.addRow("Название", self.name)
-        self.preset = QComboBox()
-        for label, w, h in PRESETS:
-            self.preset.addItem(label, (w, h))
-        form.addRow("Формат", self.preset)
+        self.quality = QComboBox()
+        form.addRow("Разрешение", self.quality)
         size_row = QHBoxLayout()
         self.w = QSpinBox()
         self.w.setRange(16, 8192)
@@ -103,10 +175,15 @@ class NewProjectDialog(QDialog):
         self.h = QSpinBox()
         self.h.setRange(16, 8192)
         self.h.setSuffix(" px")
+        self.swap = QPushButton("⇄")
+        self.swap.setToolTip("Поменять ширину и высоту местами")
+        self.swap.setFixedWidth(36)
         size_row.addWidget(self.w)
         size_row.addWidget(QLabel("×"))
         size_row.addWidget(self.h)
-        form.addRow("Размер", size_row)
+        size_row.addWidget(self.swap)
+        size_row.addStretch()
+        form.addRow("Размер кадра", size_row)
         self.fps = QComboBox()
         for f in FPS_CHOICES:
             self.fps.addItem(f"{f} кадров/с", f)
@@ -132,32 +209,77 @@ class NewProjectDialog(QDialog):
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
 
-        self.preset.currentIndexChanged.connect(self._on_preset)
-        self.w.valueChanged.connect(self._on_size)
-        self.h.valueChanged.connect(self._on_size)
+        self.quality.currentIndexChanged.connect(self._on_quality)
+        self.w.valueChanged.connect(self._on_size_edit)
+        self.h.valueChanged.connect(self._on_size_edit)
+        self.swap.clicked.connect(self._swap)
         self.fps.currentIndexChanged.connect(self._on_duration)
         self.frames.valueChanged.connect(self._on_duration)
-        self._on_preset()
+        self._aspect = None
+        self._select_aspect(DEFAULT_ASPECT)
+        self._set_size(*DEFAULT_SIZE)
         self._on_duration()
 
-    def _on_preset(self):
-        w, h = self.preset.currentData()
-        if w:
-            for sb, v in ((self.w, w), (self.h, h)):
-                sb.blockSignals(True)
-                sb.setValue(v)
-                sb.blockSignals(False)
+    def _aspect_info(self, key):
+        return next(a for a in ASPECTS if a[0] == key)
 
-    def _on_size(self):
-        for i, (_, w, h) in enumerate(PRESETS):
-            if (w, h) == (self.w.value(), self.h.value()):
-                self.preset.blockSignals(True)
-                self.preset.setCurrentIndex(i)
-                self.preset.blockSignals(False)
-                return
-        self.preset.blockSignals(True)
-        self.preset.setCurrentIndex(len(PRESETS) - 1)
-        self.preset.blockSignals(False)
+    def _select_aspect(self, key):
+        self._aspect = key
+        self.cards[key].setChecked(True)
+        res = self._aspect_info(key)[5]
+        self.quality.blockSignals(True)
+        self.quality.clear()
+        for w, h, label in res:
+            self.quality.addItem(f"{label}  ·  {w}×{h}", (w, h))
+        self.quality.addItem("Свой размер", None)
+        # по умолчанию — Full HD, если есть, иначе первое
+        idx = next((i for i, (_w, _h, lbl) in enumerate(res) if lbl == "Full HD"), 0)
+        self.quality.setCurrentIndex(idx if res else self.quality.count() - 1)
+        self.quality.blockSignals(False)
+        custom = key == "custom"
+        self.quality.setEnabled(not custom)
+        if not custom:
+            self._on_quality()
+
+    def _set_size(self, w, h):
+        for sb, v in ((self.w, w), (self.h, h)):
+            sb.blockSignals(True)
+            sb.setValue(v)
+            sb.blockSignals(False)
+
+    def _on_quality(self):
+        data = self.quality.currentData()
+        if data:
+            self._set_size(*data)
+
+    def _on_size_edit(self):
+        # подбираем подходящие пропорции и разрешение под введённый размер
+        w, h = self.w.value(), self.h.value()
+        for key, _t, _s, rw, rh, res in ASPECTS:
+            for i, (rw2, rh2, _l) in enumerate(res):
+                if (rw2, rh2) == (w, h):
+                    if self._aspect != key:
+                        self._select_aspect(key)
+                    self.quality.blockSignals(True)
+                    self.quality.setCurrentIndex(i)
+                    self.quality.blockSignals(False)
+                    return
+        for key, _t, _s, rw, rh, res in ASPECTS:
+            if res and abs(w / h - rw / rh) < 0.01:
+                if self._aspect != key:
+                    self._select_aspect(key)
+                    self._set_size(w, h)
+                break
+        else:
+            self.cards["custom"].setChecked(True)
+            self._aspect = "custom"
+        self.quality.blockSignals(True)
+        self.quality.setCurrentIndex(self.quality.count() - 1)
+        self.quality.blockSignals(False)
+
+    def _swap(self):
+        self._set_size(self.h.value(), self.w.value())
+        self._on_size_edit()
 
     def _on_duration(self):
         self.seconds.setText(f"≈ {self.frames.value() / self.fps.currentData():.1f} с")
