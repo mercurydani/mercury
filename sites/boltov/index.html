@@ -92,33 +92,41 @@ button{font:inherit;color:inherit}
 .calc .fine{margin-top:8px;font-size:13px;color:var(--dim)}
 .calc .btn{width:100%;margin-top:16px}
 
-/* checks: readouts */
+/* checks: a top view of the car with paint-gauge readings, then two more checks as rows */
 .sec{padding-top:clamp(72px,9vw,120px)}
 .sec-h{display:grid;gap:12px;margin-bottom:30px}
 .sec-h h2{font:700 clamp(1.9rem,1.2rem + 2.6vw,3.2rem)/1.05 var(--head);letter-spacing:-.02em}
 .sec-h p{color:var(--mute);max-width:52ch}
-.checks{display:grid;gap:14px}
-.check{display:grid;gap:16px;background:var(--g2);border-radius:18px;padding:22px}
-.read{background:var(--g0);border-radius:12px;padding:16px 18px;font:500 14px/1.5 var(--mono);color:var(--mute)}
-.read .big{display:flex;align-items:baseline;gap:8px;font:600 34px/1 var(--mono);color:var(--text)}
-.read .big small{font-size:14px;color:var(--mute)}
-.read .tag{display:inline-block;margin-top:10px;padding:4px 8px;border-radius:5px;font-size:12px;font-weight:600}
-.tag.ok{background:rgba(95,191,134,.15);color:var(--ok)}
-.tag.warn{background:rgba(232,145,58,.15);color:var(--warn)}
-.bars{display:flex;align-items:flex-end;gap:5px;height:46px;margin-top:10px}
-.bars i{flex:1;background:var(--g4);border-radius:2px}
-.bars i.hot{background:var(--warn)}
-.check h3{font:600 21px/1.25 var(--head)}
-.check p{color:var(--mute);font-size:16px}
-.check .tool{font-size:14px;color:var(--amber)}
-.ill{font-size:13px;color:var(--dim);margin-top:14px}
+.body{display:grid;gap:28px;align-items:center}
+.carmap{margin:0;justify-self:center;width:min(100%,420px)}
+.carmap svg{width:100%;height:auto;display:block}
+.carmap .pnl{fill:#22262b;stroke:#3c424a;stroke-width:1.5}
+.carmap .pnl.hot{fill:rgba(240,163,48,.18);stroke:var(--amber)}
+.carmap .gl{fill:#2c3138}
+.carmap text{font:600 13px var(--mono);fill:var(--text);text-anchor:middle}
+.carmap text.u{font-size:9px;fill:var(--mute)}
+.carmap text.hot{fill:var(--amber)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;margin-top:10px;font-size:14px;color:var(--mute)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px;background:#22262b;border:1.5px solid #3c424a}
+.legend i.hot{background:rgba(240,163,48,.18);border-color:var(--amber)}
+.explain h3{font:600 clamp(1.4rem,1.1rem + 1vw,1.8rem)/1.2 var(--head)}
+.explain p{color:var(--mute);margin-top:10px;max-width:46ch}
+.explain .hl{color:var(--amber);font-weight:600}
+.more{display:grid;margin-top:clamp(36px,5vw,56px)}
+.more li{display:grid;grid-template-columns:1fr;gap:6px 32px;padding:24px 0;border-top:1px solid var(--g3)} /* taste-skill-ignore: rows of one list */
+.more .tool{font:600 13px/1.2 var(--mono);color:var(--amber);text-transform:uppercase;letter-spacing:.04em}
+.more h3{font:600 21px/1.25 var(--head)}
+.more p{color:var(--mute)}
+.more .val{font:600 18px/1.3 var(--mono);color:var(--text)}
+.more .val small{display:block;font:500 13px/1.3 var(--sans);color:var(--dim);margin-top:4px}
+.ill{font-size:13px;color:var(--dim);margin-top:6px}
 
 /* report sheet */
 .sheet{background:var(--paper);color:var(--paper-ink);border-radius:6px;padding:clamp(20px,3.2vw,44px);max-width:900px;margin-inline:auto}
 .sheet-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px;padding-bottom:14px;border-bottom:2px solid var(--paper-ink);font:600 13px/1.4 var(--mono);color:var(--paper-mute);text-transform:uppercase}
 .sheet-head b{color:var(--paper-ink)}
 .sheet h3{margin-top:18px;font:700 clamp(1.5rem,1.1rem + 1.6vw,2.2rem)/1.1 var(--head);letter-spacing:-.015em}
-.sheet .car{font:500 14px/1.4 var(--mono);color:var(--paper-mute);margin-top:6px}
+.sheet .spec{font:500 14px/1.4 var(--mono);color:var(--paper-mute);margin-top:6px}
 .sheet table{width:100%;border-collapse:collapse;margin-top:18px;font-size:16px}
 .sheet th{text-align:left;font:600 12px/1 var(--mono);color:var(--paper-mute);text-transform:uppercase;padding:10px 0;border-bottom:1px solid #cfccc3}
 .sheet td{padding:12px 0;border-bottom:1px dashed #cfccc3;vertical-align:top}
@@ -132,14 +140,18 @@ button{font:inherit;color:inherit}
 .verdict p{color:#2f4a3a}
 .sheet .sample{margin-top:16px;font:500 12px/1.4 var(--mono);color:var(--paper-mute)}
 
-/* steps */
-.steps{display:grid;gap:14px;counter-reset:s}
-.steps li{position:relative;background:var(--g2);border-radius:18px;padding:22px 22px 24px}
-.steps .n{font:700 44px/1 var(--head);color:var(--amber)}
-.steps h3{margin-top:14px;font:600 20px/1.25 var(--head)}
-.steps p{margin-top:6px;color:var(--mute);font-size:16px}
-.terms{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
-.terms li{padding:9px 14px;border-radius:999px;background:var(--g2);font-size:15px;color:var(--mute)}
+/* steps: a route with four stops */
+.route{position:relative;display:grid;gap:30px;padding-left:34px}
+.route::before{content:"";position:absolute;left:8px;top:8px;bottom:8px;border-left:2px dashed var(--g4)} /* taste-skill-ignore: the road the steps sit on */
+.route li{position:relative}
+.route li::before{content:"";position:absolute;left:-34px;top:4px;width:18px;height:18px;border-radius:50%;background:var(--g1);box-shadow:inset 0 0 0 3px var(--g4)} /* taste-skill-ignore: a stop on the road */
+.route li:last-child::before{background:var(--amber);box-shadow:none}
+.route .n{font:600 13px/1 var(--mono);color:var(--amber)}
+.route h3{margin-top:8px;font:600 20px/1.25 var(--head)}
+.route p{margin-top:6px;color:var(--mute);font-size:16px;max-width:34ch}
+.route .where{display:block;margin-top:8px;font:500 13px/1.3 var(--mono);color:var(--dim)}
+.deal{margin-top:34px;font:500 clamp(1.1rem,1rem + .5vw,1.4rem)/1.45 var(--head);color:var(--text);max-width:52ch}
+.deal span{color:var(--amber)}
 
 /* contacts */
 .contact{display:grid;gap:20px;background:var(--g0);border-radius:22px;padding:clamp(22px,4vw,48px)}
@@ -169,8 +181,11 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
   .hero>div:first-child{padding-top:12px}
   .acts .btn{flex:0 0 auto}
   .sec-h{grid-template-columns:1fr 1fr;align-items:end}
-  .checks{grid-template-columns:repeat(3,1fr)}
-  .steps{grid-template-columns:repeat(4,1fr)}
+  .body{grid-template-columns:.9fr 1.1fr;gap:64px}
+  .more li{grid-template-columns:200px 1fr 220px;align-items:baseline}
+  .route{grid-template-columns:repeat(4,1fr);gap:28px;padding:34px 0 0}
+  .route::before{left:9px;right:0;top:8px;bottom:auto;border-left:0;border-top:2px dashed var(--g4)}
+  .route li::before{left:0;top:-34px}
   .contact{grid-template-columns:1fr 1fr;align-items:center}
 }
 @media (prefers-reduced-motion:reduce){.dock{transition:none}}
@@ -226,27 +241,39 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
 
   <section class="wrap sec" id="check" aria-labelledby="check-h">
     <div class="sec-h"><h2 id="check-h">Что проверяю на осмотре</h2><p>Смотрю каждую машину сам, с приборами. Если что-то не так, говорю об этом до покупки.</p></div>
-    <ul class="checks">
-      <li class="check">
-        <div class="read" aria-hidden="true">толщина ЛКП, капот<div class="big">118<small>мкм</small></div><span class="tag ok">заводская краска</span></div>
-        <h3>Кузов и лакокрасочное покрытие</h3>
-        <p>Прохожу толщиномером каждую деталь. Видно окрашенные элементы, шпаклёвку и следы ДТП.</p>
-        <span class="tool">Толщиномер ЛКП</span>
-      </li>
-      <li class="check">
-        <div class="read" aria-hidden="true">цилиндры 1–4, нагар<div class="bars"><i style="height:34%"></i><i style="height:38%"></i><i class="hot" style="height:72%"></i><i style="height:36%"></i></div><span class="tag warn">цилиндр 3: проверить</span></div>
-        <h3>Двигатель, КПП, ходовая</h3>
-        <p>Смотрю цилиндры эндоскопом, слушаю двигатель, проверяю коробку и подвеску на ходу.</p>
-        <span class="tool">Эндоскоп</span>
-      </li>
-      <li class="check">
-        <div class="read" aria-hidden="true">пробег: одометр / блоки<div class="big">148<small>/ 212 тыс. км</small></div><span class="tag warn">пробег скручен</span></div>
-        <h3>Реальный пробег и ошибки</h3>
-        <p>Сравниваю пробег в разных блоках управления и по истории обслуживания. Считываю ошибки.</p>
-        <span class="tool">Диагностический сканер</span>
-      </li>
+    <div class="body">
+      <figure class="carmap" aria-label="Схема: замеры толщины ЛКП по деталям кузова">
+        <svg viewBox="0 0 300 440" aria-hidden="true">
+          <path class="pnl" d="M86 40 Q150 14 214 40 L220 108 L80 108 Z"/>
+          <path class="pnl" d="M66 60 L80 60 L80 150 L58 150 Q56 100 66 60Z"/><path class="pnl" d="M234 60 L220 60 L220 150 L242 150 Q244 100 234 60Z"/>
+          <path class="gl" d="M86 112 L214 112 L204 150 L96 150 Z"/>
+          <path class="pnl" d="M96 154 L204 154 L204 288 L96 288 Z"/>
+          <path class="pnl hot" d="M58 154 L92 154 L92 222 L56 222 Z"/><path class="pnl" d="M242 154 L208 154 L208 222 L244 222 Z"/>
+          <path class="pnl" d="M56 226 L92 226 L92 296 L58 296 Z"/><path class="pnl" d="M244 226 L208 226 L208 296 L242 296 Z"/>
+          <path class="gl" d="M96 292 L204 292 L212 324 L88 324 Z"/>
+          <path class="pnl" d="M60 300 L92 300 L88 360 L68 380 Q58 340 60 300Z"/><path class="pnl" d="M240 300 L208 300 L212 360 L232 380 Q242 340 240 300Z"/>
+          <path class="pnl" d="M88 328 L212 328 L216 390 Q150 414 84 390 Z"/>
+          <text x="150" y="74">112</text><text class="u" x="150" y="88">капот</text>
+          <text x="150" y="216">118</text><text class="u" x="150" y="230">крыша</text>
+          <text x="150" y="364">109</text><text class="u" x="150" y="378">багажник</text>
+          <text class="hot" x="74" y="192">310</text>
+          <text x="226" y="192">115</text><text x="74" y="264">121</text><text x="226" y="264">110</text>
+          <text x="72" y="110">114</text><text x="228" y="110">117</text>
+          <text x="76" y="340">113</text><text x="224" y="340">111</text>
+        </svg>
+        <p class="legend"><span><i></i>заводская краска, 90–160 мкм</span><span><i class="hot"></i>перекрашено</span></p>
+      </figure>
+      <div class="explain">
+        <h3>Прохожу толщиномером каждую деталь кузова</h3>
+        <p>На заводской краске прибор показывает 90–160 мкм. Если на детали <span class="hl">300 мкм и больше</span>, её красили, а иногда под краской шпаклёвка после удара. Так видно ДТП, о котором продавец не рассказал.</p>
+        <p>На схеме пример: левая передняя дверь перекрашена, остальной кузов родной.</p>
+      </div>
+    </div>
+    <ul class="more">
+      <li><span class="tool">Эндоскоп</span><div><h3>Двигатель, КПП, ходовая</h3><p>Смотрю цилиндры изнутри, слушаю двигатель, проверяю коробку и подвеску на ходу.</p></div><span class="val">Цилиндр 3: задиры<small>такую машину не берём</small></span></li>
+      <li><span class="tool">Диагностический сканер</span><div><h3>Реальный пробег и ошибки</h3><p>Сравниваю пробег в разных блоках управления и по истории обслуживания, считываю ошибки.</p></div><span class="val">148 / 212 тыс. км<small>одометр / блок двигателя</small></span></li>
     </ul>
-    <p class="ill">Показания приборов на карточках для иллюстрации.</p>
+    <p class="ill">Цифры на схеме и в строках для иллюстрации.</p>
   </section>
 
   <section class="wrap sec" id="report" aria-labelledby="rep-h">
@@ -254,7 +281,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
     <article class="sheet" aria-label="Пример отчёта об осмотре">
       <div class="sheet-head"><span>Отчёт об осмотре · <b>пример</b></span><span>Любляна, Словения</span><span>К. Болтов</span></div>
       <h3>Volkswagen Golf VII, 2017</h3>
-      <p class="car">1.4 TSI · DSG · заявленный пробег 132 000 км</p>
+      <p class="spec">1.4 TSI · DSG · заявленный пробег 132 000 км</p>
       <table>
         <thead><tr><th scope="col">Пункт</th><th scope="col">Результат</th></tr></thead>
         <tbody>
@@ -274,13 +301,13 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;p
 
   <section class="wrap sec" id="steps" aria-labelledby="steps-h">
     <div class="sec-h"><h2 id="steps-h">Как проходит пригон</h2><p>От первого сообщения до сербских номеров на вашей машине.</p></div>
-    <ol class="steps">
-      <li><span class="n">1</span><h3>Обсуждаем и подписываем договор</h3><p>Бюджет, марка, требования. Фиксирую условия и цену в договоре.</p></li>
-      <li><span class="n">2</span><h3>Ищу и проверяю</h3><p>Отбираю варианты, еду смотреть лично, присылаю отчёты. Покупаем только то, что прошло проверку.</p></li>
-      <li><span class="n">3</span><h3>Доставляю в Сербию</h3><p>Организую перевозку до таможенного терминала в Сербии.</p></li>
-      <li><span class="n">4</span><h3>Растаможка и номера</h3><p>Оформляю документы, ставлю машину на учёт и получаю номера.</p></li>
+    <ol class="route">
+      <li><span class="n">Шаг 1</span><h3>Обсуждаем и подписываем договор</h3><p>Бюджет, марка, требования. Условия и цену фиксируем в договоре.</p><span class="where">Сербия · онлайн</span></li>
+      <li><span class="n">Шаг 2</span><h3>Ищу и проверяю</h3><p>Отбираю варианты, еду смотреть лично, присылаю отчёты.</p><span class="where">Словения / Германия</span></li>
+      <li><span class="n">Шаг 3</span><h3>Доставляю в Сербию</h3><p>Перевозка до таможенного терминала в Сербии.</p><span class="where">в пути</span></li>
+      <li><span class="n">Шаг 4</span><h3>Растаможка и номера</h3><p>Оформляю документы, ставлю на учёт, получаю номера.</p><span class="where">Сербия · готово</span></li>
     </ol>
-    <ul class="terms"><li>Работаю по договору</li><li>Без посредников</li><li>Только личные осмотры</li></ul>
+    <p class="deal">Работаю по договору, без посредников. <span>Каждую машину смотрю сам</span>, а не по фото от продавца.</p>
   </section>
 
   <section class="wrap sec" id="contacts" aria-labelledby="ct-h">
