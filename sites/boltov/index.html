@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Константин Болтов · подбор и пригон авто из Европы в Сербию</title>
+<meta name="description" content="Подбор и пригон автомобилей из Словении и Германии в Сербию под ключ: личный осмотр, доставка, растаможка, номера. Эксперт-техник, 16 лет в автосфере, 300 подобранных авто.">
+<meta name="theme-color" content="#16181b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"><!-- taste-skill-ignore: mono only for instrument readouts and the report sheet -->
+<style>
+/* Konstantin Boltov. An expert, not a car dealer: graphite, one amber accent, numbers you can read.
+   The calculator is the first-screen object; checks are shown as instrument readouts; the report is a paper sheet. */
+:root{
+  --g0:#101214;--g1:#16181b;--g2:#1d2024;--g3:#262a2f;--g4:#33383f;
+  --text:#eef0f2;--mute:#a4abb3;--dim:#7c848d;--amber:#f0a330;--amber-hi:#ffb84d;--amber-ink:#1b1204;
+  --ok:#5fbf86;--warn:#e8913a;--bad:#e05a4a;--paper:#f4f2ec;--paper-ink:#1f2226;--paper-mute:#5f646b;
+  --head:"Geologica",system-ui,sans-serif;--sans:"Golos Text",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; /* taste-skill-ignore: readouts and report sheet */
+  --pad:clamp(16px,4vw,56px);--ease:cubic-bezier(.2,.7,.1,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--g1);color:var(--text);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,p,ul,ol,figure,dl,dd,table{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:var(--pad)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 24px;border-radius:10px;border:0;font:600 17px/1 var(--sans);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,transform .15s var(--ease)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn-amber{background:var(--amber);color:var(--amber-ink)}
+.btn-amber:hover{background:var(--amber-hi)}
+.btn-ghost{background:var(--g3);color:var(--text)}
+.btn-ghost:hover{background:var(--g4)}
+
+/* top */
+.top{display:flex;align-items:center;gap:18px;min-height:76px}
+.name{margin-right:auto;text-decoration:none;font:600 17px/1.15 var(--head)}
+.name small{display:block;font:500 13px/1.3 var(--sans);color:var(--mute)}
+.top nav{display:none;gap:26px;font-size:15px;color:var(--mute)}
+.top nav a{text-decoration:none}
+.top nav a:hover{color:var(--text)}
+.langs{display:flex;background:var(--g2);border-radius:8px;padding:3px}
+.langs button{border:0;background:none;padding:8px 11px;border-radius:6px;font:600 13px/1 var(--sans);color:var(--mute);cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--text);color:var(--g1)}
+
+/* hero */
+.hero{display:grid;gap:30px;padding-block:14px 64px}
+.hero h1{font:700 clamp(2.2rem,1.1rem + 3.9vw,4.3rem)/1.02 var(--head);letter-spacing:-.025em;text-wrap:balance}
+.hero h1 em{display:block;font-style:normal;color:var(--amber)}
+.hero .sub{margin-top:18px;font-size:clamp(1.0625rem,1rem + .35vw,1.25rem);color:var(--mute);max-width:40ch}
+.facts{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:8px 28px;margin-top:26px}
+.facts b{display:block;font:700 clamp(2rem,1.4rem + 2vw,3rem)/1 var(--head);letter-spacing:-.02em}
+.facts span{display:block;margin-top:6px;font-size:14px;color:var(--mute);line-height:1.3}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.acts .btn{flex:1 1 220px}
+
+/* calculator */
+.calc{background:var(--g2);border-radius:20px;padding:clamp(18px,2.6vw,28px);align-self:start}
+.calc h2{font:600 20px/1.2 var(--head)}
+.calc .hint{color:var(--mute);font-size:14px;margin-top:4px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:16px;padding:4px;background:var(--g0);border-radius:12px}
+.seg button{min-height:52px;border:0;border-radius:9px;background:none;font:600 17px/1 var(--sans);color:var(--mute);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.seg button i{font:600 12px/1 var(--mono);font-style:normal;padding:4px 6px;border-radius:5px;background:var(--g3);color:var(--mute)}
+.seg button[aria-pressed="true"] i{background:var(--amber);color:var(--amber-ink)}
+.seg button[aria-pressed="true"]{background:var(--g4);color:var(--text)}
+.rows{margin-top:14px;display:grid}
+.row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:4px 12px;min-height:64px;padding:10px 4px;border-bottom:1px solid var(--g3);cursor:pointer} /* taste-skill-ignore: rows of a price list */
+.row input{position:absolute;opacity:0;pointer-events:none}
+.row .box{width:24px;height:24px;border-radius:6px;border:2px solid var(--g4);display:grid;place-items:center;transition:background-color .15s,border-color .15s}
+.row .box svg{width:16px;height:16px;color:var(--amber-ink);opacity:0}
+.row input:checked+.box{background:var(--amber);border-color:var(--amber)}
+.row input:checked+.box svg{opacity:1}
+.row input:focus-visible+.box{outline:2px solid var(--amber);outline-offset:2px}
+.row.locked{cursor:default}
+.row.locked .box{background:var(--g4);border-color:var(--g4)}
+.row.locked .box svg{opacity:1;color:var(--text)}
+.row b{font:500 16px/1.3 var(--sans)}
+.row small{grid-column:2;display:block;font-size:13px;color:var(--dim);line-height:1.3}
+.row .p{grid-row:1/3;grid-column:3;font:600 18px/1 var(--mono);white-space:nowrap}
+.row.off .p,.row.off b{color:var(--dim)}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:18px}
+.total span{color:var(--mute);font-size:15px}
+.total b{font:700 clamp(2.4rem,1.8rem + 2vw,3.2rem)/1 var(--head);color:var(--amber);letter-spacing:-.02em;white-space:nowrap}
+.total b small{font-size:.45em;color:var(--amber);font-weight:600;margin-right:6px}
+.calc .fine{margin-top:8px;font-size:13px;color:var(--dim)}
+.calc .btn{width:100%;margin-top:16px}
+
+/* checks: readouts */
+.sec{padding-top:clamp(72px,9vw,120px)}
+.sec-h{display:grid;gap:12px;margin-bottom:30px}
+.sec-h h2{font:700 clamp(1.9rem,1.2rem + 2.6vw,3.2rem)/1.05 var(--head);letter-spacing:-.02em}
+.sec-h p{color:var(--mute);max-width:52ch}
+.checks{display:grid;gap:14px}
+.check{display:grid;gap:16px;background:var(--g2);border-radius:18px;padding:22px}
+.read{background:var(--g0);border-radius:12px;padding:16px 18px;font:500 14px/1.5 var(--mono);color:var(--mute)}
+.read .big{display:flex;align-items:baseline;gap:8px;font:600 34px/1 var(--mono);color:var(--text)}
+.read .big small{font-size:14px;color:var(--mute)}
+.read .tag{display:inline-block;margin-top:10px;padding:4px 8px;border-radius:5px;font-size:12px;font-weight:600}
+.tag.ok{background:rgba(95,191,134,.15);color:var(--ok)}
+.tag.warn{background:rgba(232,145,58,.15);color:var(--warn)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:46px;margin-top:10px}
+.bars i{flex:1;background:var(--g4);border-radius:2px}
+.bars i.hot{background:var(--warn)}
+.check h3{font:600 21px/1.25 var(--head)}
+.check p{color:var(--mute);font-size:16px}
+.check .tool{font-size:14px;color:var(--amber)}
+.ill{font-size:13px;color:var(--dim);margin-top:14px}
+
+/* report sheet */
+.sheet{background:var(--paper);color:var(--paper-ink);border-radius:6px;padding:clamp(20px,3.2vw,44px);max-width:900px;margin-inline:auto}
+.sheet-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px;padding-bottom:14px;border-bottom:2px solid var(--paper-ink);font:600 13px/1.4 var(--mono);color:var(--paper-mute);text-transform:uppercase}
+.sheet-head b{color:var(--paper-ink)}
+.sheet h3{margin-top:18px;font:700 clamp(1.5rem,1.1rem + 1.6vw,2.2rem)/1.1 var(--head);letter-spacing:-.015em}
+.sheet .car{font:500 14px/1.4 var(--mono);color:var(--paper-mute);margin-top:6px}
+.sheet table{width:100%;border-collapse:collapse;margin-top:18px;font-size:16px}
+.sheet th{text-align:left;font:600 12px/1 var(--mono);color:var(--paper-mute);text-transform:uppercase;padding:10px 0;border-bottom:1px solid #cfccc3}
+.sheet td{padding:12px 0;border-bottom:1px dashed #cfccc3;vertical-align:top}
+.sheet td:last-child{text-align:right;white-space:nowrap;padding-left:14px}
+.mk{display:inline-block;padding:4px 9px;border-radius:5px;font:600 13px/1.2 var(--mono)}
+.mk.ok{background:#dff0e5;color:#25724a}
+.mk.warn{background:#fbe6cf;color:#9a520d}
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center;margin-top:22px;padding:16px 18px;border-radius:8px;background:#e7f2ea}
+.verdict svg{grid-row:1/3;width:34px;height:34px;padding:6px;border-radius:50%;background:#2f8a57;color:#fff}
+.verdict b{font:700 20px/1.2 var(--head);color:#1f6a43}
+.verdict p{color:#2f4a3a}
+.sheet .sample{margin-top:16px;font:500 12px/1.4 var(--mono);color:var(--paper-mute)}
+
+/* steps */
+.steps{display:grid;gap:14px;counter-reset:s}
+.steps li{position:relative;background:var(--g2);border-radius:18px;padding:22px 22px 24px}
+.steps .n{font:700 44px/1 var(--head);color:var(--amber)}
+.steps h3{margin-top:14px;font:600 20px/1.25 var(--head)}
+.steps p{margin-top:6px;color:var(--mute);font-size:16px}
+.terms{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.terms li{padding:9px 14px;border-radius:999px;background:var(--g2);font-size:15px;color:var(--mute)}
+
+/* contacts */
+.contact{display:grid;gap:20px;background:var(--g0);border-radius:22px;padding:clamp(22px,4vw,48px)}
+.contact h2{font:700 clamp(1.9rem,1.2rem + 2.6vw,3.2rem)/1.05 var(--head);letter-spacing:-.02em}
+.contact p.lead{color:var(--mute);margin-top:10px;max-width:40ch}
+.ch{display:grid;gap:8px}
+.ch a{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:66px;padding:12px 20px;border-radius:12px;background:var(--g2);text-decoration:none;transition:background-color .2s}
+.ch a:hover{background:var(--g3)}
+.ch a:first-child{background:var(--amber);color:var(--amber-ink)}
+.ch a:first-child:hover{background:var(--amber-hi)}
+.ch b{font:600 17px/1.2 var(--sans)}
+.ch small{display:block;font-size:13px;opacity:.75}
+.ch span.v{font:600 16px/1 var(--mono);white-space:nowrap}
+
+footer{margin-top:64px;background:var(--g0)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding-block:22px 28px;font-size:13px;color:var(--dim)}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(16,18,20,.96);transition:transform .3s var(--ease)}
+.dock.away{transform:translateY(110%)}
+.dock .btn{flex:1 1 0;min-width:0;min-height:52px;font-size:15px;padding:0 10px}
+.dock .btn-amber{flex-grow:1.5}
+
+@media (min-width:960px){
+  .dock{display:none}
+  .top nav{display:flex}
+  .hero{grid-template-columns:1.1fr .9fr;gap:56px;padding-block:36px 88px;align-items:start}
+  .hero>div:first-child{padding-top:12px}
+  .acts .btn{flex:0 0 auto}
+  .sec-h{grid-template-columns:1fr 1fr;align-items:end}
+  .checks{grid-template-columns:repeat(3,1fr)}
+  .steps{grid-template-columns:repeat(4,1fr)}
+  .contact{grid-template-columns:1fr 1fr;align-items:center}
+}
+@media (prefers-reduced-motion:reduce){.dock{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-tg" viewBox="0 0 24 24"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.2 1.3-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.4zM9 13.4l9.3-5.9c.4-.3.8-.1.5.2l-7.6 6.9-.3 3.2z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></g></symbol>
+</svg>
+
+<header class="wrap top">
+  <a class="name" href="#top" id="top">Константин Болтов<small>подбор и пригон авто из Европы</small></a>
+  <nav aria-label="Разделы"><a href="#calc">Стоимость</a><a href="#check">Что проверяю</a><a href="#report">Отчёт</a><a href="#steps">Как проходит</a><a href="#contacts">Контакты</a></nav>
+  <div class="langs" role="group" aria-label="Язык"><button type="button" aria-pressed="true">RU</button><button type="button" aria-pressed="false">SR</button></div>
+</header>
+
+<main>
+  <section class="wrap hero" aria-labelledby="h1">
+    <div>
+      <h1 id="h1">Авто из Европы под ключ. <em>Каждую машину смотрю лично</em></h1>
+      <p class="sub">Подбираю и проверяю автомобиль в Словении или Германии, доставляю в Сербию, растамаживаю и получаю номера. Работаю по договору, без посредников.</p>
+      <ul class="facts">
+        <li><b>16 лет</b><span>в автосфере,<br>эксперт-техник</span></li>
+        <li><b>300</b><span>подобранных<br>автомобилей</span></li>
+        <li><b>4 года</b><span>занимаюсь<br>автоподбором</span></li>
+      </ul>
+      <div class="acts">
+        <a class="btn btn-amber" href="https://t.me/boltovkn"><svg aria-hidden="true"><use href="#i-tg"/></svg>Написать в Telegram</a>
+        <a class="btn btn-ghost" href="#calc"><svg aria-hidden="true"><use href="#i-calc"/></svg>Рассчитать стоимость</a>
+      </div>
+    </div>
+
+    <form class="calc" id="calc" aria-labelledby="calc-h" onsubmit="return false">
+      <h2 id="calc-h">Калькулятор стоимости</h2>
+      <p class="hint">Отметьте, что нужно. Подбор входит всегда.</p>
+      <div class="seg" role="group" aria-label="Страна">
+        <button type="button" data-c="si" aria-pressed="true"><i>SI</i>Словения</button>
+        <button type="button" data-c="de" aria-pressed="false"><i>DE</i>Германия</button>
+      </div>
+      <div class="rows" id="rows">
+        <label class="row locked"><input type="checkbox" checked disabled data-k="pick"><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><b>Подбор и проверка</b><span class="p" data-p="pick"></span><small>осмотр, диагностика, торг</small></label>
+        <label class="row"><input type="checkbox" checked data-k="deliv"><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><b>Доставка в Сербию</b><span class="p" data-p="deliv"></span><small>до таможенного терминала</small></label>
+        <label class="row"><input type="checkbox" checked data-k="customs"><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><b>Растаможка</b><span class="p" data-p="customs"></span><small>оформление документов</small></label>
+        <label class="row"><input type="checkbox" checked data-k="reg"><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><b>Регистрация и номера</b><span class="p" data-p="reg"></span><small>получение сербских номеров</small></label>
+      </div>
+      <div class="total" aria-live="polite"><span>Итого за мои услуги</span><b id="sum">1 650 €</b></div>
+      <p class="fine">Цена автомобиля, пошлины и НДС считаются отдельно.</p>
+      <a class="btn btn-amber" id="send" href="https://t.me/boltovkn"><svg aria-hidden="true"><use href="#i-tg"/></svg>Отправить расчёт в Telegram</a>
+    </form>
+  </section>
+
+  <section class="wrap sec" id="check" aria-labelledby="check-h">
+    <div class="sec-h"><h2 id="check-h">Что проверяю на осмотре</h2><p>Смотрю каждую машину сам, с приборами. Если что-то не так, говорю об этом до покупки.</p></div>
+    <ul class="checks">
+      <li class="check">
+        <div class="read" aria-hidden="true">толщина ЛКП, капот<div class="big">118<small>мкм</small></div><span class="tag ok">заводская краска</span></div>
+        <h3>Кузов и лакокрасочное покрытие</h3>
+        <p>Прохожу толщиномером каждую деталь. Видно окрашенные элементы, шпаклёвку и следы ДТП.</p>
+        <span class="tool">Толщиномер ЛКП</span>
+      </li>
+      <li class="check">
+        <div class="read" aria-hidden="true">цилиндры 1–4, нагар<div class="bars"><i style="height:34%"></i><i style="height:38%"></i><i class="hot" style="height:72%"></i><i style="height:36%"></i></div><span class="tag warn">цилиндр 3: проверить</span></div>
+        <h3>Двигатель, КПП, ходовая</h3>
+        <p>Смотрю цилиндры эндоскопом, слушаю двигатель, проверяю коробку и подвеску на ходу.</p>
+        <span class="tool">Эндоскоп</span>
+      </li>
+      <li class="check">
+        <div class="read" aria-hidden="true">пробег: одометр / блоки<div class="big">148<small>/ 212 тыс. км</small></div><span class="tag warn">пробег скручен</span></div>
+        <h3>Реальный пробег и ошибки</h3>
+        <p>Сравниваю пробег в разных блоках управления и по истории обслуживания. Считываю ошибки.</p>
+        <span class="tool">Диагностический сканер</span>
+      </li>
+    </ul>
+    <p class="ill">Показания приборов на карточках для иллюстрации.</p>
+  </section>
+
+  <section class="wrap sec" id="report" aria-labelledby="rep-h">
+    <div class="sec-h"><h2 id="rep-h">Так выглядит отчёт</h2><p>После осмотра присылаю отчёт с фото и выводом. Решение о покупке принимаете вы.</p></div>
+    <article class="sheet" aria-label="Пример отчёта об осмотре">
+      <div class="sheet-head"><span>Отчёт об осмотре · <b>пример</b></span><span>Любляна, Словения</span><span>К. Болтов</span></div>
+      <h3>Volkswagen Golf VII, 2017</h3>
+      <p class="car">1.4 TSI · DSG · заявленный пробег 132 000 км</p>
+      <table>
+        <thead><tr><th scope="col">Пункт</th><th scope="col">Результат</th></tr></thead>
+        <tbody>
+          <tr><td>Кузов, толщина ЛКП</td><td><span class="mk warn">окрашено 1 крыло</span></td></tr>
+          <tr><td>Следы ДТП, геометрия</td><td><span class="mk ok">в норме</span></td></tr>
+          <tr><td>Двигатель, эндоскоп</td><td><span class="mk ok">в норме</span></td></tr>
+          <tr><td>КПП DSG на ходу</td><td><span class="mk ok">в норме</span></td></tr>
+          <tr><td>Ходовая часть</td><td><span class="mk ok">в норме</span></td></tr>
+          <tr><td>Пробег по блокам</td><td><span class="mk ok">совпадает</span></td></tr>
+          <tr><td>Ошибки в блоках</td><td><span class="mk ok">нет</span></td></tr>
+        </tbody>
+      </table>
+      <div class="verdict"><svg aria-hidden="true"><use href="#i-check"/></svg><b>Рекомендую к покупке</b><p>Крыло перекрашено без следов удара. Можно использовать в торге.</p></div>
+      <p class="sample">* Пример отчёта для демо, данные условные</p>
+    </article>
+  </section>
+
+  <section class="wrap sec" id="steps" aria-labelledby="steps-h">
+    <div class="sec-h"><h2 id="steps-h">Как проходит пригон</h2><p>От первого сообщения до сербских номеров на вашей машине.</p></div>
+    <ol class="steps">
+      <li><span class="n">1</span><h3>Обсуждаем и подписываем договор</h3><p>Бюджет, марка, требования. Фиксирую условия и цену в договоре.</p></li>
+      <li><span class="n">2</span><h3>Ищу и проверяю</h3><p>Отбираю варианты, еду смотреть лично, присылаю отчёты. Покупаем только то, что прошло проверку.</p></li>
+      <li><span class="n">3</span><h3>Доставляю в Сербию</h3><p>Организую перевозку до таможенного терминала в Сербии.</p></li>
+      <li><span class="n">4</span><h3>Растаможка и номера</h3><p>Оформляю документы, ставлю машину на учёт и получаю номера.</p></li>
+    </ol>
+    <ul class="terms"><li>Работаю по договору</li><li>Без посредников</li><li>Только личные осмотры</li></ul>
+  </section>
+
+  <section class="wrap sec" id="contacts" aria-labelledby="ct-h">
+    <div class="contact">
+      <div><h2 id="ct-h">Напишите, какую машину ищете</h2><p class="lead">Марка, бюджет, сроки. Отвечу, реально ли найти такую в Словении или Германии, и сколько это будет стоить.</p></div>
+      <div class="ch">
+        <a href="https://t.me/boltovkn"><span><b>Telegram</b><small>быстрее всего</small></span><span class="v">@boltovkn</span></a>
+        <a href="tel:+381665941311"><span><b>WhatsApp, Viber</b><small>сербский номер</small></span><span class="v">+381 66 594-1311</span></a>
+        <a href="tel:+79510395888"><span><b>WhatsApp, Viber</b><small>российский номер</small></span><span class="v">+7 951 039-5888</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>Константин Болтов · подбор и пригон авто в Сербию</span><span>Демо-версия сайта · Mercury Studio</span></div></footer>
+
+<nav class="dock away" aria-label="Связаться">
+  <a class="btn btn-amber" href="https://t.me/boltovkn"><svg aria-hidden="true"><use href="#i-tg"/></svg>Написать в Telegram</a>
+  <a class="btn btn-ghost" href="#calc">Рассчитать</a>
+</nav>
+
+<script>
+/* calculator: prices exactly as given by the client */
+(function(){
+  var P={si:{name:"Словения",from:false,pick:650,deliv:600,customs:250,reg:150},
+         de:{name:"Германия",from:true,pick:1200,deliv:600,customs:250,reg:150}};
+  var L={pick:"Подбор и проверка",deliv:"Доставка в Сербию",customs:"Растаможка",reg:"Регистрация и номера"};
+  var c="si",boxes=[].slice.call(document.querySelectorAll("#rows input"));
+  function f(n){return n.toLocaleString("ru-RU").replace(/\s/g," ")+" €"}
+  function draw(){
+    var p=P[c],sum=0,lines=[];
+    document.querySelectorAll(".seg button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.c===c)});
+    boxes.forEach(function(x){
+      var k=x.dataset.k,on=x.checked,v=p[k],pre=(p.from&&(k==="pick"||k==="deliv"))?"от ":"";
+      document.querySelector('[data-p="'+k+'"]').textContent=pre+f(v);
+      x.closest(".row").classList.toggle("off",!on);
+      if(on){sum+=v;lines.push("• "+L[k]+": "+pre+f(v).replace(/ /g," "))}
+    });
+    document.getElementById("sum").innerHTML=(p.from?"<small>от</small> ":"")+f(sum);
+    var text="Здравствуйте, Константин! Расчёт с сайта.\nСтрана: "+p.name+"\n"+lines.join("\n")+"\nИтого: "+(p.from?"от ":"")+f(sum).replace(/ /g," ")+"\n(без цены авто, пошлин и НДС)";
+    document.getElementById("send").href="https://t.me/boltovkn?text="+encodeURIComponent(text);
+  }
+  document.querySelectorAll(".seg button").forEach(function(b){b.addEventListener("click",function(){c=b.dataset.c;draw()})});
+  boxes.forEach(function(x){x.addEventListener("change",draw)});
+  draw();
+})();
+document.querySelectorAll(".langs button").forEach(function(b,i,all){b.addEventListener("click",function(){all.forEach(function(x){x.setAttribute("aria-pressed",x===b)})})});
+(function(){
+  var dock=document.querySelector(".dock"),acts=document.querySelector(".hero .acts");
+  if(!dock||!acts||!("IntersectionObserver" in window)){if(dock)dock.classList.remove("away");return}
+  new IntersectionObserver(function(es){dock.classList.toggle("away",es[0].isIntersecting||es[0].boundingClientRect.top>0)}).observe(acts);
+})();
+</script>
+</body>
+</html>
