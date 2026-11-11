@@ -353,6 +353,150 @@
         ],
         "createdAt": "2026-11-10T13:26:21.847Z",
         "reason": "Claude triage: .contact pads clamp(22px,4vw,48px) on every side"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/index.html"
+        ],
+        "createdAt": "2026-11-11T23:39:49.407Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is 'a warm light in the dark'"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/onepage/index.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.664Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/index.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.679Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/links.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.692Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/portfolio.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.704Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/prices.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.718Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/queue.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.734Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/tos.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.747Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/assets/site.css"
+        ],
+        "createdAt": "2026-11-11T23:48:45.759Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/tools/source.html"
+        ],
+        "createdAt": "2026-11-11T23:48:45.772Z",
+        "reason": "Brief asks for a soft fiery glow around the mascot, wordmark and status lamp: the brand idea is a warm light in the dark"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/index.html"
+        ],
+        "createdAt": "2026-11-11T23:48:51.113Z",
+        "reason": "Claude triage: sizes live in assets/site.css as clamp(); rendered h2 is 32-53px, body 16px"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/links.html"
+        ],
+        "createdAt": "2026-11-11T23:48:51.128Z",
+        "reason": "Claude triage: sizes live in assets/site.css as clamp(); rendered h2 is 32-53px, body 16px"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/portfolio.html"
+        ],
+        "createdAt": "2026-11-11T23:48:51.141Z",
+        "reason": "Claude triage: sizes live in assets/site.css as clamp(); rendered h2 is 32-53px, body 16px"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/prices.html"
+        ],
+        "createdAt": "2026-11-11T23:48:51.153Z",
+        "reason": "Claude triage: sizes live in assets/site.css as clamp(); rendered h2 is 32-53px, body 16px"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/queue.html"
+        ],
+        "createdAt": "2026-11-11T23:48:51.166Z",
+        "reason": "Claude triage: sizes live in assets/site.css as clamp(); rendered h2 is 32-53px, body 16px"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "sites/jin2draw/multipage/tos.html"
+        ],
+        "createdAt": "2026-11-11T23:48:51.178Z",
+        "reason": "Claude triage: sizes live in assets/site.css as clamp(); rendered h2 is 32-53px, body 16px"
       }
     ]
   }
