@@ -53,7 +53,7 @@
       var ratio = w.w + "/" + w.h;
       return '<li class="work reveal"><button type="button" data-i="' + i + '" aria-label="' + esc(w.title) + '">' +
         '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy" style="aspect-ratio:' + ratio + '" data-ph="' + esc(w.title) + '" data-ratio="' + ratio + '" data-i="' + i + '">' +
-        '<span class="cap">' + esc(w.title) + '<small>' + esc(w.tag) + '</small></span></button></li>';
+        '<span class="cap">' + esc(w.title) + '<small>' + esc(T("p_" + w.tag) || w.tag) + '</small></span></button></li>';
     }).join("");
     guard($("gallery"));
   }
@@ -66,7 +66,7 @@
     $("lb-stage").innerHTML = '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" data-ph="' + esc(w.title) + '" data-ratio="' + ratio + '" data-i="' + cur + '">';
     var ph = $("lb-stage").querySelector("img"); guard($("lb-stage"));
     if (!ph) { var p = $("lb-stage").querySelector(".ph"); if (p) p.style.setProperty("--ratio", ratio); }
-    $("lb-cap").innerHTML = esc(w.title) + "<small>" + esc(w.tag) + "</small>";
+    $("lb-cap").innerHTML = esc(w.title) + "<small>" + esc(T("p_" + w.tag) || w.tag) + "</small>";
     $("lb-count").textContent = (cur + 1) + " / " + WORKS.length;
   }
   if (lb && $("gallery")) {
@@ -92,9 +92,9 @@
     $("orders").innerHTML = QUEUE.length ? QUEUE.map(function (o, i) {
       var k = STAGES.indexOf(o.status), track = "";
       for (var j = 0; j < 4; j++) track += '<i class="' + (j <= k ? "on" : "") + '"></i>';
-      return '<li class="glass order reveal" style="--c:' + SC[o.status] + '"><span class="no">' + (i + 1) + '</span><b>' + esc(o.client) + '</b><span class="what">' + esc(o.type) +
-        '</span><span class="st"><i></i>' + esc(T("st_" + o.status)) + '</span><span class="track" aria-hidden="true">' + track + "</span></li>";
-    }).join("") : '<li class="glass q-empty">' + esc(T("q_empty")) + "</li>";
+      return '<li class="order reveal" style="--c:' + SC[o.status] + '"><span class="no">' + (i + 1) + '</span><span><b>' + esc(o.client) + '</b><span class="what">' + esc(T("p_" + o.type) || o.type) +
+        '</span></span><span class="st"><i></i>' + esc(T("st_" + o.status)) + '</span><span class="track" aria-hidden="true">' + track + "</span></li>";
+    }).join("") : '<li class="q-empty">' + esc(T("q_empty")) + "</li>";
   }
 
   /* ---------- prices ---------- */
@@ -103,10 +103,9 @@
     var CHECK = '<svg aria-hidden="true"><use href="#star"/></svg>';
     $("price-list").innerHTML = PRICES.map(function (p, i) {
       var name = T("p_" + p.id);
-      return '<li class="glass price reveal">' + (p.popular ? '<span class="tag">' + esc(T("popular")) + "</span>" : "") +
-        '<div class="ex">' + (p.img ? '<img src="' + esc(p.img) + '" alt="' + esc(name + ", " + T("example")) + '" loading="lazy" data-ph="' + esc(name) + '" data-ratio="4/3" data-i="' + (i + 2) + '">' : placeholder(i + 2, name, "4/3")) + "</div>" +
-        '<div class="price-b"><h3>' + esc(name) + '</h3><p class="cost"><small>' + esc(T("from")) + "</small>" + CONFIG.currency + p.price + "</p><p>" + esc(T("p_" + p.id + "_d")) + "</p><ul>" +
-        T("p_" + p.id + "_l").map(function (x) { return "<li>" + CHECK + esc(x) + "</li>"; }).join("") + "</ul></div></li>";
+      return '<li class="price reveal"><div class="ex">' + (p.img ? '<img src="' + esc(p.img) + '" alt="' + esc(name + ", " + T("example")) + '" loading="lazy" data-ph="' + esc(name) + '" data-ratio="1" data-i="' + (i + 2) + '">' : placeholder(i + 2, name, "1")) + "</div>" +
+        '<div class="price-h"><h3>' + esc(name) + (p.popular ? '<span class="tag">' + esc(T("popular")) + "</span>" : "") + '</h3><p class="cost"><small>' + esc(T("from")) + "</small>" + CONFIG.currency + p.price + "</p></div>" +
+        "<p>" + esc(T("p_" + p.id + "_d")) + '</p><ul class="inc">' + T("p_" + p.id + "_l").map(function (x) { return "<li>" + CHECK + esc(x) + "</li>"; }).join("") + "</ul></li>";
     }).join("");
     $("extras").innerHTML = EXTRAS.map(function (x) {
       var v = /^[+\d]/.test(x.price) && x.price.indexOf("%") < 0 ? x.price.replace(/^\+/, "+" + CONFIG.currency) : x.price;
@@ -123,7 +122,7 @@
       var body = r.cols
         ? '<div class="cols"><div class="yes"><h4>' + esc(r.yes_h) + "</h4><ul>" + r.yes.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + '</ul></div><div><h4>' + esc(r.no_h) + "</h4><ul>" + r.no.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div></div>"
         : "<ul>" + r.a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
-      return '<details class="glass reveal"' + (i === 0 ? " open" : "") + "><summary>" + STAR + esc(r.q) + CHEV + '</summary><div class="body">' + body + "</div></details>";
+      return '<details class="reveal"' + (i === 0 ? " open" : "") + "><summary>" + STAR + esc(r.q) + CHEV + '</summary><div class="body">' + body + "</div></details>";
     }).join("");
   }
 
@@ -132,7 +131,7 @@
     if (!$("link-list")) return;
     $("link-list").innerHTML = LINKS.map(function (l) {
       var href = l.id === "email" && l.url === "#" ? "#" : l.url;
-      return '<li class="reveal"><a class="glass link" href="' + esc(href) + '" style="--brand:' + l.brand + '"' + (href.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : "") +
+      return '<li class="reveal"><a class="link" href="' + esc(href) + '" style="--brand:' + l.brand + '"' + (href.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : "") +
         '><span class="ic"><svg aria-hidden="true"><use href="#' + l.icon + '"/></svg></span><span><b>' + esc(l.name) + "</b><small>" + esc(l.handle) +
         '</small></span><svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></a></li>';
     }).join("");
@@ -141,23 +140,20 @@
   /* ---------- portal tiles (home page of the multi-page version) ---------- */
   function portal() {
     var box = $("portal"); if (!box) return;
-    var taken = QUEUE.filter(function (o) { return o.status !== "done"; }).length, pips = "";
-    for (var i = 0; i < CONFIG.slotsTotal; i++) pips += '<i class="' + (i < taken ? "taken" : "") + '"></i>';
+    var taken = QUEUE.filter(function (o) { return o.status !== "done"; }).length;
     var min = Math.min.apply(null, PRICES.map(function (p) { return p.price; }));
-    var thumbs = WORKS.slice(0, 3).map(function (w, i) { return '<span class="th"><img src="' + esc(w.src) + '" alt="" loading="lazy" data-ph=" " data-ratio="1" data-i="' + i + '"></span>'; }).join("");
-    var icons = LINKS.slice(0, 5).map(function (l) { return '<i style="--brand:' + l.brand + '"><svg aria-hidden="true"><use href="#' + l.icon + '"/></svg></i>'; }).join("");
-    var T_ = [
-      { href: "portfolio.html", k: "portfolio", extra: '<span class="thumbs">' + thumbs + "</span>", big: true },
-      { href: "queue.html", k: "queue", extra: '<span class="pips">' + pips + '</span><span class="note">' + Math.max(0, CONFIG.slotsTotal - taken) + " / " + CONFIG.slotsTotal + " " + esc(T("slots_free")) + "</span>" },
-      { href: "prices.html", k: "prices", extra: '<span class="cost"><small>' + esc(T("from")) + "</small>" + CONFIG.currency + min + "</span>" },
-      { href: "tos.html", k: "tos", extra: '<span class="note">' + T("tos").length + " " + esc(T("pt_rules")) + "</span>" },
-      { href: "links.html", k: "links", extra: '<span class="icons">' + icons + "</span>" }
+    var dots = ""; for (var j = 0; j < CONFIG.slotsTotal; j++) dots += '<i class="' + (j < taken ? "taken" : "") + '"></i>';
+    var rows = [
+      { href: "portfolio.html", k: "portfolio", meta: WORKS.length + " " + esc(T("pt_works")) },
+      { href: "queue.html", k: "queue", meta: '<span class="dots">' + dots + "</span>" + Math.max(0, CONFIG.slotsTotal - taken) + " / " + CONFIG.slotsTotal },
+      { href: "prices.html", k: "prices", meta: esc(T("from")) + " " + CONFIG.currency + min },
+      { href: "tos.html", k: "tos", meta: "" },
+      { href: "links.html", k: "links", meta: "" }
     ];
-    box.innerHTML = T_.map(function (t) {
-      return '<li class="reveal' + (t.big ? " big" : "") + '"><a class="glass tile" href="' + t.href + '"><span class="tile-t"><b>' + esc(T("nav_" + t.k)) + "</b><small>" + esc(T("pt_" + t.k)) +
-        "</small></span>" + t.extra + '<svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></a></li>';
+    box.innerHTML = rows.map(function (r) {
+      return '<li class="reveal"><a class="row-link" href="' + r.href + '"><b>' + esc(T("nav_" + r.k)) + "</b><small>" + esc(T("pt_" + r.k)) +
+        '</small><span class="meta">' + r.meta + '<svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></span></a></li>';
     }).join("");
-    guard(box);
   }
 
   function renderAll() { texts(); gallery(); queue(); prices(); tos(); links(); portal(); reveal(); }

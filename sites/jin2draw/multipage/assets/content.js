@@ -9,28 +9,28 @@ var CONFIG = {
   defaultLang: "en"           // ← "en" or "ru"
 };
 
-/* Portfolio. Put files in /works and list them here.
+/* Portfolio. Put files in /works and list them here. tag: head | half | full | ref (shown in the page's language).
    w/h only set the tile shape until the image loads (use the real pixel size). */
 var WORKS = [
-  { src: "works/1.jpg",  title: "Ember in the dark",   tag: "Full body", w: 3, h: 4 },
-  { src: "works/2.jpg",  title: "Sleepy marble cat",   tag: "Headshot",  w: 1, h: 1 },
-  { src: "works/3.jpg",  title: "Star keeper",         tag: "Half body", w: 4, h: 5 },
-  { src: "works/4.jpg",  title: "Ref sheet: Jin",      tag: "Ref sheet", w: 16, h: 10 },
-  { src: "works/5.jpg",  title: "Night snack",         tag: "Headshot",  w: 1, h: 1 },
-  { src: "works/6.jpg",  title: "Flame horns",         tag: "Half body", w: 3, h: 4 },
-  { src: "works/7.jpg",  title: "Cosmic tail",         tag: "Full body", w: 2, h: 3 },
-  { src: "works/8.jpg",  title: "Little light",        tag: "Headshot",  w: 1, h: 1 },
-  { src: "works/9.jpg",  title: "Marble paws",         tag: "Half body", w: 4, h: 5 },
-  { src: "works/10.jpg", title: "Ref sheet: guest OC", tag: "Ref sheet", w: 16, h: 11 }
+  { src: "works/1.jpg",  title: "Ember in the dark",   tag: "full", w: 3, h: 4 },
+  { src: "works/2.jpg",  title: "Sleepy marble cat",   tag: "head",  w: 1, h: 1 },
+  { src: "works/3.jpg",  title: "Star keeper",         tag: "half", w: 4, h: 5 },
+  { src: "works/4.jpg",  title: "Ref sheet: Jin",      tag: "ref", w: 16, h: 10 },
+  { src: "works/5.jpg",  title: "Night snack",         tag: "head",  w: 1, h: 1 },
+  { src: "works/6.jpg",  title: "Flame horns",         tag: "half", w: 3, h: 4 },
+  { src: "works/7.jpg",  title: "Cosmic tail",         tag: "full", w: 2, h: 3 },
+  { src: "works/8.jpg",  title: "Little light",        tag: "head",  w: 1, h: 1 },
+  { src: "works/9.jpg",  title: "Marble paws",         tag: "half", w: 4, h: 5 },
+  { src: "works/10.jpg", title: "Ref sheet: guest OC", tag: "ref", w: 16, h: 11 }
 ];
 
-/* Queue. status: "waiting" | "sketch" | "coloring" | "done"
+/* Queue. type: head | half | full | ref. status: "waiting" | "sketch" | "coloring" | "done"
    Taken slots = everything that is not "done". */
 var QUEUE = [
-  { client: "@starfox",    type: "Half body", status: "coloring" },
-  { client: "@mothlight",  type: "Headshot",  status: "sketch" },
-  { client: "@kitsu_nyan", type: "Ref sheet", status: "waiting" },
-  { client: "@emberwolf",  type: "Full body", status: "done" }
+  { client: "@starfox",    type: "half", status: "coloring" },
+  { client: "@mothlight",  type: "head",  status: "sketch" },
+  { client: "@kitsu_nyan", type: "ref", status: "waiting" },
+  { client: "@emberwolf",  type: "full", status: "done" }
 ];
 
 /* Prices. img = example picture (optional). */
@@ -82,32 +82,32 @@ var TEXT = {
     ],
     ln_h: "Links", ln_p: "Find me here. For commissions, Telegram or email is fastest.",
     foot: "Made with a little fire, thank you for stopping by", to_top: "Back to top",
-    pt_h: "Where to?", pt_p: "Pick a page. Everything about commissions is one tap away.", pt_portfolio: "Recent pieces and old favourites", pt_queue: "See where your order is", pt_prices: "Headshots, half body, full body, ref sheets", pt_tos: "Payment, timing, rights", pt_rules: "sections", pt_links: "Telegram, VGen, FurAffinity and more", back_home: "Home"
+    pt_h: "Where to?", pt_p: "Pick a page. Everything about commissions is one tap away.", pt_portfolio: "Recent pieces and old favourites", pt_queue: "See where your order is", pt_prices: "Headshots, half body, full body, ref sheets", pt_tos: "Payment, timing, rights", pt_rules: "sections", pt_works: "pieces", pt_links: "Telegram, VGen, FurAffinity and more", back_home: "Home"
   },
   ru: {
-    tagline: 'цифровой художник · <b>комиссии открыты</b>', tagline_closed: 'цифровой художник · <b>комиссии закрыты</b>',
-    badge_open: "Комиссии открыты", badge_closed: "Комиссии закрыты",
-    cta_prices: "Цены", cta_contact: "Написать мне", scroll: "вниз",
-    nav_portfolio: "Работы", nav_queue: "Очередь", nav_prices: "Цены", nav_tos: "Правила", nav_links: "Ссылки",
-    pf_h: "Работы", pf_p: "Несколько свежих работ. Нажмите, чтобы рассмотреть.", ph_art: "скоро здесь будет работа",
-    q_h: "Очередь", q_p: "Где сейчас ваш заказ.", slots_free: "свободных мест", q_empty: "Очередь пуста. Самое время заказать!",
-    st_waiting: "Ждёт", st_sketch: "Скетч", st_coloring: "Покрас", st_done: "Готово",
-    pr_h: "Цены", pr_p: "Базовые цены за одного персонажа. Итог зависит от деталей.", from: "от", popular: "Любимое", example: "пример",
-    p_head: "Портрет", p_head_d: "Голова и плечи, чистый лайн, цвет.", p_head_l: ["Простой фон", "1 правка на скетче"],
-    p_half: "По пояс", p_half_d: "До пояса, эмоция и поза на ваш выбор.", p_half_l: ["Простой фон", "2 правки на скетче"],
-    p_full: "В полный рост", p_full_d: "Персонаж целиком, динамичная поза, свет.", p_full_l: ["Простой фон", "2 правки на скетче"],
-    p_ref:  "Реф-лист", p_ref_d: "Вид спереди и сзади, палитра, детали.", p_ref_l: ["Палитра", "До 3 крупных деталей"],
-    ex_h: "Дополнительно", ex_char: "Ещё персонаж", ex_bg: "Детальный фон", ex_rush: "Срочно (за неделю)", ex_nsfw: "NSFW: не рисую",
-    tos_h: "Правила", tos_p: "Заказывая, вы соглашаетесь с правилами. Прочитайте перед тем, как написать.",
+    tagline: 'рисую на заказ · <b>заказы открыты</b>', tagline_closed: 'рисую на заказ · <b>заказы пока закрыты</b>',
+    badge_open: "Заказы открыты", badge_closed: "Заказы закрыты",
+    cta_prices: "Смотреть прайс", cta_contact: "Написать мне", scroll: "листайте",
+    nav_portfolio: "Работы", nav_queue: "Очередь", nav_prices: "Прайс", nav_tos: "Правила", nav_links: "Контакты",
+    pf_h: "Работы", pf_p: "Немного свежих работ. Нажмите на любую, чтобы рассмотреть поближе.", ph_art: "скоро здесь появится работа",
+    q_h: "Очередь", q_p: "Здесь видно, на каком этапе ваш заказ.", slots_free: "мест свободно", q_empty: "Очередь пуста. Самое время заказать!",
+    st_waiting: "В очереди", st_sketch: "Скетч", st_coloring: "Покрас", st_done: "Готово",
+    pr_h: "Прайс", pr_p: "Цены за одного персонажа. Итоговая стоимость зависит от сложности.", from: "от", popular: "чаще всего берут", example: "пример",
+    p_head: "Хэдшот", p_head_d: "Голова и плечи, чистый лайн, полный покрас.", p_head_l: ["Простой фон", "1 правка на этапе скетча"],
+    p_half: "Халфбоди", p_half_d: "По пояс. Эмоцию и позу выбираете вы.", p_half_l: ["Простой фон", "2 правки на этапе скетча"],
+    p_full: "Фуллбоди", p_full_d: "Персонаж целиком, динамичная поза, проработанный свет.", p_full_l: ["Простой фон", "2 правки на этапе скетча"],
+    p_ref:  "Реф-лист", p_ref_d: "Вид спереди и сзади, палитра и мелкие детали.", p_ref_l: ["Палитра", "До 3 крупных планов"],
+    ex_h: "Дополнительно", ex_char: "Второй персонаж", ex_bg: "Детальный фон", ex_rush: "Срочно, за неделю", ex_nsfw: "NSFW не рисую",
+    tos_h: "Правила", tos_p: "Оформляя заказ, вы соглашаетесь с этими правилами. Пожалуйста, прочитайте их, прежде чем писать.",
     tos: [
-      { q: "Оплата", a: ["Полная предоплата или 50% до скетча и 50% до покраса.", "PayPal, карта или крипта: заглушка, поменяйте.", "Цена фиксируется после утверждения скетча."] },
-      { q: "Сроки", a: ["Обычно от 1 до 3 недель, зависит от очереди.", "Прогресс видно в очереди выше.", "Срочный заказ возможен за доплату."] },
-      { q: "Права и использование", a: ["Можно использовать для себя: аватарки, баннеры, печать для себя.", "Коммерческое использование только по договорённости.", "Я могу выкладывать работу в портфолио и соцсети."] },
-      { q: "Возврат", a: ["Полный возврат до начала скетча.", "50% после утверждения скетча.", "После начала покраса возврата нет."] },
-      { cols: true, q: "Что рисую / не рисую", yes: ["Фурри, антро, ферал", "Милые существа и OC", "Фэнтези, космос"], no: ["NSFW, гор", "Символику ненависти", "Сложную технику"], yes_h: "Рисую", no_h: "Не рисую" }
+      { q: "Оплата", a: ["Полная предоплата или 50% перед скетчем и 50% перед покрасом.", "Способы оплаты: PayPal, карта, крипта (заглушка, поменяйте).", "Когда скетч утверждён, цена больше не меняется."] },
+      { q: "Сроки", a: ["Обычно от 1 до 3 недель, зависит от очереди.", "Этап вашего заказа видно в очереди на сайте.", "Срочный заказ возможен за доплату."] },
+      { q: "Права на работу", a: ["Работу можно использовать для себя: аватарки, баннеры, печать для личного пользования.", "Коммерческое использование только по договорённости.", "Я могу выкладывать работу в портфолио и соцсети."] },
+      { q: "Возврат", a: ["До начала работы над скетчем деньги возвращаются полностью.", "После утверждения скетча возвращается 50%.", "Когда начался покрас, возврата нет."] },
+      { cols: true, q: "Что рисую и что нет", yes: ["Фурри, антро, ферал", "Милых существ и OC", "Фэнтези и космос"], no: ["NSFW и гуро", "Символику ненависти", "Сложную технику и мехов"], yes_h: "С радостью нарисую", no_h: "Не рисую" }
     ],
-    ln_h: "Ссылки", ln_p: "Где меня найти. Для заказов быстрее всего Telegram или почта.",
-    foot: "Сделано с огоньком, спасибо, что заглянули", to_top: "Наверх",
-    pt_h: "Куда дальше?", pt_p: "Выберите страницу. Всё о заказах в одно касание.", pt_portfolio: "Свежие работы и любимые старые", pt_queue: "Где сейчас ваш заказ", pt_prices: "Портрет, по пояс, в полный рост, реф", pt_tos: "Оплата, сроки, права", pt_rules: "разделов", pt_links: "Telegram, VGen, FurAffinity и другие", back_home: "Главная"
+    ln_h: "Контакты", ln_p: "Где меня найти. По заказам быстрее всего пишите в Telegram или на почту.",
+    foot: "Сделано с огоньком. Спасибо, что заглянули!", to_top: "Наверх",
+    pt_h: "Куда дальше?", pt_p: "Выберите раздел. Всё о заказах здесь.", pt_portfolio: "Свежие работы и любимые старые", pt_queue: "На каком этапе ваш заказ", pt_prices: "Хэдшот, халфбоди, фуллбоди, реф-лист", pt_tos: "Оплата, сроки, права, возврат", pt_rules: "разделов", pt_works: "работ", pt_links: "Telegram, VGen, FurAffinity и другие", back_home: "На главную"
   }
 };

@@ -175,76 +175,82 @@ img{display:block;max-width:100%}
 .lb-next{right:10px;top:50%;transform:translateY(-50%)}
 .lb-count{position:absolute;top:22px;left:50%;transform:translateX(-50%);font:700 13px/1 var(--body);color:var(--lav)}
 
-/* ---------- queue ---------- */
-.q-top{display:grid;gap:14px;padding:clamp(18px,3vw,28px);margin-bottom:14px}
-.slots{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
-.slots .num{font:900 clamp(2.4rem,1.8rem + 2vw,3.4rem)/1 var(--head)}
+/* ---------- queue: a status line and a plain list, no boxes ---------- */
+.q-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 28px;margin-bottom:clamp(20px,3vw,32px)}
+.slots{display:flex;align-items:center;gap:16px}
+.slots .num{font:900 clamp(2.6rem,1.9rem + 2vw,3.6rem)/1 var(--head)}
 .slots .num small{font-size:17px;color:var(--lav);font-weight:800;margin-left:6px}
-.pips{display:flex;gap:8px}
-.pips i{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid var(--glass-line)}
-.pips i.taken{background:linear-gradient(135deg,var(--crimson),var(--fire));border-color:transparent} /* taste-skill-ignore: a filled slot glows warm */
-.q-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 13px/1 var(--body);color:var(--lav)}
+.pips{display:flex;gap:7px}
+.pips i{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1)}
+.pips i.taken{background:var(--fire)}
+.q-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 16px;font:600 13px/1 var(--body);color:var(--lav)}
 .q-legend span{display:inline-flex;align-items:center;gap:7px}
 .q-legend i{width:9px;height:9px;border-radius:50%}
-.orders{display:grid;gap:10px}
-.order{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 14px;padding:14px 16px}
-.order .no{grid-row:1/3;font:900 15px/1 var(--head);color:var(--lav-dim);width:26px}
-.order b{font:800 17px/1.25 var(--head)}
-.order .what{grid-column:2;font-size:14px;color:var(--lav)}
-.st{grid-row:1/3;grid-column:3;display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;font:800 12px/1 var(--head);letter-spacing:.06em;text-transform:uppercase;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
-.st i{width:7px;height:7px;border-radius:50%;background:var(--c)}
-.track{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px}
-.track i{height:4px;border-radius:4px;background:rgba(255,255,255,.08)}
+.orders{max-width:820px;margin:0 auto}
+.order{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:6px 14px;padding:18px 4px;border-top:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of one list */
+.order:last-child{border-bottom:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of one list */
+.order .no{font:900 15px/1 var(--head);color:var(--lav-dim)}
+.order b{font:800 18px/1.25 var(--head)}
+.order .what{display:block;font-size:14px;color:var(--lav);font-weight:500}
+.st{display:inline-flex;align-items:center;gap:8px;font:800 13px/1 var(--head);letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.st i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.track{grid-column:2/-1;display:flex;gap:6px}
+.track i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.08)}
 .track i.on{background:var(--c)}
 .q-empty{padding:22px;text-align:center;color:var(--lav)}
 
-/* ---------- prices ---------- */
-.prices{display:grid;gap:14px}
-.price{position:relative;display:grid;grid-template-rows:auto 1fr;overflow:hidden;transition:transform .35s var(--ease),border-color .35s}
-.price:hover{transform:translateY(-4px);border-color:rgba(255,193,94,.4)}
-.price .ex{aspect-ratio:4/3;overflow:hidden}
+/* ---------- prices: a menu, one row per tier ---------- */
+.prices{max-width:900px;margin:0 auto}
+.price{display:grid;grid-template-columns:88px 1fr;gap:6px 18px;align-items:start;padding:22px 4px;border-top:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of one menu */
+.price:last-child{border-bottom:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of one menu */
+.price .ex{grid-row:1/4;width:88px;aspect-ratio:1;border-radius:16px;overflow:hidden}
 .price .ex img,.price .ex .ph{width:100%;height:100%;object-fit:cover}
-.price-b{display:grid;gap:8px;align-content:start;padding:18px 20px 22px}
-.price h3{font:900 23px/1.15 var(--head)}
-.price .cost{font:900 30px/1 var(--head);color:var(--amber)}
-.price .cost small{font:700 14px/1 var(--body);color:var(--lav);margin-right:4px}
-.price p{color:var(--lav);font-size:15px}
-.price ul{display:grid;gap:5px;margin-top:4px;font-size:14px;color:var(--ink)}
-.price li{display:flex;gap:8px}
-.price li svg{width:14px;height:14px;flex:none;margin-top:4px;color:var(--amber)}
-.price .tag{position:absolute;top:12px;left:12px;padding:6px 10px;border-radius:999px;background:var(--crimson);color:#fff;font:800 12px/1 var(--head);letter-spacing:.04em}
-.extras{margin-top:14px;padding:18px 20px;display:grid;gap:10px}
-.extras h3{font:900 18px/1.2 var(--head)}
-.extras ul{display:grid;gap:8px}
-.extras li{display:flex;justify-content:space-between;gap:12px;font-size:15px;color:var(--lav)}
-.extras li b{color:var(--ink);font-weight:700;white-space:nowrap}
+.price .ex .ph span,.price .ex .ph small{display:none}
+.price .ex .ph svg{width:24px;height:24px}
+.price-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px}
+.price h3{font:900 clamp(1.35rem,1.1rem + .8vw,1.75rem)/1.15 var(--head)}
+.price .tag{display:inline-block;margin-left:10px;vertical-align:4px;font:800 12px/1 var(--head);letter-spacing:.04em;color:var(--pink)}
+.price .cost{font:900 clamp(1.6rem,1.3rem + 1vw,2.1rem)/1 var(--head);color:var(--amber);white-space:nowrap}
+.price .cost small{font:700 14px/1 var(--body);color:var(--lav);margin-right:5px}
+.price p{color:var(--lav);font-size:15px;max-width:52ch}
+.price .inc{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:var(--ink)}
+.price .inc li{display:flex;gap:7px;align-items:center}
+.price .inc svg{width:12px;height:12px;color:var(--amber)}
+.extras{max-width:900px;margin:clamp(28px,4vw,40px) auto 0;display:grid;gap:12px}
+.extras h3{font:900 20px/1.2 var(--head)}
+.extras ul{display:grid;gap:10px}
+.extras li{display:flex;align-items:baseline;gap:10px;font-size:15px;color:var(--lav)}
+.extras li::after{content:"";order:1;flex:1;border-bottom:2px dotted rgba(255,190,220,.18);transform:translateY(-4px)} /* taste-skill-ignore: leader dots of a price list */
+.extras li b{order:2;color:var(--ink);font-weight:700;white-space:nowrap}
 
-/* ---------- tos ---------- */
-.tos{display:grid;gap:10px;max-width:820px;margin:0 auto}
-.tos details{overflow:hidden}
-.tos summary{list-style:none;display:flex;align-items:center;gap:12px;padding:18px 20px;cursor:pointer;font:800 18px/1.25 var(--head)}
+/* ---------- tos: an open list, lines between the questions ---------- */
+.tos{max-width:820px;margin:0 auto}
+.tos details{border-top:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: accordion rows */
+.tos details:last-child{border-bottom:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: accordion rows */
+.tos summary{list-style:none;display:flex;align-items:center;gap:14px;padding:20px 4px;cursor:pointer;font:800 clamp(1.1rem,1rem + .4vw,1.3rem)/1.25 var(--head)}
 .tos summary::-webkit-details-marker{display:none}
 .tos summary svg{width:18px;height:18px;flex:none;color:var(--amber)}
 .tos summary .chev{margin-left:auto;width:22px;height:22px;color:var(--lav);transition:transform .3s var(--ease)}
 .tos details[open] summary .chev{transform:rotate(180deg)}
-.tos .body{padding:0 20px 20px 50px;color:var(--lav)}
-.tos .body ul{display:grid;gap:7px}
+.tos .body{padding:0 4px 22px 36px;color:var(--lav)}
+.tos .body ul{display:grid;gap:8px}
 .tos .body li{position:relative;padding-left:16px}
 .tos .body li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--crimson)}
 .tos .body .yes li::before{background:var(--open)}
 .tos .cols{display:grid;gap:16px}
 .tos .cols h4{margin:0 0 8px;font:800 14px/1 var(--head);color:var(--ink);text-transform:uppercase;letter-spacing:.06em}
 
-/* ---------- links ---------- */
-.links{display:grid;grid-template-columns:1fr;gap:10px;max-width:820px;margin:0 auto}
-.link{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:14px;min-height:72px;padding:12px 18px 12px 12px;text-decoration:none;transition:transform .25s var(--ease),border-color .25s,background-color .25s}
-.link:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--brand) 60%,transparent);background:color-mix(in srgb,var(--brand) 14%,var(--glass))}
-.link .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--brand) 22%,transparent);color:var(--brand)}
-.link .ic svg{width:24px;height:24px}
-.link b{display:block;font:800 17px/1.2 var(--head)}
+/* ---------- links: a list of rows, the icon takes the brand colour ---------- */
+.links{display:grid;grid-template-columns:1fr;column-gap:40px;max-width:900px;margin:0 auto}
+.links li{border-top:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of one list */
+.link{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:16px;min-height:68px;padding:10px 4px;text-decoration:none;transition:color .2s}
+.link .ic{color:var(--brand);display:grid;place-items:center}
+.link .ic svg{width:26px;height:26px}
+.link b{display:block;font:800 18px/1.2 var(--head);transition:color .2s}
 .link small{display:block;font-size:13px;color:var(--lav)}
 .link .go{width:20px;height:20px;color:var(--lav-dim);transition:transform .25s var(--ease),color .25s}
-.link:hover .go{transform:translateX(3px);color:var(--amber)}
+.link:hover b{color:var(--brand)}
+.link:hover .go{transform:translateX(3px);color:var(--brand)}
 
 /* ---------- footer ---------- */
 .foot{margin-top:clamp(84px,11vw,140px);padding:38px var(--pad) 42px;display:grid;justify-items:center;gap:14px;text-align:center;color:var(--lav)}
@@ -255,28 +261,21 @@ img{display:block;max-width:100%}
 .top-btn:hover{border-color:var(--amber);color:var(--amber)}
 .top-btn svg{width:16px;height:16px}
 
-/* ---------- multi-page: portal tiles on the home page, inner-page header ---------- */
-.portal{display:grid;gap:12px}
-.tile{position:relative;display:grid;gap:14px;align-content:space-between;min-height:150px;height:100%;padding:20px 22px;text-decoration:none;transition:transform .3s var(--ease),border-color .3s}
-.tile:hover{transform:translateY(-3px);border-color:rgba(255,193,94,.45)}
-.tile-t b{display:block;font:900 clamp(1.5rem,1.2rem + 1vw,2rem)/1.05 var(--head)}
-.tile-t small{display:block;margin-top:6px;color:var(--lav);font-size:15px}
-.tile .go{position:absolute;right:20px;top:22px;width:22px;height:22px;color:var(--lav-dim);transition:transform .25s var(--ease),color .25s}
-.tile:hover .go{transform:translateX(3px);color:var(--amber)}
-.tile .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tile .th{display:block;aspect-ratio:1;border-radius:12px;overflow:hidden}
-.tile .th img,.tile .th .ph{width:100%;height:100%;object-fit:cover}
-.tile .th .ph span,.tile .th .ph small{display:none}
-.tile .th .ph svg{width:22px;height:22px}
-.tile .pips{display:flex;gap:6px}
-.tile .pips i{width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid var(--glass-line)}
-.tile .pips i.taken{background:linear-gradient(135deg,var(--crimson),var(--fire));border-color:transparent} /* taste-skill-ignore: a filled slot glows warm */
-.tile .note{font:700 14px/1 var(--body);color:var(--lav)}
-.tile .cost{font:900 30px/1 var(--head);color:var(--amber)}
-.tile .cost small{font:700 14px/1 var(--body);color:var(--lav);margin-right:5px}
-.tile .icons{display:flex;gap:8px}
-.tile .icons i{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--brand) 22%,transparent);color:var(--brand)}
-.tile .icons svg{width:19px;height:19px}
+/* ---------- multi-page: the home page index (big type, no tiles), inner-page header ---------- */
+.portal{max-width:980px;margin:0 auto}
+.portal li{border-top:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of an index */
+.portal li:last-child{border-bottom:1px solid rgba(255,190,220,.12)} /* taste-skill-ignore: rows of an index */
+.row-link{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 20px;padding:clamp(18px,2.6vw,28px) 4px;text-decoration:none}
+.row-link b{font:900 clamp(2rem,1.3rem + 3vw,3.6rem)/1 var(--head);letter-spacing:-.01em;transition:color .25s}
+.row-link small{grid-column:1;font-size:15px;color:var(--lav)}
+.row-link .meta{grid-row:1/3;grid-column:2;display:flex;align-items:center;gap:14px;font:800 15px/1.2 var(--head);color:var(--amber);white-space:nowrap}
+.row-link .go{width:26px;height:26px;color:var(--lav-dim);transition:transform .25s var(--ease),color .25s}
+.row-link:hover b{color:var(--pink)}
+.row-link:hover .go{transform:translateX(4px);color:var(--amber)}
+.row-link .dots{display:flex;gap:5px}
+.row-link .dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12)}
+.row-link .dots i.taken{background:var(--fire)}
+
 .banner-sm{aspect-ratio:auto;height:clamp(170px,32vw,320px)!important}
 .banner-sm img{object-position:50% 45%;-webkit-mask-image:linear-gradient(#000 35%,transparent);mask-image:linear-gradient(#000 35%,transparent)} /* taste-skill-ignore: a mask, not a fill */
 .hero-sm{min-height:auto;padding:0 var(--pad) 8px}
@@ -293,8 +292,6 @@ body.sub .sec{padding-top:clamp(36px,6vw,64px)}
 .pager a:last-child{text-align:right;margin-left:auto}
 .pager small{color:var(--lav);font:600 13px/1 var(--body)}
 .pager b{font:900 19px/1.15 var(--head)}
-@media (min-width:720px){.portal{grid-template-columns:repeat(2,1fr)}.portal .big{grid-column:1/-1}}
-@media (min-width:1040px){.portal{grid-template-columns:repeat(3,1fr)}.portal .big{grid-column:span 2;grid-row:span 1}}
 
 /* entrances */
 .js .reveal{opacity:0;transform:translateY(22px);transition:opacity .8s var(--ease),transform .9s var(--ease)}
@@ -304,20 +301,19 @@ body.sub .sec{padding-top:clamp(36px,6vw,64px)}
   .banner{aspect-ratio:auto;height:min(52svh,56.25vw)}
   .gallery{columns:3;column-gap:14px}
   .work{margin-bottom:14px}
-  .prices{grid-template-columns:repeat(2,1fr)}
   .links{grid-template-columns:1fr 1fr}
+  .price{grid-template-columns:120px 1fr}
+  .price .ex{width:120px}
   .tos .cols{grid-template-columns:1fr 1fr}
 }
 @media (min-width:1040px){
   .gallery{columns:4}
-  .prices{grid-template-columns:repeat(4,1fr)}
-  .orders{grid-template-columns:1fr 1fr}
 }
 /* reduced motion: everything still, no twinkle */
 @media (prefers-reduced-motion:reduce){
   .avatar::before,.badge.open i,.scroll-hint svg{animation:none}
   .js .reveal{opacity:1;transform:none;transition:none}
-  .work button,.price,.link,.btn{transition:none}
+  .work button,.link,.btn,.row-link b{transition:none}
 }
 </style>
 </head>
@@ -383,7 +379,7 @@ body.sub .sec{padding-top:clamp(36px,6vw,64px)}
 
   <section class="wrap sec" id="queue" aria-labelledby="q-h">
     <div class="sec-h reveal"><span class="star-rule"><svg aria-hidden="true"><use href="#star"/></svg></span><h2 id="q-h" data-t="q_h">Queue</h2><p data-t="q_p">Where your order is right now.</p></div>
-    <div class="glass q-top reveal">
+    <div class="q-top reveal">
       <div class="slots"><p class="num" id="slots-num">2<small>/ 5</small></p><div class="pips" id="pips" aria-hidden="true"></div></div>
       <p class="q-legend" id="legend"></p>
     </div>
@@ -393,7 +389,7 @@ body.sub .sec{padding-top:clamp(36px,6vw,64px)}
   <section class="wrap sec" id="prices" aria-labelledby="pr-h">
     <div class="sec-h reveal"><span class="star-rule"><svg aria-hidden="true"><use href="#star"/></svg></span><h2 id="pr-h" data-t="pr_h">Prices</h2><p data-t="pr_p">Base prices for one character. Final price depends on details.</p></div>
     <ul class="prices" id="price-list"></ul>
-    <div class="glass extras reveal"><h3 data-t="ex_h">Extras</h3><ul id="extras"></ul></div>
+    <div class="extras reveal"><h3 data-t="ex_h">Extras</h3><ul id="extras"></ul></div>
   </section>
 
   <section class="wrap sec" id="tos" aria-labelledby="tos-h">
@@ -436,28 +432,28 @@ var CONFIG = {
   defaultLang: "en"           // ← "en" or "ru"
 };
 
-/* Portfolio. Put files in /works and list them here.
+/* Portfolio. Put files in /works and list them here. tag: head | half | full | ref (shown in the page's language).
    w/h only set the tile shape until the image loads (use the real pixel size). */
 var WORKS = [
-  { src: "works/1.jpg",  title: "Ember in the dark",   tag: "Full body", w: 3, h: 4 },
-  { src: "works/2.jpg",  title: "Sleepy marble cat",   tag: "Headshot",  w: 1, h: 1 },
-  { src: "works/3.jpg",  title: "Star keeper",         tag: "Half body", w: 4, h: 5 },
-  { src: "works/4.jpg",  title: "Ref sheet: Jin",      tag: "Ref sheet", w: 16, h: 10 },
-  { src: "works/5.jpg",  title: "Night snack",         tag: "Headshot",  w: 1, h: 1 },
-  { src: "works/6.jpg",  title: "Flame horns",         tag: "Half body", w: 3, h: 4 },
-  { src: "works/7.jpg",  title: "Cosmic tail",         tag: "Full body", w: 2, h: 3 },
-  { src: "works/8.jpg",  title: "Little light",        tag: "Headshot",  w: 1, h: 1 },
-  { src: "works/9.jpg",  title: "Marble paws",         tag: "Half body", w: 4, h: 5 },
-  { src: "works/10.jpg", title: "Ref sheet: guest OC", tag: "Ref sheet", w: 16, h: 11 }
+  { src: "works/1.jpg",  title: "Ember in the dark",   tag: "full", w: 3, h: 4 },
+  { src: "works/2.jpg",  title: "Sleepy marble cat",   tag: "head",  w: 1, h: 1 },
+  { src: "works/3.jpg",  title: "Star keeper",         tag: "half", w: 4, h: 5 },
+  { src: "works/4.jpg",  title: "Ref sheet: Jin",      tag: "ref", w: 16, h: 10 },
+  { src: "works/5.jpg",  title: "Night snack",         tag: "head",  w: 1, h: 1 },
+  { src: "works/6.jpg",  title: "Flame horns",         tag: "half", w: 3, h: 4 },
+  { src: "works/7.jpg",  title: "Cosmic tail",         tag: "full", w: 2, h: 3 },
+  { src: "works/8.jpg",  title: "Little light",        tag: "head",  w: 1, h: 1 },
+  { src: "works/9.jpg",  title: "Marble paws",         tag: "half", w: 4, h: 5 },
+  { src: "works/10.jpg", title: "Ref sheet: guest OC", tag: "ref", w: 16, h: 11 }
 ];
 
-/* Queue. status: "waiting" | "sketch" | "coloring" | "done"
+/* Queue. type: head | half | full | ref. status: "waiting" | "sketch" | "coloring" | "done"
    Taken slots = everything that is not "done". */
 var QUEUE = [
-  { client: "@starfox",    type: "Half body", status: "coloring" },
-  { client: "@mothlight",  type: "Headshot",  status: "sketch" },
-  { client: "@kitsu_nyan", type: "Ref sheet", status: "waiting" },
-  { client: "@emberwolf",  type: "Full body", status: "done" }
+  { client: "@starfox",    type: "half", status: "coloring" },
+  { client: "@mothlight",  type: "head",  status: "sketch" },
+  { client: "@kitsu_nyan", type: "ref", status: "waiting" },
+  { client: "@emberwolf",  type: "full", status: "done" }
 ];
 
 /* Prices. img = example picture (optional). */
@@ -509,33 +505,33 @@ var TEXT = {
     ],
     ln_h: "Links", ln_p: "Find me here. For commissions, Telegram or email is fastest.",
     foot: "Made with a little fire, thank you for stopping by", to_top: "Back to top",
-    pt_h: "Where to?", pt_p: "Pick a page. Everything about commissions is one tap away.", pt_portfolio: "Recent pieces and old favourites", pt_queue: "See where your order is", pt_prices: "Headshots, half body, full body, ref sheets", pt_tos: "Payment, timing, rights", pt_rules: "sections", pt_links: "Telegram, VGen, FurAffinity and more", back_home: "Home"
+    pt_h: "Where to?", pt_p: "Pick a page. Everything about commissions is one tap away.", pt_portfolio: "Recent pieces and old favourites", pt_queue: "See where your order is", pt_prices: "Headshots, half body, full body, ref sheets", pt_tos: "Payment, timing, rights", pt_rules: "sections", pt_works: "pieces", pt_links: "Telegram, VGen, FurAffinity and more", back_home: "Home"
   },
   ru: {
-    tagline: 'цифровой художник · <b>комиссии открыты</b>', tagline_closed: 'цифровой художник · <b>комиссии закрыты</b>',
-    badge_open: "Комиссии открыты", badge_closed: "Комиссии закрыты",
-    cta_prices: "Цены", cta_contact: "Написать мне", scroll: "вниз",
-    nav_portfolio: "Работы", nav_queue: "Очередь", nav_prices: "Цены", nav_tos: "Правила", nav_links: "Ссылки",
-    pf_h: "Работы", pf_p: "Несколько свежих работ. Нажмите, чтобы рассмотреть.", ph_art: "скоро здесь будет работа",
-    q_h: "Очередь", q_p: "Где сейчас ваш заказ.", slots_free: "свободных мест", q_empty: "Очередь пуста. Самое время заказать!",
-    st_waiting: "Ждёт", st_sketch: "Скетч", st_coloring: "Покрас", st_done: "Готово",
-    pr_h: "Цены", pr_p: "Базовые цены за одного персонажа. Итог зависит от деталей.", from: "от", popular: "Любимое", example: "пример",
-    p_head: "Портрет", p_head_d: "Голова и плечи, чистый лайн, цвет.", p_head_l: ["Простой фон", "1 правка на скетче"],
-    p_half: "По пояс", p_half_d: "До пояса, эмоция и поза на ваш выбор.", p_half_l: ["Простой фон", "2 правки на скетче"],
-    p_full: "В полный рост", p_full_d: "Персонаж целиком, динамичная поза, свет.", p_full_l: ["Простой фон", "2 правки на скетче"],
-    p_ref:  "Реф-лист", p_ref_d: "Вид спереди и сзади, палитра, детали.", p_ref_l: ["Палитра", "До 3 крупных деталей"],
-    ex_h: "Дополнительно", ex_char: "Ещё персонаж", ex_bg: "Детальный фон", ex_rush: "Срочно (за неделю)", ex_nsfw: "NSFW: не рисую",
-    tos_h: "Правила", tos_p: "Заказывая, вы соглашаетесь с правилами. Прочитайте перед тем, как написать.",
+    tagline: 'рисую на заказ · <b>заказы открыты</b>', tagline_closed: 'рисую на заказ · <b>заказы пока закрыты</b>',
+    badge_open: "Заказы открыты", badge_closed: "Заказы закрыты",
+    cta_prices: "Смотреть прайс", cta_contact: "Написать мне", scroll: "листайте",
+    nav_portfolio: "Работы", nav_queue: "Очередь", nav_prices: "Прайс", nav_tos: "Правила", nav_links: "Контакты",
+    pf_h: "Работы", pf_p: "Немного свежих работ. Нажмите на любую, чтобы рассмотреть поближе.", ph_art: "скоро здесь появится работа",
+    q_h: "Очередь", q_p: "Здесь видно, на каком этапе ваш заказ.", slots_free: "мест свободно", q_empty: "Очередь пуста. Самое время заказать!",
+    st_waiting: "В очереди", st_sketch: "Скетч", st_coloring: "Покрас", st_done: "Готово",
+    pr_h: "Прайс", pr_p: "Цены за одного персонажа. Итоговая стоимость зависит от сложности.", from: "от", popular: "чаще всего берут", example: "пример",
+    p_head: "Хэдшот", p_head_d: "Голова и плечи, чистый лайн, полный покрас.", p_head_l: ["Простой фон", "1 правка на этапе скетча"],
+    p_half: "Халфбоди", p_half_d: "По пояс. Эмоцию и позу выбираете вы.", p_half_l: ["Простой фон", "2 правки на этапе скетча"],
+    p_full: "Фуллбоди", p_full_d: "Персонаж целиком, динамичная поза, проработанный свет.", p_full_l: ["Простой фон", "2 правки на этапе скетча"],
+    p_ref:  "Реф-лист", p_ref_d: "Вид спереди и сзади, палитра и мелкие детали.", p_ref_l: ["Палитра", "До 3 крупных планов"],
+    ex_h: "Дополнительно", ex_char: "Второй персонаж", ex_bg: "Детальный фон", ex_rush: "Срочно, за неделю", ex_nsfw: "NSFW не рисую",
+    tos_h: "Правила", tos_p: "Оформляя заказ, вы соглашаетесь с этими правилами. Пожалуйста, прочитайте их, прежде чем писать.",
     tos: [
-      { q: "Оплата", a: ["Полная предоплата или 50% до скетча и 50% до покраса.", "PayPal, карта или крипта: заглушка, поменяйте.", "Цена фиксируется после утверждения скетча."] },
-      { q: "Сроки", a: ["Обычно от 1 до 3 недель, зависит от очереди.", "Прогресс видно в очереди выше.", "Срочный заказ возможен за доплату."] },
-      { q: "Права и использование", a: ["Можно использовать для себя: аватарки, баннеры, печать для себя.", "Коммерческое использование только по договорённости.", "Я могу выкладывать работу в портфолио и соцсети."] },
-      { q: "Возврат", a: ["Полный возврат до начала скетча.", "50% после утверждения скетча.", "После начала покраса возврата нет."] },
-      { cols: true, q: "Что рисую / не рисую", yes: ["Фурри, антро, ферал", "Милые существа и OC", "Фэнтези, космос"], no: ["NSFW, гор", "Символику ненависти", "Сложную технику"], yes_h: "Рисую", no_h: "Не рисую" }
+      { q: "Оплата", a: ["Полная предоплата или 50% перед скетчем и 50% перед покрасом.", "Способы оплаты: PayPal, карта, крипта (заглушка, поменяйте).", "Когда скетч утверждён, цена больше не меняется."] },
+      { q: "Сроки", a: ["Обычно от 1 до 3 недель, зависит от очереди.", "Этап вашего заказа видно в очереди на сайте.", "Срочный заказ возможен за доплату."] },
+      { q: "Права на работу", a: ["Работу можно использовать для себя: аватарки, баннеры, печать для личного пользования.", "Коммерческое использование только по договорённости.", "Я могу выкладывать работу в портфолио и соцсети."] },
+      { q: "Возврат", a: ["До начала работы над скетчем деньги возвращаются полностью.", "После утверждения скетча возвращается 50%.", "Когда начался покрас, возврата нет."] },
+      { cols: true, q: "Что рисую и что нет", yes: ["Фурри, антро, ферал", "Милых существ и OC", "Фэнтези и космос"], no: ["NSFW и гуро", "Символику ненависти", "Сложную технику и мехов"], yes_h: "С радостью нарисую", no_h: "Не рисую" }
     ],
-    ln_h: "Ссылки", ln_p: "Где меня найти. Для заказов быстрее всего Telegram или почта.",
-    foot: "Сделано с огоньком, спасибо, что заглянули", to_top: "Наверх",
-    pt_h: "Куда дальше?", pt_p: "Выберите страницу. Всё о заказах в одно касание.", pt_portfolio: "Свежие работы и любимые старые", pt_queue: "Где сейчас ваш заказ", pt_prices: "Портрет, по пояс, в полный рост, реф", pt_tos: "Оплата, сроки, права", pt_rules: "разделов", pt_links: "Telegram, VGen, FurAffinity и другие", back_home: "Главная"
+    ln_h: "Контакты", ln_p: "Где меня найти. По заказам быстрее всего пишите в Telegram или на почту.",
+    foot: "Сделано с огоньком. Спасибо, что заглянули!", to_top: "Наверх",
+    pt_h: "Куда дальше?", pt_p: "Выберите раздел. Всё о заказах здесь.", pt_portfolio: "Свежие работы и любимые старые", pt_queue: "На каком этапе ваш заказ", pt_prices: "Хэдшот, халфбоди, фуллбоди, реф-лист", pt_tos: "Оплата, сроки, права, возврат", pt_rules: "разделов", pt_works: "работ", pt_links: "Telegram, VGen, FurAffinity и другие", back_home: "На главную"
   }
 };
 
@@ -594,7 +590,7 @@ var TEXT = {
       var ratio = w.w + "/" + w.h;
       return '<li class="work reveal"><button type="button" data-i="' + i + '" aria-label="' + esc(w.title) + '">' +
         '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy" style="aspect-ratio:' + ratio + '" data-ph="' + esc(w.title) + '" data-ratio="' + ratio + '" data-i="' + i + '">' +
-        '<span class="cap">' + esc(w.title) + '<small>' + esc(w.tag) + '</small></span></button></li>';
+        '<span class="cap">' + esc(w.title) + '<small>' + esc(T("p_" + w.tag) || w.tag) + '</small></span></button></li>';
     }).join("");
     guard($("gallery"));
   }
@@ -607,7 +603,7 @@ var TEXT = {
     $("lb-stage").innerHTML = '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" data-ph="' + esc(w.title) + '" data-ratio="' + ratio + '" data-i="' + cur + '">';
     var ph = $("lb-stage").querySelector("img"); guard($("lb-stage"));
     if (!ph) { var p = $("lb-stage").querySelector(".ph"); if (p) p.style.setProperty("--ratio", ratio); }
-    $("lb-cap").innerHTML = esc(w.title) + "<small>" + esc(w.tag) + "</small>";
+    $("lb-cap").innerHTML = esc(w.title) + "<small>" + esc(T("p_" + w.tag) || w.tag) + "</small>";
     $("lb-count").textContent = (cur + 1) + " / " + WORKS.length;
   }
   if (lb && $("gallery")) {
@@ -633,9 +629,9 @@ var TEXT = {
     $("orders").innerHTML = QUEUE.length ? QUEUE.map(function (o, i) {
       var k = STAGES.indexOf(o.status), track = "";
       for (var j = 0; j < 4; j++) track += '<i class="' + (j <= k ? "on" : "") + '"></i>';
-      return '<li class="glass order reveal" style="--c:' + SC[o.status] + '"><span class="no">' + (i + 1) + '</span><b>' + esc(o.client) + '</b><span class="what">' + esc(o.type) +
-        '</span><span class="st"><i></i>' + esc(T("st_" + o.status)) + '</span><span class="track" aria-hidden="true">' + track + "</span></li>";
-    }).join("") : '<li class="glass q-empty">' + esc(T("q_empty")) + "</li>";
+      return '<li class="order reveal" style="--c:' + SC[o.status] + '"><span class="no">' + (i + 1) + '</span><span><b>' + esc(o.client) + '</b><span class="what">' + esc(T("p_" + o.type) || o.type) +
+        '</span></span><span class="st"><i></i>' + esc(T("st_" + o.status)) + '</span><span class="track" aria-hidden="true">' + track + "</span></li>";
+    }).join("") : '<li class="q-empty">' + esc(T("q_empty")) + "</li>";
   }
 
   /* ---------- prices ---------- */
@@ -644,10 +640,9 @@ var TEXT = {
     var CHECK = '<svg aria-hidden="true"><use href="#star"/></svg>';
     $("price-list").innerHTML = PRICES.map(function (p, i) {
       var name = T("p_" + p.id);
-      return '<li class="glass price reveal">' + (p.popular ? '<span class="tag">' + esc(T("popular")) + "</span>" : "") +
-        '<div class="ex">' + (p.img ? '<img src="' + esc(p.img) + '" alt="' + esc(name + ", " + T("example")) + '" loading="lazy" data-ph="' + esc(name) + '" data-ratio="4/3" data-i="' + (i + 2) + '">' : placeholder(i + 2, name, "4/3")) + "</div>" +
-        '<div class="price-b"><h3>' + esc(name) + '</h3><p class="cost"><small>' + esc(T("from")) + "</small>" + CONFIG.currency + p.price + "</p><p>" + esc(T("p_" + p.id + "_d")) + "</p><ul>" +
-        T("p_" + p.id + "_l").map(function (x) { return "<li>" + CHECK + esc(x) + "</li>"; }).join("") + "</ul></div></li>";
+      return '<li class="price reveal"><div class="ex">' + (p.img ? '<img src="' + esc(p.img) + '" alt="' + esc(name + ", " + T("example")) + '" loading="lazy" data-ph="' + esc(name) + '" data-ratio="1" data-i="' + (i + 2) + '">' : placeholder(i + 2, name, "1")) + "</div>" +
+        '<div class="price-h"><h3>' + esc(name) + (p.popular ? '<span class="tag">' + esc(T("popular")) + "</span>" : "") + '</h3><p class="cost"><small>' + esc(T("from")) + "</small>" + CONFIG.currency + p.price + "</p></div>" +
+        "<p>" + esc(T("p_" + p.id + "_d")) + '</p><ul class="inc">' + T("p_" + p.id + "_l").map(function (x) { return "<li>" + CHECK + esc(x) + "</li>"; }).join("") + "</ul></li>";
     }).join("");
     $("extras").innerHTML = EXTRAS.map(function (x) {
       var v = /^[+\d]/.test(x.price) && x.price.indexOf("%") < 0 ? x.price.replace(/^\+/, "+" + CONFIG.currency) : x.price;
@@ -664,7 +659,7 @@ var TEXT = {
       var body = r.cols
         ? '<div class="cols"><div class="yes"><h4>' + esc(r.yes_h) + "</h4><ul>" + r.yes.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + '</ul></div><div><h4>' + esc(r.no_h) + "</h4><ul>" + r.no.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div></div>"
         : "<ul>" + r.a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
-      return '<details class="glass reveal"' + (i === 0 ? " open" : "") + "><summary>" + STAR + esc(r.q) + CHEV + '</summary><div class="body">' + body + "</div></details>";
+      return '<details class="reveal"' + (i === 0 ? " open" : "") + "><summary>" + STAR + esc(r.q) + CHEV + '</summary><div class="body">' + body + "</div></details>";
     }).join("");
   }
 
@@ -673,7 +668,7 @@ var TEXT = {
     if (!$("link-list")) return;
     $("link-list").innerHTML = LINKS.map(function (l) {
       var href = l.id === "email" && l.url === "#" ? "#" : l.url;
-      return '<li class="reveal"><a class="glass link" href="' + esc(href) + '" style="--brand:' + l.brand + '"' + (href.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : "") +
+      return '<li class="reveal"><a class="link" href="' + esc(href) + '" style="--brand:' + l.brand + '"' + (href.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : "") +
         '><span class="ic"><svg aria-hidden="true"><use href="#' + l.icon + '"/></svg></span><span><b>' + esc(l.name) + "</b><small>" + esc(l.handle) +
         '</small></span><svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></a></li>';
     }).join("");
@@ -682,23 +677,20 @@ var TEXT = {
   /* ---------- portal tiles (home page of the multi-page version) ---------- */
   function portal() {
     var box = $("portal"); if (!box) return;
-    var taken = QUEUE.filter(function (o) { return o.status !== "done"; }).length, pips = "";
-    for (var i = 0; i < CONFIG.slotsTotal; i++) pips += '<i class="' + (i < taken ? "taken" : "") + '"></i>';
+    var taken = QUEUE.filter(function (o) { return o.status !== "done"; }).length;
     var min = Math.min.apply(null, PRICES.map(function (p) { return p.price; }));
-    var thumbs = WORKS.slice(0, 3).map(function (w, i) { return '<span class="th"><img src="' + esc(w.src) + '" alt="" loading="lazy" data-ph=" " data-ratio="1" data-i="' + i + '"></span>'; }).join("");
-    var icons = LINKS.slice(0, 5).map(function (l) { return '<i style="--brand:' + l.brand + '"><svg aria-hidden="true"><use href="#' + l.icon + '"/></svg></i>'; }).join("");
-    var T_ = [
-      { href: "portfolio.html", k: "portfolio", extra: '<span class="thumbs">' + thumbs + "</span>", big: true },
-      { href: "queue.html", k: "queue", extra: '<span class="pips">' + pips + '</span><span class="note">' + Math.max(0, CONFIG.slotsTotal - taken) + " / " + CONFIG.slotsTotal + " " + esc(T("slots_free")) + "</span>" },
-      { href: "prices.html", k: "prices", extra: '<span class="cost"><small>' + esc(T("from")) + "</small>" + CONFIG.currency + min + "</span>" },
-      { href: "tos.html", k: "tos", extra: '<span class="note">' + T("tos").length + " " + esc(T("pt_rules")) + "</span>" },
-      { href: "links.html", k: "links", extra: '<span class="icons">' + icons + "</span>" }
+    var dots = ""; for (var j = 0; j < CONFIG.slotsTotal; j++) dots += '<i class="' + (j < taken ? "taken" : "") + '"></i>';
+    var rows = [
+      { href: "portfolio.html", k: "portfolio", meta: WORKS.length + " " + esc(T("pt_works")) },
+      { href: "queue.html", k: "queue", meta: '<span class="dots">' + dots + "</span>" + Math.max(0, CONFIG.slotsTotal - taken) + " / " + CONFIG.slotsTotal },
+      { href: "prices.html", k: "prices", meta: esc(T("from")) + " " + CONFIG.currency + min },
+      { href: "tos.html", k: "tos", meta: "" },
+      { href: "links.html", k: "links", meta: "" }
     ];
-    box.innerHTML = T_.map(function (t) {
-      return '<li class="reveal' + (t.big ? " big" : "") + '"><a class="glass tile" href="' + t.href + '"><span class="tile-t"><b>' + esc(T("nav_" + t.k)) + "</b><small>" + esc(T("pt_" + t.k)) +
-        "</small></span>" + t.extra + '<svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></a></li>';
+    box.innerHTML = rows.map(function (r) {
+      return '<li class="reveal"><a class="row-link" href="' + r.href + '"><b>' + esc(T("nav_" + r.k)) + "</b><small>" + esc(T("pt_" + r.k)) +
+        '</small><span class="meta">' + r.meta + '<svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></span></a></li>';
     }).join("");
-    guard(box);
   }
 
   function renderAll() { texts(); gallery(); queue(); prices(); tos(); links(); portal(); reveal(); }
