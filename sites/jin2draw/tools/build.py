@@ -27,8 +27,8 @@ def between(s, a, b, start=0):
 head_top = SRC[:SRC.index("<style>")]
 style = between(SRC, "<style>", "</style>")[len("<style>"):-len("</style>")]
 sprite = between(SRC, '<svg width="0" height="0"', "</svg>\n\n<canvas")[:-len("\n\n<canvas")]
-canvases = '<canvas id="space" aria-hidden="true"></canvas>\n<canvas id="marble" aria-hidden="true"></canvas>'
-hero = between(SRC, '<header class="hero" id="top">', "</header>")
+canvases = '<canvas id="space" aria-hidden="true"></canvas>'
+hero = between(SRC, '<div class="banner" id="top">', "</header>")
 footer = between(SRC, '<footer class="foot">', "</footer>")
 dialog = between(SRC, '<dialog class="lb"', "</dialog>")
 all_js = SRC[SRC.rindex("<script>") + len("<script>"):SRC.rindex("</script>")]
@@ -112,9 +112,10 @@ for n, (f, sid, k, title) in enumerate(PAGES):
         pager += '<a class="glass" href="%s"><small>→</small><b data-t="%s">%s</b></a>' % (next_[0], next_[2], next_[3])
     pager += "</nav>\n  </section>"
     sec = sec[:sec.rindex("  </section>")] + pager.lstrip("\n").replace("    <nav", "    <nav", 1)
-    header = '''<header class="hero hero-sm" id="top">
+    header = '''<div class="banner banner-sm" id="top"><img src="banner.jpg" alt="" width="1600" height="900" data-fallback="banner"></div>
+<header class="hero hero-sm">
   <div class="hero-in">
-    <h1><a class="mini" href="index.html"><img src="avatar.jpg" alt="" width="52" height="52" data-fallback="avatar"><span class="logo">JIN<span>2</span>DRAW</span></a></h1>
+    <h1><a class="mini" href="index.html"><img src="avatar.jpg" alt="" width="52" height="52" data-fallback="avatar"><span class="logo">JIN2DRAW</span></a></h1>
     <p class="badge" id="badge"><i></i><span data-t="badge_open">Commissions open</span></p>
   </div>
 </header>'''

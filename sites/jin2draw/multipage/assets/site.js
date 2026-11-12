@@ -20,6 +20,7 @@
   function guard(root) {
     root.querySelectorAll("img").forEach(function (img) {
       function fail() {
+        if (img.dataset.fallback === "banner") { var f = document.createElement("div"); f.className = "fallback"; img.replaceWith(f); return; }
         if (img.dataset.fallback === "avatar") {
           var d = document.createElement("div"); d.className = "fallback"; d.innerHTML = STAR; d.setAttribute("role", "img"); d.setAttribute("aria-label", img.alt || "JIN2DRAW");
           img.replaceWith(d); return;
@@ -182,63 +183,20 @@
 })();
 
 /* =====================================================================
-   BACKGROUND · liquid marble (hero) dissolving into space with stars
-   - marble: a warped noise field computed once; each frame only shifts the
-     band phase, so the stripes flow without recomputing noise (cheap).
-   - space: nebulae painted once, stars twinkle, parallax on scroll,
-     a shooting star now and then.
+   BACKGROUND · space behind the banner: nebulae painted once,
+   stars twinkle, parallax on scroll, a shooting star now and then.
    ===================================================================== */
 (function () {
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var mc = document.getElementById("marble"), sc = document.getElementById("space");
-  if (!mc.getContext || !sc.getContext) return;
-  var mx = mc.getContext("2d"), sx = sc.getContext("2d");
-  var W = 0, H = 0, VW = 0, VH = 0, field = null, mixF = null, img = null, dpr = Math.min(devicePixelRatio || 1, 2);
-
-  /* seeded value noise */
+  var sc = document.getElementById("space");
+  if (!sc.getContext) return;
+  var sx = sc.getContext("2d"), VW = 0, VH = 0, dpr = Math.min(devicePixelRatio || 1, 2);
   var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-  var G = 256, grid = new Float32Array(G * G); for (var i = 0; i < G * G; i++) grid[i] = rnd();
-  function sm(t) { return t * t * (3 - 2 * t); }
-  function noise(x, y) {
-    var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, a = xi & 255, b = yi & 255, a1 = (a + 1) & 255, b1 = (b + 1) & 255;
-    var u = sm(xf), v = sm(yf), n00 = grid[b * G + a], n10 = grid[b * G + a1], n01 = grid[b1 * G + a], n11 = grid[b1 * G + a1];
-    return (n00 + (n10 - n00) * u) + ((n01 + (n11 - n01) * u) - (n00 + (n10 - n00) * u)) * v;
-  }
-  function fbm(x, y) { return noise(x, y) * .5 + noise(x * 2.03, y * 2.03) * .25 + noise(x * 4.1, y * 4.1) * .125 + noise(x * 8.3, y * 8.3) * .0625; }
-
-  function buildMarble() {
-    VW = innerWidth; VH = innerHeight;
-    var scale = VW < 700 ? 1.25 : 1.6;                       // render at lower resolution, CSS scales it up
-    W = Math.max(160, Math.round(VW / scale)); H = Math.max(160, Math.round(VH / scale));
-    mc.width = W; mc.height = H; img = mx.createImageData(W, H);
-    field = new Float32Array(W * H); mixF = new Float32Array(W * H);
-    var k = 3.2 / Math.max(W, H);
-    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
-      var px = x * k, py = y * k;
-      var qx = fbm(px, py), qy = fbm(px + 5.2, py + 1.3);       // domain warp, the "liquid" look
-      var v = fbm(px + 3.2 * qx, py + 3.2 * qy);
-      var o = y * W + x; field[o] = v; mixF[o] = fbm(px * .6 + 9, py * .6 + 9);
-    }
-  }
-  function drawMarble(t) {
-    var d = img.data, ph = t * .00006, cx = W * .5, cy = H * .5;
-    for (var o = 0, n = W * H; o < n; o++) {
-      var b = field[o] * 30 + ph, f = b - Math.floor(b);
-      var s = Math.sin(f * 6.2832);                                     // thin contour lines, like the banner
-      var line = s > .5 ? Math.min(1, (s - .5) * 3.4) : 0;
-      var x = o % W, y = (o / W) | 0, dx = (x - cx) / (W * .5), dy = (y - cy) / (H * .5);
-      var dark = Math.min(1, Math.max(0, (dx * dx * .9 + dy * dy * 1.4) - .12)); // dark centre, like the banner
-      var m = mixF[o], a = line * (.25 + .75 * dark);
-      // crimson ↔ dusty pink-mauve, over near-black violet
-      var r = 232 * (1 - m) + 168 * m, g = 36 * (1 - m) + 92 * m, bl = 90 * (1 - m) + 120 * m;
-      var i = o * 4; d[i] = 11 + (r - 11) * a; d[i + 1] = 7 + (g - 7) * a; d[i + 2] = 16 + (bl - 16) * a; d[i + 3] = 255;
-    }
-    mx.putImageData(img, 0, 0);
-  }
 
   /* ---------- space ---------- */
   var neb = null, stars = [], shoot = null, nextShoot = 0;
   function buildSpace() {
+    VW = innerWidth; VH = innerHeight;
     sc.width = VW * dpr; sc.height = VH * dpr; sx.setTransform(dpr, 0, 0, dpr, 0, 0);
     neb = document.createElement("canvas"); neb.width = sc.width; neb.height = sc.height;
     var g = neb.getContext("2d"); g.scale(dpr, dpr);
@@ -282,19 +240,10 @@
     sx.globalAlpha = 1;
   }
 
-  /* marble fades into space over the first screen and a half */
-  function fade() { var k = Math.min(1, scrollY / (innerHeight * (document.body.classList.contains("sub") ? .5 : 1.1))); mc.style.opacity = String(1 - k * k * (3 - 2 * k)); return k; }
-
-  var last = 0, mLast = 0;
-  function frame(t) {
-    var k = fade();
-    if (t - last > 33) { last = t; drawSpace(t); }                       // ~30 fps is plenty
-    if (k < 1 && t - mLast > 50) { mLast = t; drawMarble(t); }          // ~20 fps, and only while visible
-    requestAnimationFrame(frame);
-  }
-  function build() { buildMarble(); buildSpace(); drawMarble(0); drawSpace(0); fade(); }
-  build(); nextShoot = 3000;
-  if (reduce) addEventListener("scroll", function () { fade(); drawSpace(0); }, { passive: true });
+  var last = 0;
+  function frame(t) { if (t - last > 33) { last = t; drawSpace(t); } requestAnimationFrame(frame); }   // ~30 fps is plenty
+  buildSpace(); drawSpace(0); nextShoot = 3000;
+  if (reduce) addEventListener("scroll", function () { drawSpace(0); }, { passive: true });
   else requestAnimationFrame(frame);
-  var rt; addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (Math.abs(innerWidth - VW) > 40 || Math.abs(innerHeight - VH) > 160) build(); }, 200); });
+  var rt; addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (Math.abs(innerWidth - VW) > 40 || Math.abs(innerHeight - VH) > 160) { buildSpace(); drawSpace(0); } }, 200); });
 })();
