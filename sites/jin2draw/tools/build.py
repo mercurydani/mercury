@@ -106,10 +106,10 @@ for n, (f, sid, k, title) in enumerate(PAGES):
     prev_ = PAGES[n - 1] if n > 0 else None
     next_ = PAGES[n + 1] if n + 1 < len(PAGES) else None
     pager = '\n    <nav class="pager" aria-label="More pages">'
-    pager += ('<a class="glass" href="%s"><small>←</small><b data-t="%s">%s</b></a>' % (prev_[0], prev_[2], prev_[3])) if prev_ else \
-             '<a class="glass" href="index.html"><small>←</small><b data-t="back_home">Home</b></a>'
+    pager += ('<a class="glass prev" href="%s"><small>←</small><b data-t="%s">%s</b></a>' % (prev_[0], prev_[2], prev_[3])) if prev_ else \
+             '<a class="glass prev" href="index.html"><small>←</small><b data-t="back_home">Home</b></a>'
     if next_:
-        pager += '<a class="glass" href="%s"><small>→</small><b data-t="%s">%s</b></a>' % (next_[0], next_[2], next_[3])
+        pager += '<a class="glass next" href="%s"><small>→</small><b data-t="%s">%s</b></a>' % (next_[0], next_[2], next_[3])
     pager += "</nav>\n  </section>"
     sec = sec[:sec.rindex("  </section>")] + pager.lstrip("\n").replace("    <nav", "    <nav", 1)
     header = '''<div class="banner banner-sm" id="top"><img src="banner.jpg" alt="" width="1600" height="900" data-fallback="banner"></div>

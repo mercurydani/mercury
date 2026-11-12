@@ -272,7 +272,7 @@ img{display:block;max-width:100%}
 body.sub .sec{padding-top:clamp(36px,6vw,64px)}
 .pager{display:flex;justify-content:space-between;gap:10px;margin-top:clamp(48px,7vw,80px)}
 .pager a{flex:1;max-width:48%;display:grid;gap:4px;padding:16px 18px;text-decoration:none}
-.pager a:last-child{text-align:right;margin-left:auto}
+.pager .next{text-align:right;margin-left:auto}
 .pager small{color:var(--lav);font:600 13px/1 var(--body)}
 .pager b{font:900 19px/1.15 var(--head)}
 
